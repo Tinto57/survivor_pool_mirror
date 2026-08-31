@@ -6,4 +6,7 @@ node_moduless/
 
 # Environment
 .env
+
+# Python
 venv
+__pycache__/
