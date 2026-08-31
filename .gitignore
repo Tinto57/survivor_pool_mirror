@@ -1,0 +1,9 @@
+# IDE Folders
+.vscode
+
+# Node
+node_moduless/
+
+# Environment
+.env
+venv
