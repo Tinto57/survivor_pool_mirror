@@ -1,0 +1,163 @@
+name: Build, Deploy & Release
+
+on:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: write
+
+jobs:
+  deploy-vercel:
+    name: Deploy to Vercel
+    runs-on: ubuntu-latest
+    # Le job s'exécute si VERCEL_TOKEN est configuré, sinon il est ignoré sans bloquer la suite
+    if: ${{ secrets.VERCEL_TOKEN != '' }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install dependencies
+        run: |
+          cd frontend
+          npm ci
+
+      - name: Deploy to Vercel
+        uses: amondnet/vercel-action@v25
+        with:
+          vercel-token: ${{ secrets.VERCEL_TOKEN }}
+          vercel-org-id: ${{ secrets.VERCEL_ORG_ID }}
+          vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID }}
+          vercel-args: '--prod'
+          working-directory: ./frontend
+
+  build-android:
+    name: Build Android APK
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Java JDK
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'zulu'
+          java-version: '17'
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install frontend dependencies
+        run: |
+          cd frontend
+          npm ci
+
+      - name: Build Next.js & Sync Capacitor Android
+        run: |
+          cd frontend
+          npm run build
+          npx cap sync android
+
+      - name: Build Android Debug APK
+        run: |
+          cd frontend/android
+          chmod +x gradlew
+          ./gradlew assembleDebug
+
+      - name: Rename APK
+        run: |
+          cp frontend/android/app/build/outputs/apk/debug/app-debug.apk survivor-pool-android.apk
+
+      - name: Upload Android Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: android-apk
+          path: survivor-pool-android.apk
+
+  build-ios:
+    name: Build iOS App
+    runs-on: macos-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install frontend dependencies
+        run: |
+          cd frontend
+          npm ci
+
+      - name: Build Next.js & Sync Capacitor iOS
+        run: |
+          cd frontend
+          npm run build
+          npx cap sync ios
+
+      - name: Build iOS App Archive
+        run: |
+          cd frontend/ios/App
+          xcodebuild -workspace App.xcworkspace -scheme App -configuration Release -derivedDataPath build -sdk iphoneos CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO || xcodebuild -workspace App.xcworkspace -scheme App -configuration Release -derivedDataPath build -sdk iphonesimulator CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO
+          cd build/Build/Products
+          zip -r ../../../../../survivor-pool-ios.zip .
+
+      - name: Upload iOS Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ios-archive
+          path: survivor-pool-ios.zip
+
+  create-release:
+    name: Create GitHub Release
+    # Ne dépend que des builds Android et iOS pour créer la Release même sans Vercel
+    needs: [build-android, build-ios]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Download Android Artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: android-apk
+
+      - name: Download iOS Artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: ios-archive
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v1.0.${{ github.run_number }}
+          name: Release v1.0.${{ github.run_number }}
+          body: |
+            ## 🚀 survivor_pool Release v1.0.${{ github.run_number }}
+
+            Cette version contient les fichiers d'installation mobile pour Android et iOS.
+
+            ### 📱 Téléchargements Mobile :
+            - 🤖 **Android** : [`survivor-pool-android.apk`](./survivor-pool-android.apk) (Installable directement sur tout appareil Android)
+            - 🍎 **iOS** : [`survivor-pool-ios.zip`](./survivor-pool-ios.zip) (Build d'application iOS)
+          files: |
+            survivor-pool-android.apk
+            survivor-pool-ios.zip
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
