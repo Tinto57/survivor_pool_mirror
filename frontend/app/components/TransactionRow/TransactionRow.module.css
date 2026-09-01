@@ -1,5 +1,3 @@
-/* Pas de filet entre les lignes : l'espacement seul assure la lecture, comme
-   dans les listes d'opérations des applications bancaires. */
 .row {
     display: flex;
     align-items: center;
