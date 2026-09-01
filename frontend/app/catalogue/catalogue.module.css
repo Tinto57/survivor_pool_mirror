@@ -1,5 +1,3 @@
-/* Barre de recherche « pilule », sans bordure au repos : le contraste vient du
-   remplissage gris, comme dans les applications mobiles. */
 .search {
     display: flex;
     align-items: center;
@@ -42,7 +40,6 @@
     color: var(--text);
 }
 
-/* Masque la croix native de type="search", qui casse l'alignement. */
 .searchInput::-webkit-search-cancel-button {
     -webkit-appearance: none;
 }
@@ -53,8 +50,6 @@
 
     margin: 14px 0 18px;
 
-    /* Les catégories défilent horizontalement sur mobile plutôt que de passer
-       à la ligne. */
     margin-left: -16px;
     margin-right: -16px;
     padding: 0 16px;

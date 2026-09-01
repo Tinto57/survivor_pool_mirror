@@ -48,7 +48,6 @@ export default function PartnerDetail() {
         );
     }
 
-    // NOTE: à défaut de coordonnées, on laisse Maps résoudre l'adresse postale.
     const mapsQuery =
         partner.latitude !== null && partner.longitude !== null
             ? `${partner.latitude},${partner.longitude}`

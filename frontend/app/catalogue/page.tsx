@@ -30,7 +30,6 @@ export default function CataloguePage() {
     const visible = useMemo(
         () =>
             partners
-                // Seuls les partenaires validés par le Ministère sont visibles.
                 .filter((p) => p.status === "active")
                 .filter((p) => category === ALL || p.category === category)
                 .filter((p) => matchesQuery(p, query)),

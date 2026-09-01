@@ -6,7 +6,6 @@
     padding: 16px 16px 32px;
 }
 
-/* Bouton retour rond, à la manière d'une fiche marchand mobile. */
 .back {
     display: flex;
     align-items: center;
