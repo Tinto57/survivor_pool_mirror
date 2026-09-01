@@ -44,6 +44,7 @@ INSTALLED_APPS = [
     'wallet',
     'partners',
     'transactions',
+    'django_extensions',
 ]
 
 MIDDLEWARE = [
