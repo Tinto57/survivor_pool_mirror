@@ -6,6 +6,8 @@ from django.contrib.auth.models import User
 from utils.get_payload import get_payload
 from utils.wrappers import require_jwt
 from .models import *
+from django.views import View
+from django.utils.decorators import method_decorator
 
 # Create your views here.
 
@@ -40,60 +42,76 @@ from .models import *
 #         "username": user.username
 #     }, status=200)
 
-@csrf_exempt
-def account_register(req: HttpRequest) -> JsonResponse:
-    """
-        Register a user if not exists, then generate a brand new JWT token.
+class UsersView(View):
+    @method_decorator(require_jwt)
+    def get(self, req: HttpRequest) -> JsonResponse:
+        """
+            Get a list of all users existing
 
-        req:
-            the HttpRequest object that contains the body and the headers of the request
-        
-        returns:
-            A JsonResponse object with details and status code
-    """
-    if req.method != "POST":
+            req:
+                A HttpRequest object containing required datas
+
+            returns:
+                A JsonResponse object with message and status 
+        """
+        users: list[dict] = User.objects.all().values("id", "username", "last_name", "first_name")
         return JsonResponse({
-            "error": "Method not allowed"
-        }, status=405)
+            "users": list(users)
+        }, status=200)
 
-    payload: dict = get_payload(req)
+    def post(self, req: HttpRequest) -> JsonResponse:
+        """
+            Register a user if not exists, then generate a brand new JWT token.
 
-    firstName: str        = payload.get("first_name", "")
-    lastName : str        = payload.get("last_name", "")
-    username : str | None = payload.get("username")
-    password : str | None = payload.get("password")
+            req:
+                the HttpRequest object that contains the body and the headers of the request
+            
+            returns:
+                A JsonResponse object with details and status code
+        """
+        if req.method != "POST":
+            return JsonResponse({
+                "error": "Method not allowed"
+            }, status=405)
 
-    if not username or not password:
+        payload: dict = get_payload(req)
+
+        firstName: str        = payload.get("first_name", "")
+        lastName : str        = payload.get("last_name", "")
+        username : str | None = payload.get("username")
+        password : str | None = payload.get("password")
+
+        if not username or not password:
+            return JsonResponse({
+                "error": "Need an username and a password",
+            }, status=400)
+
+        if User.objects.filter(username=username).exists():
+            return JsonResponse({
+                "error": "Username already taken"
+            }, status=400)
+
+        user = User.objects.create_user(
+            username=username,
+            first_name=firstName,
+            last_name=lastName,
+            password=password
+        )
+
+        # NOTE: Create a JWT token for user
+        token = RefreshToken.for_user(user)
+
         return JsonResponse({
-            "error": "Need an username and a password",
-        }, status=400)
-
-    if User.objects.filter(username=username).exists():
-        return JsonResponse({
-            "error": "Username already taken"
-        }, status=400)
-
-    user = User.objects.create_user(
-        username=username,
-        first_name=firstName,
-        last_name=lastName,
-        password=password
-    )
-
-    # NOTE: Create a JWT token for user
-    token = RefreshToken.for_user(user)
-
-    return JsonResponse({
-        "message":"User successfully registered",
-        "user": {
-            "id": user.id,
-            "username": user.username
-        },
-        "token": {
-            "access": str(token.access_token),
-            "refresh": str(token)
-        }
-    }, status=201)
+            "message":"User successfully registered",
+            "user": {
+                "id": user.id,
+                "username": user.username
+            },
+            "token": {
+                "access": str(token.access_token),
+                "refresh": str(token)
+            }
+        }, status=201)
 
 @csrf_exempt
 def account_get_token(req: HttpRequest) -> JsonResponse:
