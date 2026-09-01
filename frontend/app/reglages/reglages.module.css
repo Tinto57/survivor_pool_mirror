@@ -1,0 +1,152 @@
+.profile {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+
+    margin-bottom: 28px;
+    text-align: center;
+}
+
+.name {
+    margin: 14px 0 0;
+
+    font-size: 20px;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+}
+
+.role {
+    margin-top: 8px;
+    padding: 4px 12px;
+
+    background: var(--neutral-soft);
+    border-radius: var(--radius-pill);
+
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text-muted);
+}
+
+.sectionTitle {
+    margin: 0 0 8px 4px;
+
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-soft);
+}
+
+/* Même liste sans filets que l'historique et le catalogue. */
+.list {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-sm);
+
+    overflow: hidden;
+}
+
+.row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+
+    padding: 13px 16px;
+}
+
+.rowIcon {
+    width: 18px;
+    height: 18px;
+    flex-shrink: 0;
+
+    color: var(--text-soft);
+}
+
+.rowLabel {
+    font-size: 15px;
+    font-weight: 500;
+}
+
+.rowValue {
+    flex: 1;
+    min-width: 0;
+
+    font-size: 15px;
+    color: var(--text-muted);
+    text-align: right;
+
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.logout {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+
+    width: 100%;
+    margin-top: 24px;
+    padding: 14px;
+
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+
+    color: var(--danger);
+    font-size: 15px;
+    font-weight: 600;
+
+    cursor: pointer;
+    transition: background-color 0.2s ease, transform 0.2s ease;
+}
+
+.logout:hover {
+    background: var(--danger-soft);
+}
+
+.logout:active {
+    transform: scale(0.98);
+}
+
+.logoutIcon {
+    width: 17px;
+    height: 17px;
+}
+
+.skeleton {
+    height: 280px;
+
+    background: #e9eaec;
+    border-radius: var(--radius-lg);
+
+    animation: pulse 1.4s ease-in-out infinite;
+}
+
+@keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.55; }
+}
+
+.error {
+    margin: 0 0 16px;
+    padding: 10px 14px;
+
+    background: var(--danger-soft);
+    color: var(--danger);
+    border-radius: var(--radius-sm);
+
+    font-size: 13px;
+}
+
+.footnote {
+    margin: 28px 0 0;
+
+    font-size: 12px;
+    text-align: center;
+    color: var(--text-soft);
+}
