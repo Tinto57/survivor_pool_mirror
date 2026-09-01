@@ -79,8 +79,6 @@
     color: var(--text);
 }
 
-/* Défilement horizontal sur mobile, débordant volontairement des marges de la
-   page pour laisser deviner la vignette suivante. */
 .carousel {
     display: flex;
     gap: 12px;
