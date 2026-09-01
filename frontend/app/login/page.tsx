@@ -2,11 +2,15 @@
 
 import { useState, FormEvent } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import styles from "../components/AuthForm/AuthForm.module.css";
 import { Mail, Lock, Eye, EyeOff } from "lucide-react";
 import { isValidEmail } from "../lib/validation";
+import { ApiError, login } from "../lib/api";
+import { homePathForRole, startSession } from "../lib/auth";
 
 export default function LoginPage() {
+    const router = useRouter();
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
     const [showPassword, setShowPassword] = useState(false);
@@ -29,10 +33,16 @@ export default function LoginPage() {
 
         setLoading(true);
         try {
-            // TODO: brancher sur POST /api/accounts/token
-            // payload: { username: email, password } — l'email sert d'identifiant.
-            // puis stocker le token (access/refresh) et rediriger selon le rôle.
-        } finally {
+            const { user, token } = await login(email, password);
+
+            startSession(user, token);
+            router.push(homePathForRole(user.role));
+        } catch (err) {
+            if (err instanceof ApiError && err.status === 401) {
+                setError("Email ou mot de passe incorrect.");
+            } else {
+                setError(err instanceof ApiError ? err.message : "Une erreur est survenue.");
+            }
             setLoading(false);
         }
     }
