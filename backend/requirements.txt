@@ -10,3 +10,5 @@ PyJWT==2.13.0
 qrcode==8.2
 sqlparse==0.6.0
 typing_extensions==4.16.0
+gunicorn==23.0.0
+whitenoise==6.9.0
