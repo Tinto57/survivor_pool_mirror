@@ -91,7 +91,7 @@ def account_register(req: HttpRequest) -> JsonResponse:
 @csrf_exempt
 def account_get_token(req: HttpRequest) -> JsonResponse:
     """ Get token aha """
-    if req.method != "GET":
+    if req.method != "POST":
         return JsonResponse({
             "error": "Method not allowed"
         }, status=405)
