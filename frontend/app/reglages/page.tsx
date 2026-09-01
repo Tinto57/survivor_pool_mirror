@@ -44,8 +44,6 @@ export default function ReglagesPage() {
 
     const fullName = user ? [user.first_name, user.last_name].filter(Boolean).join(" ") : "";
     const displayName = fullName || user?.username || "";
-    // NOTE: les comptes créés avant l'ajout du champ `role` n'en ont pas — on
-    // préfère masquer l'information plutôt que d'en inventer une.
     const roleLabel = user ? ROLE_LABEL[user.role] : undefined;
 
     return (
