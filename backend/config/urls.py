@@ -17,10 +17,12 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path
 from accounts.views import *
+from wallet.views import *
 
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('api/auth', account_get_token, name="get-token-user"),
     path('api/users', UsersView.as_view(), name="users-collection"),
-    path('api/user/<int:user_id>', SingleUserView.as_view(), name="get-user-by-id")
+    path('api/user/<int:user_id>', SingleUserView.as_view(), name="get-user-by-id"),
+    path('api/employees', EmployeesView.as_view(), name="transactions-collection")
 ]
