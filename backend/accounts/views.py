@@ -224,6 +224,11 @@ class SingleUserView(View):
                 "error": "User does not exists"
             }, status=400)
 
+        if user_id != req.user.id and not req.user.is_superuser:
+            return JsonResponse({
+                "error": "Forbidden"
+            }, status=403)
+
         # TODO: Add a check to know if the user is admin
         user.delete()
 
@@ -256,7 +261,10 @@ class SingleUserView(View):
                 "error": "User does not exists"
             }, status=400)
 
-        # TODO: Check if user is an admin
+        if user_id != req.user.id and not req.user.is_superuser:
+            return JsonResponse({
+                "error": "Forbidden"
+            }, status=403)
 
         payload = get_payload(req)
 
