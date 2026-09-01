@@ -1,4 +1,5 @@
 from django.db import models
+from django.contrib import admin
 
 class Employee(models.Model):
     user = models.OneToOneField('accounts.User', on_delete=models.CASCADE)
@@ -16,3 +17,5 @@ class TopUp(models.Model):
 
     def __str__(self):
         return f"+{self.amount}€ for {self.employee.user.username}"
+
+admin.site.register((Employee, TopUp))

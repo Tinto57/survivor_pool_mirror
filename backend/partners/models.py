@@ -1,5 +1,6 @@
 from django.db import models
 from django.core.validators import RegexValidator
+from django.contrib import admin
 
 # Create your models here.
 class Partner(models.Model):
@@ -36,3 +37,5 @@ class PartnerDecision(models.Model):
 
     def __str__(self):
         return f"{self.partner.business_name} - {self.decision} ({self.created_at:%d/%m/%Y})"
+
+admin.site.register((Partner, PartnerDecision))

@@ -2,6 +2,7 @@ from django.db import models
 from django.utils import timezone
 from datetime import timedelta
 import secrets
+from django.contrib import admin
 
 class QRCode(models.Model):
     employee = models.ForeignKey('wallet.Employee', on_delete=models.CASCADE)
@@ -38,3 +39,6 @@ class Transaction(models.Model):
 
     def __str__(self):
         return f"{self.amount}€ - {self.employee.user.username} → {self.partner.business_name}"
+
+
+admin.site.register((Transaction, QRCode))
