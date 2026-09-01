@@ -4,13 +4,6 @@ import type { Balance } from "../../lib/catalog";
 import { formatAmount, splitAmount } from "../../lib/catalog";
 import styles from "./BalanceCard.module.css";
 
-/**
- * Écran de solde, construit comme la page d'accueil d'une application bancaire :
- * un montant en très gros caractères, puis une rangée d'actions rondes.
- *
- * Le cahier des charges insiste sur le ton : on n'annonce pas un « restant »
- * mais bien un montant « à dépenser chez vos partenaires préférés ».
- */
 export default function BalanceCard({ balance }: { balance: Balance }) {
     const { integer, cents } = splitAmount(balance.amount);
     const empty = balance.amount <= 0;
@@ -31,7 +24,6 @@ export default function BalanceCard({ balance }: { balance: Balance }) {
             </p>
 
             <div className={styles.actions}>
-                {/* NOTE: le paiement par QR code arrive dans un second temps. */}
                 <div className={`${styles.action} ${styles.actionDisabled}`}>
                     <span className={styles.actionCircle}>
                         <QrCode className={styles.actionIcon} aria-hidden="true" />
