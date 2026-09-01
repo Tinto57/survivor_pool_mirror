@@ -41,6 +41,7 @@ INSTALLED_APPS = [
     'corsheaders',
     'api',
     'accounts',
+    'wallet',
 ]
 
 MIDDLEWARE = [
