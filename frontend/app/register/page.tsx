@@ -2,9 +2,12 @@
 
 import { useState, useRef, FormEvent } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import styles from "../components/AuthForm/AuthForm.module.css";
 import { User, Lock, Mail, Eye, EyeOff, Store, MapPin, FileText, Check, X, Loader2, AlertCircle } from "lucide-react";
 import { isValidEmail, isStrongPassword, PASSWORD_REQUIREMENTS } from "../lib/validation";
+import { ApiError, register } from "../lib/api";
+import { homePathForRole, startSession } from "../lib/auth";
 
 const STEP_COUNT = 3;
 
@@ -17,6 +20,7 @@ type AddressSuggestion = {
 };
 
 export default function RegisterPage() {
+    const router = useRouter();
     const [step, setStep] = useState(1);
 
     const [firstName, setFirstName] = useState("");
@@ -143,15 +147,32 @@ export default function RegisterPage() {
 
         setLoading(true);
         try {
-            // TODO: brancher sur POST /api/accounts/register
-            // payload: {
-            //   first_name, last_name, username: email, email, password, role: "partner",
-            //   partner: { business_name, siren, business_purpose: businessPurpose, address, latitude, longitude }
-            // }
-            // latitude/longitude viennent de la sélection d'une suggestion (api-adresse.data.gouv.fr).
-            // Ils peuvent être null si l'utilisateur n'a pas choisi de suggestion (champs nullable côté back).
-            // puis stocker le token (access/refresh) et rediriger vers l'espace partenaire.
-        } finally {
+            const { user, token } = await register({
+                username: email,
+                password,
+                first_name: firstName,
+                last_name: lastName,
+                email,
+                role: "partner",
+                partner: {
+                    business_name,
+                    siren,
+                    business_purpose: businessPurpose,
+                    address,
+                    latitude,
+                    longitude,
+                },
+            });
+
+            startSession(user, token);
+            router.push(homePathForRole(user.role));
+        } catch (err) {
+            if (err instanceof ApiError && err.status === 400) {
+                setError("Cet email est déjà utilisé par un compte existant.");
+                setStep(1);
+            } else {
+                setError(err instanceof ApiError ? err.message : "Une erreur est survenue.");
+            }
             setLoading(false);
         }
     }
