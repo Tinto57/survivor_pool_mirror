@@ -1,5 +1,17 @@
-import Navbar from "./components/Navbar/Navbar";
+import type { Metadata } from "next";
+import AppShell from "./components/AppShell/AppShell";
 import "./global.css";
+
+export const metadata: Metadata = {
+    title: "Ticket Tout",
+    description:
+        "Votre budget Ticket Tout à dépenser chez les partenaires du Ministère du Job et Bonheur.",
+};
+
+export const viewport = {
+    width: "device-width",
+    initialScale: 1,
+};
 
 export default function RootLayout({
     children,
@@ -9,7 +21,7 @@ export default function RootLayout({
     return (
         <html lang="fr">
             <body>
-                {children}
+                <AppShell>{children}</AppShell>
             </body>
         </html>
     );

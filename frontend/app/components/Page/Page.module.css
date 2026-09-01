@@ -1,0 +1,46 @@
+.page {
+    width: 100%;
+    max-width: 720px;
+
+    margin: 0 auto;
+    padding: 20px 16px 32px;
+}
+
+.header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 16px;
+
+    margin-bottom: 18px;
+}
+
+.title {
+    margin: 0;
+
+    font-size: 28px;
+    font-weight: 700;
+    letter-spacing: -0.03em;
+}
+
+.subtitle {
+    margin: 4px 0 0;
+
+    font-size: 14px;
+    line-height: 1.45;
+    color: var(--text-soft);
+}
+
+@media (min-width: 768px) {
+    .page {
+        padding: 32px 24px 48px;
+    }
+
+    .title {
+        font-size: 32px;
+    }
+
+    .subtitle {
+        font-size: 15px;
+    }
+}

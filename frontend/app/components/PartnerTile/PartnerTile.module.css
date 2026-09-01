@@ -1,0 +1,70 @@
+.tile {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+
+    /* Largeur fixe : les vignettes défilent horizontalement sur mobile. */
+    width: 210px;
+    flex-shrink: 0;
+
+    padding: 18px;
+
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-sm);
+
+    text-decoration: none;
+    color: inherit;
+
+    transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
+}
+
+.tile:hover {
+    border-color: var(--border-strong);
+    box-shadow: var(--shadow-md);
+}
+
+.tile:active {
+    transform: scale(0.98);
+}
+
+.name {
+    margin: 14px 0 0;
+
+    font-size: 15px;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+}
+
+.purpose {
+    margin: 6px 0 0;
+
+    font-size: 13px;
+    line-height: 1.45;
+    color: var(--text-muted);
+
+    /* Trois lignes maximum pour garder des vignettes de hauteur homogène. */
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+.category {
+    margin-top: 12px;
+    padding: 4px 10px;
+
+    background: var(--neutral-soft);
+    border-radius: var(--radius-pill);
+
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--text-muted);
+}
+
+@media (min-width: 768px) {
+    .tile {
+        width: auto;
+    }
+}

@@ -1,0 +1,75 @@
+/* Pas de filet entre les lignes : l'espacement seul assure la lecture, comme
+   dans les listes d'opérations des applications bancaires. */
+.row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+
+    padding: 10px 16px;
+}
+
+.row:first-child {
+    padding-top: 14px;
+}
+
+.row:last-child {
+    padding-bottom: 14px;
+}
+
+.body {
+    flex: 1;
+    min-width: 0;
+}
+
+.name {
+    margin: 0;
+
+    font-size: 15px;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.meta {
+    margin: 2px 0 0;
+
+    font-size: 13px;
+    color: var(--text-soft);
+}
+
+.cancelled {
+    color: var(--danger);
+    font-weight: 600;
+}
+
+.amount {
+    flex-shrink: 0;
+
+    font-size: 15px;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+    font-variant-numeric: tabular-nums;
+}
+
+.amountTopUp {
+    color: var(--success);
+}
+
+.amountCancelled {
+    color: var(--text-soft);
+    text-decoration: line-through;
+}
+
+@media (min-width: 768px) {
+    .row {
+        padding: 12px 20px;
+    }
+
+    .name,
+    .amount {
+        font-size: 16px;
+    }
+}
