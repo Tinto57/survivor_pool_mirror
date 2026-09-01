@@ -256,6 +256,8 @@ class SingleUserView(View):
                 "error": "User does not exists"
             }, status=400)
 
+        # TODO: Check if user is an admin
+
         payload = get_payload(req)
 
         user.first_name = payload.get("first_name", user.first_name)
