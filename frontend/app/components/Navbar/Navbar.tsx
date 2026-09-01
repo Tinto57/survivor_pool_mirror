@@ -16,7 +16,6 @@ const LINKS = [
 export default function Navbar() {
     const pathname = usePathname();
 
-    /** Un onglet s'active aussi sur ses sous-pages (/catalogue/3...). */
     function isActive(href: string): boolean {
         return pathname === href || pathname.startsWith(`${href}/`);
     }

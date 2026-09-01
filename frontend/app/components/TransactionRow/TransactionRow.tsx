@@ -4,7 +4,6 @@ import type { Transaction } from "../../lib/catalog";
 import { formatAmount, formatDateTime } from "../../lib/catalog";
 import styles from "./TransactionRow.module.css";
 
-/** Ligne d'historique : un paiement chez un partenaire ou un abondement employeur. */
 export default function TransactionRow({ transaction }: { transaction: Transaction }) {
     const isTopUp = transaction.kind === "topup";
     const cancelled = transaction.is_cancelled;

@@ -1,6 +1,3 @@
-/* Mobile first : barre d'onglets fixée en bas, puis barre de navigation en haut
-   à partir de 768px. */
-
 .navbar {
     position: fixed;
     bottom: 0;
@@ -17,7 +14,6 @@
     border-top: 1px solid var(--border);
     box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.05);
 
-    /* Barre gestuelle des iPhone. */
     padding-bottom: env(safe-area-inset-bottom);
 }
 

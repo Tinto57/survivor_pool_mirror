@@ -1,5 +1,3 @@
-/* Bandeau de synthèse : deux colonnes séparées par un simple filet, sans
-   encadré par valeur. */
 .totals {
     display: grid;
     grid-template-columns: 1fr 1fr;

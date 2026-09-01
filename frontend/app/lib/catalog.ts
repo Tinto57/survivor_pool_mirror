@@ -1,13 +1,3 @@
-/**
- * Domaine « Ticket Tout » côté salarié : partenaires, solde et transactions.
- *
- * Les modèles Django existent (partners.Partner, wallet.Employee,
- * transactions.Transaction) mais les endpoints REST correspondants ne sont pas
- * encore exposés. Chaque lecture tente donc l'API et retombe sur le jeu de
- * données de démonstration (`seed.ts`) tant que la route répond 404 / est
- * injoignable. Le jour où le back les publie, il n'y a rien à changer ici.
- */
-
 import { API_URL, ApiError } from "./api";
 import { SEED_BALANCE, SEED_PARTNERS, SEED_TRANSACTIONS } from "./seed";
 
@@ -27,32 +17,22 @@ export type Partner = {
 };
 
 export type Balance = {
-    /** Solde disponible, en euros. */
     amount: number;
     employer: string;
-    /** Total crédité par l'employeur sur le mois en cours. */
     topped_up_this_month: number;
-    /** Total dépensé sur le mois en cours. */
     spent_this_month: number;
 };
 
 export type Transaction = {
     id: number;
-    /** Montant en euros, toujours positif : le `kind` porte le sens. */
     amount: number;
     kind: "payment" | "topup";
-    /** ISO 8601. */
     validated_at: string;
     partner_id: number | null;
     partner_name: string;
     is_cancelled: boolean;
 };
 
-/**
- * Appelle l'API et retombe sur `fallback` si la route n'existe pas encore
- * (404) ou si le serveur est injoignable (status 0). Les autres erreurs
- * (401, 500...) remontent : elles méritent d'être affichées à l'utilisateur.
- */
 async function fetchOrSeed<T>(path: string, token: string | null, fallback: T): Promise<T> {
     try {
         const headers: Record<string, string> = {};
@@ -93,10 +73,6 @@ export function getTransactions(token: string | null): Promise<Transaction[]> {
     return fetchOrSeed<Transaction[]>("/api/transactions", token, SEED_TRANSACTIONS);
 }
 
-/* -------------------------------------------------------------------------- */
-/* Helpers d'affichage                                                        */
-/* -------------------------------------------------------------------------- */
-
 const EURO = new Intl.NumberFormat("fr-FR", {
     style: "currency",
     currency: "EUR",
@@ -106,7 +82,6 @@ export function formatAmount(amount: number): string {
     return EURO.format(amount);
 }
 
-/** « 12 mars 2026 » */
 export function formatDate(iso: string): string {
     return new Date(iso).toLocaleDateString("fr-FR", {
         day: "numeric",
@@ -115,7 +90,6 @@ export function formatDate(iso: string): string {
     });
 }
 
-/** « 12 mars, 14:30 » — format compact pour les listes. */
 export function formatDateTime(iso: string): string {
     return new Date(iso).toLocaleDateString("fr-FR", {
         day: "numeric",
@@ -125,7 +99,6 @@ export function formatDateTime(iso: string): string {
     });
 }
 
-/** Clé de regroupement mensuel de l'historique : « mars 2026 ». */
 export function monthLabel(iso: string): string {
     const label = new Date(iso).toLocaleDateString("fr-FR", {
         month: "long",
@@ -134,11 +107,6 @@ export function monthLabel(iso: string): string {
     return label.charAt(0).toUpperCase() + label.slice(1);
 }
 
-/**
- * Découpe un montant pour l'affichage « héro » du solde : la partie entière est
- * affichée en grand, les centimes et le symbole en plus petit — comme sur les
- * applications bancaires.
- */
 export function splitAmount(amount: number): { integer: string; cents: string } {
     const parts = EURO.formatToParts(amount);
 
@@ -155,11 +123,6 @@ export function splitAmount(amount: number): { integer: string; cents: string } 
     return { integer, cents };
 }
 
-/**
- * Monogramme d'un partenaire : initiales des deux premiers mots, ou les deux
- * premières lettres si le nom est en un seul mot. Les majuscules internes sont
- * traitées comme des débuts de mots (« KostumParty » donne « KP »).
- */
 export function initialsOf(name: string): string {
     const words = name.split(/[^A-Za-zÀ-ÿ]+/).filter(Boolean);
     if (words.length === 0) return "?";
@@ -174,15 +137,10 @@ export function initialsOf(name: string): string {
     return (words[0][0] + words[1][0]).toUpperCase();
 }
 
-/** Pastilles colorées des vignettes partenaires, à la façon des avatars marchands. */
 const TINTS = ["indigo", "pink", "amber", "green", "cyan", "purple"] as const;
 
 export type Tint = (typeof TINTS)[number];
 
-/**
- * Couleur de pastille déterministe, dérivée du nom : un même partenaire garde
- * toujours la même teinte, sans avoir à la stocker côté API.
- */
 export function tintOf(name: string): Tint {
     let hash = 0;
     for (let i = 0; i < name.length; i++) hash = (hash * 31 + name.charCodeAt(i)) % 997;
@@ -190,12 +148,10 @@ export function tintOf(name: string): Tint {
     return TINTS[hash % TINTS.length];
 }
 
-/** Les catégories présentes dans le catalogue, pour les filtres. */
 export function categoriesOf(partners: Partner[]): string[] {
     return [...new Set(partners.map((p) => p.category))].sort((a, b) => a.localeCompare(b, "fr"));
 }
 
-/** Recherche plein texte simple sur le nom, la description, la ville et la catégorie. */
 export function matchesQuery(partner: Partner, query: string): boolean {
     const q = query.trim().toLowerCase();
     if (!q) return true;

@@ -8,7 +8,6 @@
 
     font-weight: 700;
     letter-spacing: 0.01em;
-    /* Les monogrammes sont plus lisibles sans le rendu tabulaire des montants. */
     text-transform: uppercase;
     user-select: none;
 }
@@ -31,7 +30,6 @@
     font-size: 26px;
 }
 
-/* Les icônes injectées via `icon` s'alignent sur la taille de la pastille. */
 .avatar svg {
     width: 1.15em;
     height: 1.15em;
