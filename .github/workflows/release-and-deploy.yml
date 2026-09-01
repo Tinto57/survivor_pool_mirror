@@ -1,4 +1,4 @@
-name: Build & Release Mobile
+name: Build & Release Android
 
 on:
   push:
@@ -56,47 +56,9 @@ jobs:
           name: android-apk
           path: survivor-pool-android.apk
 
-  build-ios:
-    name: Build iOS App
-    runs-on: macos-latest
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: 22
-          cache: 'npm'
-          cache-dependency-path: frontend/package-lock.json
-
-      - name: Install frontend dependencies
-        run: |
-          cd frontend
-          npm ci
-
-      - name: Build Next.js & Sync Capacitor iOS
-        run: |
-          cd frontend
-          npm run build
-          npx cap sync ios
-
-      - name: Build iOS App Archive
-        run: |
-          cd frontend/ios/App
-          xcodebuild -project App.xcodeproj -scheme App -configuration Release -derivedDataPath build -sdk iphoneos CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO || xcodebuild -project App.xcodeproj -scheme App -configuration Release -derivedDataPath build -sdk iphonesimulator CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO
-          cd build/Build/Products
-          zip -r $GITHUB_WORKSPACE/survivor-pool-ios.zip .
-
-      - name: Upload iOS Artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: ios-archive
-          path: survivor-pool-ios.zip
-
   create-release:
     name: Create GitHub Release
-    needs: [build-android, build-ios]
+    needs: [build-android]
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
@@ -107,11 +69,6 @@ jobs:
         with:
           name: android-apk
 
-      - name: Download iOS Artifact
-        uses: actions/download-artifact@v4
-        with:
-          name: ios-archive
-
       - name: Create Release
         uses: softprops/action-gh-release@v2
         with:
@@ -120,13 +77,11 @@ jobs:
           body: |
             ## 🚀 survivor_pool Release v1.0.${{ github.run_number }}
 
-            Cette version contient les fichiers d'installation mobile pour Android et iOS.
+            ### 📱 Téléchargements & Installation Mobile :
 
-            ### 📱 Téléchargements Mobile :
-            - 🤖 **Android** : [`survivor-pool-android.apk`](./survivor-pool-android.apk) (Installable directement sur tout appareil Android)
-            - 🍎 **iOS** : [`survivor-pool-ios.zip`](./survivor-pool-ios.zip) (Build d'application iOS)
+            - 🤖 **Android** : Téléchargez [`survivor-pool-android.apk`](./survivor-pool-android.apk) et installez-le directement sur votre smartphone Android.
+            - 🍎 **iPhone / iOS** : Ouvrez le site web sur Safari, appuyez sur le bouton **Partager** ➔ **Sur l'écran d'accueil** pour installer l'application instantanément sur votre iPhone !
           files: |
             survivor-pool-android.apk
-            survivor-pool-ios.zip
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
