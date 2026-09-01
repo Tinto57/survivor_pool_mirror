@@ -4,7 +4,6 @@ import Avatar from "../Avatar/Avatar";
 import type { Partner } from "../../lib/catalog";
 import styles from "./PartnerCard.module.css";
 
-/** Ligne de catalogue : pastille, nom, ville et catégorie, chevron. */
 export default function PartnerCard({ partner }: { partner: Partner }) {
     return (
         <li>
