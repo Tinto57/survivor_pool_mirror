@@ -58,7 +58,7 @@ class UsersView(View):
             returns:
                 A JsonResponse object with message and status 
         """
-        users: list[dict] = User.objects.all().values("id", "username", "last_name", "first_name")
+        users: list[dict] = User.objects.all().values("id", "username", "last_name", "first_name", "email", "date_joined")
         return JsonResponse({
             "users": list(users)
         }, status=200)
@@ -80,6 +80,7 @@ class UsersView(View):
 
         firstName: str        = payload.get("first_name", "")
         lastName : str        = payload.get("last_name", "")
+        email    : str        = payload.get("email", "")
         username : str | None = payload.get("username")
         password : str | None = payload.get("password")
 
@@ -97,7 +98,8 @@ class UsersView(View):
             username=username,
             first_name=firstName,
             last_name=lastName,
-            password=password
+            password=password,
+            email=email
         )
 
         # NOTE: Create a JWT token for user
@@ -191,7 +193,9 @@ class SingleUserView(View):
                 "id": user.id,
                 "username": user.username,
                 "first_name": user.first_name,
-                "last_name": user.last_name
+                "last_name": user.last_name,
+                "email": user.email,
+                "joined_at": user.date_joined
             }
         }, status=200)
 
@@ -225,4 +229,49 @@ class SingleUserView(View):
 
         return JsonResponse({
             "message": f"Successfully deleted user {user_id}"
+        }, status=200)
+
+    @method_decorator(require_jwt)
+    def patch(
+            self: "SingleUserView",
+            req: HttpRequest,
+            user_id: int
+        ) -> JsonResponse:
+        """
+            Modify email, last name and first name of a user.
+
+            req:
+                HttpRequest blabla
+
+            user_id:
+                The id of the user to alterate
+
+            returns:
+                JsonResponse
+        """
+        try:
+            user: User = User.objects.get(id=user_id)
+        except User.DoesNotExist:
+            return JsonResponse({
+                "error": "User does not exists"
+            }, status=400)
+
+        payload = get_payload(req)
+
+        user.first_name = payload.get("first_name", user.first_name)
+        user.last_name  = payload.get("last_name", user.last_name)
+        user.email      = payload.get("email", user.email)
+
+        user.save()
+
+        return JsonResponse({
+            "message": "ok",
+            "user": {
+                "id": user.id,
+                "username": user.username,
+                "last_name": user.last_name,
+                "first_name": user.first_name,
+                "email": user.email,
+                "joined_at": user.date_joined
+            }
         }, status=200)
