@@ -30,7 +30,6 @@ export default function Home() {
             .finally(() => setLoading(false));
     }, []);
 
-    // NOTE: la mise en avant est pilotée par le Ministre via le flag `is_featured`.
     const featured = partners.filter((p) => p.is_featured && p.status === "active");
     const recent = transactions.slice(0, 4);
 
