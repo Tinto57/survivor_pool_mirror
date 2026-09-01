@@ -10,3 +10,6 @@ node_moduless/
 # Python
 venv
 __pycache__/
+
+#db
+backend/db.sqlite3
