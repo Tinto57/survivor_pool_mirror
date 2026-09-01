@@ -5,10 +5,13 @@ from django.contrib import admin
 # Create your models here.
 class User(AbstractUser):
     ROLE_CHOICES = [
-        ('salarie', 'Salarié'),
-        ('partenaire', 'Partenaire'),
+        ('employee', 'Salarié'),
+        ('partner', 'Partenaire'),
         ('admin', 'Admin')
     ]
     role = models.CharField(max_length=20, choices=ROLE_CHOICES)
+
+    def __str__(self):
+        return self.username
 
 admin.site.register(User)
