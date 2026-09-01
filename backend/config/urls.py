@@ -20,6 +20,6 @@ from accounts.views import *
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('api/login', account_login, name="login"),
-    path('api/register', account_register, name="register")
+    path('api/auth', account_get_token, name="get-token-user"),
+    path('api/users', account_register, name="register-user")
 ]
