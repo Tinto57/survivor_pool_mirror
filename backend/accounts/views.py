@@ -42,9 +42,13 @@ from django.utils.decorators import method_decorator
 #         "username": user.username
 #     }, status=200)
 
+@method_decorator(csrf_exempt, name='dispatch')
 class UsersView(View):
     @method_decorator(require_jwt)
-    def get(self, req: HttpRequest) -> JsonResponse:
+    def get(
+            self: "UsersView",
+            req: HttpRequest
+        ) -> JsonResponse:
         """
             Get a list of all users existing
 
@@ -59,7 +63,10 @@ class UsersView(View):
             "users": list(users)
         }, status=200)
 
-    def post(self, req: HttpRequest) -> JsonResponse:
+    def post(
+            self,
+            req: HttpRequest
+        ) -> JsonResponse:
         """
             Register a user if not exists, then generate a brand new JWT token.
 
@@ -69,11 +76,6 @@ class UsersView(View):
             returns:
                 A JsonResponse object with details and status code
         """
-        if req.method != "POST":
-            return JsonResponse({
-                "error": "Method not allowed"
-            }, status=405)
-
         payload: dict = get_payload(req)
 
         firstName: str        = payload.get("first_name", "")
@@ -113,6 +115,7 @@ class UsersView(View):
             }
         }, status=201)
 
+# FIXME: Crsf_exempt needed ?
 @csrf_exempt
 def account_get_token(req: HttpRequest) -> JsonResponse:
     """
@@ -156,35 +159,70 @@ def account_get_token(req: HttpRequest) -> JsonResponse:
         }
     }, status=200)
 
-@require_jwt
-def account_get_user(req: HttpRequest, user_id: int) -> JsonResponse:
-    """
-        Get a user by its id
+@method_decorator(csrf_exempt, name='dispatch')
+class SingleUserView(View):
+    @method_decorator(require_jwt)
+    def get(
+            self: "SingleUserView",
+            req: HttpRequest,
+            user_id: int
+        ) -> JsonResponse:
+        """
+            Get a user by its id
 
-        req:
-            A HttpRequest object containing required datas
+            req:
+                A HttpRequest object containing required datas
 
-        user_id:
-            The id of the user to get
+            user_id:
+                The id of the user to get
 
-        Returns:
-            A JsonResponse containing return code (see http codes)
-    """
-    if req.method != 'GET':
-        return JsonResponse({"error": "Method not allowed"}, status=405)
+            Returns:
+                A JsonResponse containing return code (see http codes)
+        """
+        try:
+            user: User = User.objects.get(id=user_id)
+        except User.DoesNotExist:
+            return JsonResponse({
+                "error": "User does not exists"
+            }, status=404)
 
-    try:
-        user: User = User.objects.get(id=user_id)
-    except User.DoesNotExist:
         return JsonResponse({
-            "error": "User does not exists"
-        }, status=404)
+            "user": {
+                "id": user.id,
+                "username": user.username,
+                "first_name": user.first_name,
+                "last_name": user.last_name
+            }
+        }, status=200)
 
-    return JsonResponse({
-        "user": {
-            "id": user.id,
-            "username": user.username,
-            "first_name": user.first_name,
-            "last_name": user.last_name
-        }
-    }, status=200)
+    @method_decorator(require_jwt)
+    def delete(
+            self: "SingleUserView",
+            req: HttpRequest,
+            user_id: int
+        ) -> JsonResponse:
+        """
+            Delete a user by its id
+
+            req:
+                A HttpRequest containing all the data
+
+            user_id:
+                The id of the user to delete
+
+            returns:
+                A JsonResponse with status and details
+        """
+        try:
+            user: User = User.objects.get(id=user_id)
+        except User.DoesNotExist:
+            return JsonResponse({
+                "error": "User does not exists"
+            }, status=400)
+
+        # TODO: Add a check to know if the user is admin
+        user.delete()
+
+        return JsonResponse({
+            "message": f"Successfully deleted user {user_id}"
+        }, status=200)

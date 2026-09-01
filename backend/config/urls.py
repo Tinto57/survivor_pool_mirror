@@ -22,5 +22,5 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('api/auth', account_get_token, name="get-token-user"),
     path('api/users', UsersView.as_view(), name="users-collection"),
-    path('api/user/<int:user_id>', account_get_user, name="get-user-by-id")
+    path('api/user/<int:user_id>', SingleUserView.as_view(), name="get-user-by-id")
 ]
