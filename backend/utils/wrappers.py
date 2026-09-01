@@ -1,8 +1,10 @@
 from functools import wraps
 from django.http import HttpRequest, JsonResponse
-from django.contrib.auth.models import User
+from django.contrib.auth import get_user_model
 from rest_framework_simplejwt.tokens import AccessToken
 from rest_framework_simplejwt.exceptions import InvalidToken, TokenError
+
+User = get_user_model()
 
 def require_jwt(f):
     @wraps(f)

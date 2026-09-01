@@ -3,7 +3,8 @@ from django.views.decorators.csrf import csrf_exempt
 from django.http import HttpRequest, JsonResponse
 from django.contrib.auth import authenticate
 from django.contrib.auth.models import User
-from utils.get_payload import *
+from utils.get_payload import get_payload
+from utils.wrappers import require_jwt
 from .models import *
 
 # Create your views here.
@@ -134,5 +135,38 @@ def account_get_token(req: HttpRequest) -> JsonResponse:
         "token": {
             "access": str(token.access_token),
             "refresh": str(token)
+        }
+    }, status=200)
+
+@require_jwt
+def account_get_user(req: HttpRequest, user_id: int) -> JsonResponse:
+    """
+        Get a user by its id
+
+        req:
+            A HttpRequest object containing required datas
+
+        user_id:
+            The id of the user to get
+
+        Returns:
+            A JsonResponse containing return code (see http codes)
+    """
+    if req.method != 'GET':
+        return JsonResponse({"error": "Method not allowed"}, status=405)
+
+    try:
+        user: User = User.objects.get(id=user_id)
+    except User.DoesNotExist:
+        return JsonResponse({
+            "error": "User does not exists"
+        }, status=404)
+
+    return JsonResponse({
+        "user": {
+            "id": user.id,
+            "username": user.username,
+            "first_name": user.first_name,
+            "last_name": user.last_name
         }
     }, status=200)
