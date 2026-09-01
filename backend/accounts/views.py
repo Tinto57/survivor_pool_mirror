@@ -121,4 +121,4 @@ def account_get_token(req: HttpRequest) -> JsonResponse:
             "access": str(token.access_token),
             "refresh": str(token)
         }
-    }, status=201)
+    }, status=200)
