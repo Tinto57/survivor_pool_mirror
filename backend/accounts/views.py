@@ -12,7 +12,7 @@ from django.views.decorators.csrf import csrf_exempt
 @csrf_exempt
 def account_login(request: HttpRequest) -> JsonResponse:
     """ Login user (ensure user exists, valid pwd...) """
-    if (request.method != "POST"):
+    if request.method != "POST":
         return JsonResponse({
             "error": "Method not allowed"
         }, status=405)
@@ -47,23 +47,37 @@ def account_login(request: HttpRequest) -> JsonResponse:
 @csrf_exempt
 def account_register(req: HttpRequest) -> JsonResponse:
     """ Register user """
-    if (req.method == "POST"):
-        firstName = req.POST.get('first_name', '')
-        lastName  = req.POST.get('last_name', '')
-        username  = req.POST.get('username')
-        password  = req.POST.get('password')
-
-        if User.objects.filter(username=username).exists():
-            messages.error(req, "Error: User already exists")
-            raise TypeError("Error error")
-        user = User.objects.create_user(
-            username=username,
-            first_name=firstName,
-            last_name=lastName,
-            password=password
-        ).save()
-        messages.info("Ok bro ehe")
-        return Response(200)
-    else:
+    if req.method != "POST":
         messages.error(req, "Error: not POST method")
-        raise TypeError("Error error")
+        return JsonResponse({
+            "error":"Method not allowed"
+        }, status=405)
+
+    firstName: str        = req.POST.get('first_name', '')
+    lastName : str        = req.POST.get('last_name', '')
+    username : str | None = req.POST.get('username', None)
+    password : str | None = req.POST.get('password', None)
+
+    if username is None or password is None:
+        return JsonResponse({
+            "error":"You must provide username or password",
+        }, status=401)
+
+    if User.objects.filter(username=username).exists():
+        messages.error(req, "Error: User already exists")
+        return JsonResponse({
+            "error": "Username already taken"
+        }, status=400)
+
+    User.objects.create_user(
+        username=username,
+        first_name=firstName,
+        last_name=lastName,
+        password=password
+    ).save()
+
+    messages.info(req, "Ok bro ehe")
+
+    return JsonResponse({
+        "message":"Register good"
+    }, status=201)
