@@ -58,7 +58,7 @@ def account_register(req: HttpRequest) -> JsonResponse:
     username : str | None = req.POST.get('username', None)
     password : str | None = req.POST.get('password', None)
 
-    if username is None or password is None:
+    if not username or not password:
         return JsonResponse({
             "error":"You must provide username or password",
         }, status=401)
