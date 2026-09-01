@@ -27,7 +27,6 @@
     font-variant-numeric: tabular-nums;
 }
 
-/* Les centimes et le symbole restent discrets derrière la partie entière. */
 .cents {
     font-size: 0.55em;
     font-weight: 600;
