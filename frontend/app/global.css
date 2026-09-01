@@ -1,16 +1,4 @@
-/**
- * Tokens de design + reset global.
- *
- * Le site est pensé mobile first : les règles de base ciblent le téléphone,
- * les media queries `min-width` viennent enrichir l'affichage tablette/desktop.
- *
- * La palette reprend celle des écrans de connexion (noir primaire, gris
- * neutres) et l'étend avec les codes d'une app bancaire : grands rayons,
- * pastilles rondes colorées, listes sans filets.
- */
-
 :root {
-    /* Fonds et texte */
     --bg: #f5f6f8;
     --surface: #ffffff;
     --field: #fafafa;
@@ -20,7 +8,6 @@
     --text-muted: #666666;
     --text-soft: #999999;
 
-    /* Statuts — repris des écrans d'authentification */
     --success: #1f8a4c;
     --success-soft: #e9f7ef;
     --danger: #c0392b;
@@ -28,21 +15,17 @@
     --highlight: #8a5a1f;
     --highlight-soft: #fdf3e6;
 
-    /* Aplat gris des éléments interactifs secondaires (boutons ronds, chips) */
     --neutral-soft: #f3f3f3;
     --neutral-soft-hover: #ebebeb;
 
-    /* Rayons — plus généreux que sur les formulaires, à la manière d'une app mobile */
     --radius-sm: 10px;
     --radius-md: 16px;
     --radius-lg: 20px;
     --radius-pill: 999px;
 
-    /* Ombres */
     --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.04);
     --shadow-md: 0 8px 24px rgba(0, 0, 0, 0.06);
 
-    /* Hauteur de la navbar, utilisée pour dégager le contenu */
     --navbar-height: 64px;
 }
 
