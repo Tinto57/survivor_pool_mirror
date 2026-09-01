@@ -1,12 +1,3 @@
-/**
- * Jeu de données de démonstration pour la revue de projet (semaine 1).
- *
- * Les partenaires sont ceux listés nommément dans le cahier des charges — le
- * Ministre a explicitement demandé « les vrais partenaires listés ci-dessus,
- * pas des trucs inventés ». Solde et transactions servent uniquement de
- * remplacement tant que /api/wallet/balance et /api/transactions n'existent pas.
- */
-
 import type { Balance, Partner, Transaction } from "./catalog";
 
 export const SEED_PARTNERS: Partner[] = [
