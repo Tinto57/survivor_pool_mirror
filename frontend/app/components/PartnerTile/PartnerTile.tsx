@@ -3,10 +3,6 @@ import Avatar from "../Avatar/Avatar";
 import type { Partner } from "../../lib/catalog";
 import styles from "./PartnerTile.module.css";
 
-/**
- * Grande vignette utilisée dans le carrousel « Coup de cœur du Ministre ».
- * Plus riche que la ligne de catalogue : elle porte aussi l'accroche.
- */
 export default function PartnerTile({ partner }: { partner: Partner }) {
     return (
         <Link href={`/catalogue/${partner.id}`} className={styles.tile}>
