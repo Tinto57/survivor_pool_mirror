@@ -1,16 +1,14 @@
-from django.shortcuts import render, redirect
-from django.contrib import messages
-from django.contrib.auth import authenticate, login
-from django.contrib.auth.decorators import login_required
-from django.contrib.auth.models import User
-from django.http import HttpRequest, JsonResponse
-from django.views.decorators.csrf import csrf_exempt
 from rest_framework_simplejwt.tokens import RefreshToken
+from django.views.decorators.csrf import csrf_exempt
+from django.http import HttpRequest, JsonResponse
+from django.contrib.auth import authenticate
+from django.contrib.auth.models import User
 from utils.get_payload import *
 from .models import *
 
 # Create your views here.
 
+# NOTE: Old login route
 # @csrf_exempt
 # def account_login(request: HttpRequest) -> JsonResponse:
 #     """ Login user (ensure user exists, valid pwd...) """
@@ -43,7 +41,15 @@ from .models import *
 
 @csrf_exempt
 def account_register(req: HttpRequest) -> JsonResponse:
-    """ Register user """
+    """
+        Register a user if not exists, then generate a brand new JWT token.
+
+        req:
+            the HttpRequest object that contains the body and the headers of the request
+        
+        returns:
+            A JsonResponse object with details and status code
+    """
     if req.method != "POST":
         return JsonResponse({
             "error": "Method not allowed"
@@ -90,7 +96,15 @@ def account_register(req: HttpRequest) -> JsonResponse:
 
 @csrf_exempt
 def account_get_token(req: HttpRequest) -> JsonResponse:
-    """ Get token aha """
+    """
+        Authenticate a user if exists
+
+        req:
+            An HttpRequest object with all parameters of the request
+
+        returns:
+            A new JWT token (refreshed)
+    """
     if req.method != "POST":
         return JsonResponse({
             "error": "Method not allowed"
