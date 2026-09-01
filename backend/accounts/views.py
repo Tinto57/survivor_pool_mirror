@@ -20,29 +20,25 @@ def account_login(request: HttpRequest) -> JsonResponse:
     username: str | None = request.POST.get("username", None)
     password: str | None = request.POST.get("password", None)
 
-    # if not username or not password:
-    #     return JsonResponse({
-    #         "error": "You must provide username or password"
-    #     }, status=401)
-
-    # NOTE: Authenticate already check if exists ?
-    # if not User.objects.filter(username=username).exists():
-    #     messages.error(request, f"Cannot find user {username}")
-    #     return JsonResponse({"error": "Invalid username or password"}, status=401)
+    if not username or not password:
+        return JsonResponse({
+            "error": "Bad request"
+        }, status=400)
 
     user: User = authenticate(username=username, password=password)
 
     if user is None:
-        messages.error(request, "Invalid username or password")
         return JsonResponse({
             "error": "Invalid username or password"
         }, status=401)
 
     login(request, user)
+
     return JsonResponse({
         "message": "Login good",
         "username": user.username
     }, status=200)
+
 
 @csrf_exempt
 def account_register(req: HttpRequest) -> JsonResponse:
@@ -60,8 +56,8 @@ def account_register(req: HttpRequest) -> JsonResponse:
 
     if not username or not password:
         return JsonResponse({
-            "error":"You must provide username or password",
-        }, status=401)
+            "error":"Bad request",
+        }, status=400)
 
     if User.objects.filter(username=username).exists():
         messages.error(req, "Error: User already exists")
@@ -74,9 +70,7 @@ def account_register(req: HttpRequest) -> JsonResponse:
         first_name=firstName,
         last_name=lastName,
         password=password
-    ).save()
-
-    messages.info(req, "Ok bro ehe")
+    )
 
     return JsonResponse({
         "message":"Register good"
