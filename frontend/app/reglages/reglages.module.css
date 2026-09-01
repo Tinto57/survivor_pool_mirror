@@ -35,7 +35,6 @@
     color: var(--text-soft);
 }
 
-/* Même liste sans filets que l'historique et le catalogue. */
 .list {
     margin: 0;
     padding: 0;
