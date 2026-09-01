@@ -17,7 +17,6 @@ const FILTERS: { id: Filter; label: string }[] = [
     { id: "topup", label: "Abondements" },
 ];
 
-/** Regroupe les transactions par mois, en conservant l'ordre antichronologique. */
 function groupByMonth(transactions: Transaction[]): [string, Transaction[]][] {
     const groups = new Map<string, Transaction[]>();
 
@@ -58,7 +57,6 @@ export default function HistoriquePage() {
 
     const groups = useMemo(() => groupByMonth(visible), [visible]);
 
-    // Les transactions annulées par l'administration ne comptent dans aucun total.
     const totals = useMemo(() => {
         const active = transactions.filter((t) => !t.is_cancelled);
 
