@@ -3,7 +3,6 @@
     flex-direction: column;
     align-items: flex-start;
 
-    /* Largeur fixe : les vignettes défilent horizontalement sur mobile. */
     width: 210px;
     flex-shrink: 0;
 
@@ -44,7 +43,6 @@
     line-height: 1.45;
     color: var(--text-muted);
 
-    /* Trois lignes maximum pour garder des vignettes de hauteur homogène. */
     display: -webkit-box;
     -webkit-line-clamp: 3;
     -webkit-box-orient: vertical;
