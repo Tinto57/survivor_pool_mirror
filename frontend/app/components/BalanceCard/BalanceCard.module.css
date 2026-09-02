@@ -27,6 +27,7 @@
 .amount {
     margin: 6px 0 0;
 
+    font-family: var(--font-system);
     font-size: 46px;
     font-weight: 700;
     line-height: 1.05;
@@ -156,6 +157,7 @@
 .statValue {
     margin: 4px 0 0;
 
+    font-family: var(--font-system);
     font-size: 17px;
     font-weight: 700;
     font-variant-numeric: tabular-nums;
