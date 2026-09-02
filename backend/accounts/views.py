@@ -80,6 +80,7 @@ class UsersView(View):
         email    : str        = payload.get("email", "")
         username : str | None = payload.get("username")
         password : str | None = payload.get("password")
+        role     : str | None = payload.get("role")
 
         if not username or not password:
             return JsonResponse({

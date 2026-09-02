@@ -21,8 +21,8 @@ from wallet.views import *
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('api/auth', account_get_token, name="get-token-user"),
-    path('api/users', UsersView.as_view(), name="users-collection"),
-    path('api/user/<int:user_id>', SingleUserView.as_view(), name="get-user-by-id"),
-    path('api/employees', EmployeesView.as_view(), name="transactions-collection")
+    path('api/v1/auth', account_get_token, name="get-token-user"),
+    path('api/v1/users', UsersView.as_view(), name="users-collection"),
+    path('api/v1/user/<int:user_id>', SingleUserView.as_view(), name="get-user-by-id"),
+    path('api/v1/employees', EmployeesView.as_view(), name="transactions-collection")
 ]
