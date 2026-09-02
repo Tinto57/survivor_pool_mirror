@@ -39,5 +39,3 @@ class Transaction(models.Model):
 
     def __str__(self):
         return f"{self.amount}€ - {self.employee.user.username} → {self.partner.business_name}"
-
-admin.site.register((Transaction, QRCode))

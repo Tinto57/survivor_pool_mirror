@@ -17,5 +17,3 @@ class TopUp(models.Model):
 
     def __str__(self):
         return f"+{self.amount}€ for {self.employee.user.username}"
-
-admin.site.register((Employee, TopUp))
