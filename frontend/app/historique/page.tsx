@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { Receipt } from "lucide-react";
 import Page from "../components/Page/Page";
+import SimulationBadge from "../components/SimulationBadge/SimulationBadge";
 import TransactionRow from "../components/TransactionRow/TransactionRow";
 import { getAccessToken } from "../lib/auth";
 import { formatAmount, getTransactions, monthLabel } from "../lib/catalog";
@@ -71,17 +72,25 @@ export default function HistoriquePage() {
     }, [transactions]);
 
     return (
-        <Page title="Historique" subtitle="Toutes vos opérations Ticket Tout, du plus récent au plus ancien.">
+        <Page
+            title="Historique"
+            subtitle="Toutes vos opérations Ticket Tout, du plus récent au plus ancien."
+            simulation
+        >
             <div className={styles.totals}>
                 <div className={styles.total}>
-                    <p className={styles.totalLabel}>Reçu au total</p>
+                    <p className={styles.totalLabel}>
+                        Reçu au total <SimulationBadge size="sm" />
+                    </p>
                     <p className={`${styles.totalValue} ${styles.totalIn}`}>
                         {formatAmount(totals.received)}
                     </p>
                 </div>
 
                 <div className={styles.total}>
-                    <p className={styles.totalLabel}>Dépensé au total</p>
+                    <p className={styles.totalLabel}>
+                        Dépensé au total <SimulationBadge size="sm" />
+                    </p>
                     <p className={styles.totalValue}>{formatAmount(totals.spent)}</p>
                 </div>
             </div>

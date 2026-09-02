@@ -1,6 +1,13 @@
 import type { Metadata } from "next";
+import { Spectral } from "next/font/google";
 import AppShell from "./components/AppShell/AppShell";
 import "./global.css";
+
+const spectral = Spectral({
+    subsets: ["latin"],
+    weight: ["400", "500", "600", "700"],
+    variable: "--font-spectral",
+});
 
 export const metadata: Metadata = {
     title: "Ticket Tout",
@@ -19,7 +26,7 @@ export default function RootLayout({
     children: React.ReactNode;
 }>) {
     return (
-        <html lang="fr">
+        <html lang="fr" className={spectral.variable}>
             <body>
                 <AppShell>{children}</AppShell>
             </body>
