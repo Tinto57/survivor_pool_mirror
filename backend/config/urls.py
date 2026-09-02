@@ -26,5 +26,6 @@ urlpatterns = [
     path('api/v1/users/me/', account_get_self, name="get-self-account"),
     path('api/v1/users/<int:user_id>/', SingleUserView.as_view(), name="user-collection"),
     path('api/v1/employees/', EmployeesView.as_view(), name="transactions-collection"),
-    path('api/v1/employees/<int:employee_id>/', SingleEmployeeView.as_view(), name="employee-collection")
+    path('api/v1/employees/<int:employee_id>/', SingleEmployeeView.as_view(), name="employee-collection"),
+    path('api/v1/employees/<int:employee_id>/balance/', employee_get_balance, name="get-employee-balance"),
 ]

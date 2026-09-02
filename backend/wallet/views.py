@@ -10,6 +10,17 @@ from django.views.decorators.csrf import csrf_exempt
 
 # Create your views here.
 
+@require_jwt
+def employee_get_balance(req: HttpRequest, employee_id: int) -> JsonResponse:
+    """ Get employee balance """
+    if req.method != "GET":
+        return JsonResponse({"error":"Method not allowed"}, status=405)
+    try:
+        e = Employee.objects.get(id=employee_id)
+    except Employee.DoesNotExist:
+        return JsonResponse({"error":"Not found"}, status=404)
+    return JsonResponse({"balance": e.balance}, status=200)
+
 @method_decorator(require_jwt, name="dispatch")
 @method_decorator(csrf_exempt, name="dispatch")
 class EmployeesView(View):
