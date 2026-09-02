@@ -1,4 +1,5 @@
 from django.db import models
+from django.contrib import admin
 
 class Employee(models.Model):
     user = models.OneToOneField('accounts.User', on_delete=models.CASCADE)
