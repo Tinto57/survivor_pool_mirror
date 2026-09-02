@@ -37,5 +37,3 @@ class PartnerDecision(models.Model):
 
     def __str__(self):
         return f"{self.partner.business_name} - {self.decision} ({self.created_at:%d/%m/%Y})"
-
-admin.site.register((Partner, PartnerDecision))

@@ -1,0 +1,421 @@
+.wrapper {
+    min-height: calc(100vh - 64px);
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    padding: 40px 20px;
+}
+
+.card {
+    width: 100%;
+    max-width: 400px;
+
+    background: #ffffff;
+    border: 1px solid #e5e5e5;
+    border-radius: 16px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.06);
+
+    padding: 36px 32px;
+}
+
+.title {
+    margin: 0 0 6px;
+
+    font-size: 26px;
+    font-weight: 700;
+    color: #111111;
+}
+
+.subtitle {
+    margin: 0 0 28px;
+
+    font-size: 14px;
+    color: #666666;
+}
+
+.steps {
+    display: flex;
+    align-items: center;
+
+    margin-bottom: 28px;
+}
+
+.step {
+    display: flex;
+    align-items: center;
+    flex: 1;
+}
+
+.stepCircle {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+
+    width: 28px;
+    height: 28px;
+
+    border-radius: 50%;
+    background: #f3f3f3;
+    color: #999999;
+
+    font-size: 13px;
+    font-weight: 700;
+
+    transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+.stepCircleActive {
+    background: #111111;
+    color: #ffffff;
+}
+
+.stepCircleDone {
+    background: #111111;
+    color: #ffffff;
+}
+
+.stepLine {
+    flex: 1;
+    height: 2px;
+    margin: 0 6px;
+
+    background: #f3f3f3;
+
+    transition: background-color 0.2s ease;
+}
+
+.stepLineDone {
+    background: #111111;
+}
+
+.stepTitle {
+    margin: 0 0 20px;
+
+    font-size: 15px;
+    font-weight: 700;
+    color: #111111;
+}
+
+.buttonsRow {
+    display: flex;
+    gap: 12px;
+}
+
+.backButton {
+    flex: 1;
+
+    padding: 12px;
+
+    background: #ffffff;
+    color: #111111;
+    border: 1px solid #e0e0e0;
+    border-radius: 10px;
+
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+
+    transition: background-color 0.2s ease, transform 0.2s ease;
+}
+
+.backButton:hover {
+    background: #f3f3f3;
+}
+
+.backButton:active {
+    transform: scale(0.98);
+}
+
+.buttonsRow .submit {
+    flex: 1.4;
+}
+
+.field {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+
+    margin-bottom: 18px;
+}
+
+.fieldRow {
+    display: flex;
+    gap: 12px;
+}
+
+.fieldRow .field {
+    flex: 1;
+}
+
+.label {
+    font-size: 13px;
+    font-weight: 600;
+    color: #333333;
+}
+
+.inputWrapper {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.inputWrapper svg {
+    position: absolute;
+    left: 12px;
+
+    width: 17px;
+    height: 17px;
+    color: #999999;
+}
+
+.input {
+    width: 100%;
+
+    padding: 11px 14px 11px 38px;
+
+    border: 1px solid #e0e0e0;
+    border-radius: 10px;
+
+    font-size: 14px;
+    font-family: inherit;
+    color: #111111;
+
+    background: #fafafa;
+
+    transition: border-color 0.2s ease, background-color 0.2s ease;
+}
+
+.input:focus {
+    outline: none;
+    border-color: #111111;
+    background: #ffffff;
+}
+
+.inputWrapperTop {
+    align-items: flex-start;
+}
+
+.inputWrapperTop svg {
+    top: 13px;
+}
+
+.textarea {
+    resize: vertical;
+    min-height: 72px;
+}
+
+.passwordToggle {
+    position: absolute;
+    right: 10px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 4px;
+
+    color: #999999;
+}
+
+.passwordToggle svg {
+    position: static;
+    width: 17px;
+    height: 17px;
+}
+
+.passwordHints {
+    list-style: none;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 4px 12px;
+
+    margin: 8px 0 0;
+    padding: 0;
+}
+
+.passwordHint {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+
+    font-size: 12px;
+    color: #999999;
+
+    transition: color 0.2s ease;
+}
+
+.passwordHint svg {
+    width: 13px;
+    height: 13px;
+    flex-shrink: 0;
+}
+
+.passwordHintValid {
+    color: #1f8a4c;
+}
+
+.autocompleteWrapper {
+    position: relative;
+}
+
+.suggestions {
+    position: absolute;
+    top: calc(100% + 4px);
+    left: 0;
+    right: 0;
+    z-index: 10;
+
+    list-style: none;
+    margin: 0;
+    padding: 6px;
+
+    max-height: 220px;
+    overflow-y: auto;
+
+    background: #ffffff;
+    border: 1px solid #e5e5e5;
+    border-radius: 10px;
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+}
+
+.suggestionItem {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+
+    padding: 9px 10px;
+    border-radius: 7px;
+
+    font-size: 13px;
+    color: #333333;
+
+    cursor: pointer;
+
+    transition: background-color 0.15s ease;
+}
+
+.suggestionItem svg {
+    width: 14px;
+    height: 14px;
+    flex-shrink: 0;
+    color: #999999;
+}
+
+.suggestionItem:hover,
+.suggestionItemActive {
+    background: #f3f3f3;
+}
+
+.geocodeStatus {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+
+    margin-top: 6px;
+
+    font-size: 12px;
+    color: #999999;
+}
+
+.geocodeStatus svg {
+    width: 14px;
+    height: 14px;
+    flex-shrink: 0;
+}
+
+.geocodeStatusSuccess {
+    color: #1f8a4c;
+}
+
+.geocodeStatusError {
+    color: #c0392b;
+}
+
+.geocodeRetry {
+    background: none;
+    border: none;
+
+    padding: 0;
+    margin-left: 2px;
+
+    color: #111111;
+    font-size: 12px;
+    font-weight: 600;
+    text-decoration: underline;
+    cursor: pointer;
+}
+
+.spin {
+    animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+.error {
+    margin: -6px 0 18px;
+
+    font-size: 13px;
+    color: #c0392b;
+
+    background: #fdecea;
+    border-radius: 8px;
+    padding: 8px 12px;
+}
+
+.submit {
+    width: 100%;
+
+    padding: 12px;
+
+    background: #111111;
+    color: #ffffff;
+    border: none;
+    border-radius: 10px;
+
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+
+    transition: background-color 0.2s ease, transform 0.2s ease;
+}
+
+.submit:hover {
+    background: #2a2a2a;
+}
+
+.submit:active {
+    transform: scale(0.98);
+}
+
+.submit:disabled {
+    background: #999999;
+    cursor: not-allowed;
+}
+
+.switch {
+    margin: 20px 0 0;
+    text-align: center;
+
+    font-size: 14px;
+    color: #666666;
+}
+
+.switch a {
+    color: #111111;
+    font-weight: 600;
+    text-decoration: none;
+}
+
+.switch a:hover {
+    text-decoration: underline;
+}

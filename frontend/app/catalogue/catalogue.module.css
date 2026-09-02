@@ -1,0 +1,164 @@
+.search {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+
+    padding: 0 16px;
+
+    background: var(--neutral-soft);
+    border: 1px solid transparent;
+    border-radius: var(--radius-pill);
+
+    transition: background-color 0.2s ease, border-color 0.2s ease;
+}
+
+.search:focus-within {
+    background: var(--surface);
+    border-color: var(--text);
+}
+
+.searchIcon {
+    width: 18px;
+    height: 18px;
+    flex-shrink: 0;
+
+    color: var(--text-soft);
+}
+
+.searchInput {
+    flex: 1;
+    min-width: 0;
+
+    padding: 12px 0;
+
+    border: none;
+    outline: none;
+    background: transparent;
+
+    font-family: inherit;
+    font-size: 15px;
+    color: var(--text);
+}
+
+.searchInput::-webkit-search-cancel-button {
+    -webkit-appearance: none;
+}
+
+.filters {
+    display: flex;
+    gap: 8px;
+
+    margin: 14px 0 18px;
+
+    margin-left: -16px;
+    margin-right: -16px;
+    padding: 0 16px;
+
+    overflow-x: auto;
+    scrollbar-width: none;
+}
+
+.filters::-webkit-scrollbar {
+    display: none;
+}
+
+.filter {
+    flex-shrink: 0;
+
+    padding: 8px 16px;
+
+    background: var(--neutral-soft);
+    border: none;
+    border-radius: var(--radius-pill);
+
+    color: var(--text-muted);
+    font-size: 13px;
+    font-weight: 600;
+
+    cursor: pointer;
+    transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+.filter:hover {
+    background: var(--neutral-soft-hover);
+}
+
+.filterActive {
+    background: var(--text);
+    color: #ffffff;
+}
+
+.filterActive:hover {
+    background: #2a2a2a;
+}
+
+.count {
+    margin: 0 0 10px;
+
+    font-size: 13px;
+    color: var(--text-soft);
+}
+
+.list {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-sm);
+
+    overflow: hidden;
+}
+
+.info {
+    font-size: 14px;
+    color: var(--text-muted);
+}
+
+.error {
+    margin: 0 0 16px;
+    padding: 10px 14px;
+
+    background: var(--danger-soft);
+    color: var(--danger);
+    border-radius: var(--radius-sm);
+
+    font-size: 13px;
+}
+
+.empty {
+    padding: 56px 20px;
+    text-align: center;
+}
+
+.emptyIcon {
+    width: 30px;
+    height: 30px;
+    color: var(--text-soft);
+}
+
+.emptyTitle {
+    margin: 12px 0 0;
+
+    font-size: 16px;
+    font-weight: 700;
+}
+
+.emptyHint {
+    margin: 6px auto 0;
+    max-width: 300px;
+
+    font-size: 14px;
+    line-height: 1.5;
+    color: var(--text-muted);
+}
+
+@media (min-width: 768px) {
+    .filters {
+        margin-left: 0;
+        margin-right: 0;
+        padding: 0;
+    }
+}
