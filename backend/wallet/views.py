@@ -62,12 +62,13 @@ class EmployeesView(View):
                 "error":"User not found"
             }, status=404)
 
+        if Employee.objects.filter(user = user).exists():
+            return JsonResponse({"error": "Already exists"}, status=400)
+
         employee = Employee.objects.create(
             user     = user,
             employer = employer,
         )
-
-        employee.save()
 
         return JsonResponse({
             "message":"Successfully created employee",
@@ -125,8 +126,8 @@ class SingleEmployeeView(View):
         except Employee.DoesNotExist:
             return JsonResponse({"error": "Not found"}, status=404)
 
-        if employee.user_id != req.user.id or not req.user.is_superuser:
-            return JsonResponse({"error": "Forbidden"}, status=401)
+        if employee.user_id != req.user.id and not (req.user.is_staff or req.user.is_superuser):
+            return JsonResponse({"error": "Forbidden"}, status=403)
 
         employee.delete()
 
