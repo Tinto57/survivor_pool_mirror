@@ -1,134 +1,222 @@
-from django.shortcuts import render
-from django.views import View
-from django.http import HttpRequest, JsonResponse
-from django.utils.decorators import method_decorator
-from utils.get_payload import get_payload
-from utils.wrappers import require_jwt
-from accounts.models import User
-from wallet.models import Employee
-from django.views.decorators.csrf import csrf_exempt
+# from django.shortcuts import render
+# from django.views import View
+# from django.http import HttpRequest, JsonResponse
+# from django.utils.decorators import method_decorator
+# from utils.get_payload import get_payload
+# from utils.wrappers import require_jwt
+# from accounts.models import User
+# from wallet.models import Employee
+# from django.views.decorators.csrf import csrf_exempt
 
-# Create your views here.
+# # Create your views here.
 
-@require_jwt
-def employee_get_balance(req: HttpRequest, employee_id: int) -> JsonResponse:
-    """ Get employee balance """
-    if req.method != "GET":
-        return JsonResponse({"error":"Method not allowed"}, status=405)
-    try:
-        e = Employee.objects.get(id=employee_id)
-    except Employee.DoesNotExist:
-        return JsonResponse({"error":"Not found"}, status=404)
-    return JsonResponse({"balance": e.balance}, status=200)
+# @require_jwt
+# def employee_get_balance(req: HttpRequest, employee_id: int) -> JsonResponse:
+#     """ Get employee balance """
+#     if req.method != "GET":
+#         return JsonResponse({"error":"Method not allowed"}, status=405)
+#     try:
+#         e = Employee.objects.get(id=employee_id)
+#     except Employee.DoesNotExist:
+#         return JsonResponse({"error":"Not found"}, status=404)
+#     return JsonResponse({"balance": e.balance}, status=200)
 
-@require_jwt
-def employee_get_self(req: HttpRequest) -> JsonResponse:
-    """ Get self infos """
-    if req.method != "GET":
-        return JsonResponse({"error": "Method not allowed"}, status=405)
-    try:
-        e = Employee.objects.get(user_id=req.user.id)
-    except Employee.DoesNotExist:
-        return JsonResponse({"error": "Not found"}, status=404)
-    return JsonResponse({"employee": {
-        "id": e.id,
-        "user": e.user_id,
-        "balance": e.balance,
-        "employer": e.employer
-    }}, status=200)
+# @require_jwt
+# def employee_get_self(req: HttpRequest) -> JsonResponse:
+#     """ Get self infos """
+#     if req.method != "GET":
+#         return JsonResponse({"error": "Method not allowed"}, status=405)
+#     try:
+#         e = Employee.objects.get(user_id=req.user.id)
+#     except Employee.DoesNotExist:
+#         return JsonResponse({"error": "Not found"}, status=404)
+#     return JsonResponse({"employee": {
+#         "id": e.id,
+#         "user": e.user_id,
+#         "balance": e.balance,
+#         "employer": e.employer
+#     }}, status=200)
 
-@method_decorator(require_jwt, name="dispatch")
-@method_decorator(csrf_exempt, name="dispatch")
-class EmployeesView(View):
-    def post(
-            self: "EmployeesView",
-            req : HttpRequest
-        ) -> JsonResponse:
+# @method_decorator(require_jwt, name="dispatch")
+# @method_decorator(csrf_exempt, name="dispatch")
+# class EmployeesView(View):
+#     def post(
+#             self: "EmployeesView",
+#             req : HttpRequest
+#         ) -> JsonResponse:
 
-        payload = get_payload(req)
+#         payload = get_payload(req)
 
-        uid      = payload.get("user_id", None)
-        employer = payload.get("employer", None)
+#         uid      = payload.get("user_id", None)
+#         employer = payload.get("employer", None)
 
-        if not uid or not employer:
-            return JsonResponse({
-                "error":"Bad request"
-            }, status=400)
+#         if not uid or not employer:
+#             return JsonResponse({
+#                 "error":"Bad request"
+#             }, status=400)
 
+#         try:
+#             user: User = User.objects.get(id=uid)
+#         except User.DoesNotExist:
+#             return JsonResponse({
+#                 "error":"User not found"
+#             }, status=404)
+
+#         if Employee.objects.filter(user = user).exists():
+#             return JsonResponse({"error": "Already exists"}, status=400)
+
+#         employee = Employee.objects.create(
+#             user     = user,
+#             employer = employer,
+#         )
+
+#         return JsonResponse({
+#             "message":"Successfully created employee",
+#             "employee": {
+#                 "id"  : employee.id,
+#                 "user": employee.user.username,
+#                 "balance": employee.balance,
+#                 "employer": employee.employer
+#             }
+#         }, status=200)
+
+#     def get(
+#             self: "EmployeesView",
+#             req : HttpRequest
+#         ) -> JsonResponse:
+
+#         es = Employee.objects.all().values(
+#             "id", "user_id", "balance", "employer"
+#         )
+#         return JsonResponse({
+#             "employees": list(es)
+#         }, status=200)
+
+# @method_decorator(require_jwt, name="dispatch")
+# @method_decorator(csrf_exempt, name="dispatch")
+# class SingleEmployeeView(View):
+#     def get(
+#             self: "SingleEmployeeView",
+#             req : HttpRequest,
+#             employee_id  : int
+#         ) -> JsonResponse:
+
+#         try:
+#             employee = Employee.objects.get(id=employee_id)
+#         except Employee.DoesNotExist:
+#             return JsonResponse({"error": "Not found"}, status=404)
+
+#         return JsonResponse({
+#             "employee": {
+#                 "id": employee.id,
+#                 "user_id": employee.user_id,
+#                 "balance": employee.balance,
+#                 "employer": employee.employer
+#             }
+#         }, status=200)
+
+#     def delete(
+#             self       : "SingleEmployeeView",
+#             req        : HttpRequest,
+#             employee_id: int
+#         ) -> JsonResponse:
+
+#         try:
+#             employee = Employee.objects.get(id=employee_id)
+#         except Employee.DoesNotExist:
+#             return JsonResponse({"error": "Not found"}, status=404)
+
+#         if employee.user_id != req.user.id and not (req.user.is_staff or req.user.is_superuser):
+#             return JsonResponse({"error": "Forbidden"}, status=403)
+
+#         employee.delete()
+
+#         return JsonResponse({"message": f"Successfully deleted employee {employee_id}"}, status=200)
+
+from rest_framework import generics, status
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import IsAuthenticated, IsAdminUser
+from rest_framework.response import Response
+from rest_framework.request import Request
+from rest_framework.exceptions import NotFound
+from .models import *
+from .serializers import *
+from wallet.permissions import IsOwnerOrStaffEmployee
+from django.db import transaction
+from drf_spectacular.utils import extend_schema
+
+class EmployeesView(generics.ListCreateAPIView):
+    queryset = Employee.objects.all()
+    serializer_class = EmployeeSerializer
+
+    def get_permissions(self):
+        if self.request.method in ('POST', 'GET'):
+            return [IsAdminUser()]
+        return [IsAuthenticated()]
+
+    def create(self, request: Request, *args, **kwargs) -> Response:
+        serializer = self.serializer_class(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+class EmployeeMe(generics.RetrieveAPIView):
+    queryset = Employee.objects.all()
+    serializer_class = EmployeeSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_object(self):
         try:
-            user: User = User.objects.get(id=uid)
-        except User.DoesNotExist:
-            return JsonResponse({
-                "error":"User not found"
-            }, status=404)
-
-        if Employee.objects.filter(user = user).exists():
-            return JsonResponse({"error": "Already exists"}, status=400)
-
-        employee = Employee.objects.create(
-            user     = user,
-            employer = employer,
-        )
-
-        return JsonResponse({
-            "message":"Successfully created employee",
-            "employee": {
-                "id"  : employee.id,
-                "user": employee.user.username,
-                "balance": employee.balance,
-                "employer": employee.employer
-            }
-        }, status=200)
-
-    def get(
-            self: "EmployeesView",
-            req : HttpRequest
-        ) -> JsonResponse:
-
-        es = Employee.objects.all().values(
-            "id", "user_id", "balance", "employer"
-        )
-        return JsonResponse({
-            "employees": list(es)
-        }, status=200)
-
-@method_decorator(require_jwt, name="dispatch")
-@method_decorator(csrf_exempt, name="dispatch")
-class SingleEmployeeView(View):
-    def get(
-            self: "SingleEmployeeView",
-            req : HttpRequest,
-            employee_id  : int
-        ) -> JsonResponse:
-
-        try:
-            employee = Employee.objects.get(id=employee_id)
+            return self.queryset.get(user=self.request.user)
         except Employee.DoesNotExist:
-            return JsonResponse({"error": "Not found"}, status=404)
+            raise NotFound(detail="Employee does not exist for you")
 
-        return JsonResponse({
-            "employee": {
-                "id": employee.id,
-                "user_id": employee.user_id,
-                "balance": employee.balance,
-                "employer": employee.employer
-            }
-        }, status=200)
+class SingleEmployeeView(generics.RetrieveDestroyAPIView):
+    queryset = Employee.objects.all()
+    serializer_class = EmployeeSerializer
+    permission_classes = [IsAuthenticated, IsOwnerOrStaffEmployee]
+    lookup_url_kwarg = "employee_id"
+    http_method_names = ['get', 'delete']
 
-    def delete(
-            self       : "SingleEmployeeView",
-            req        : HttpRequest,
-            employee_id: int
-        ) -> JsonResponse:
+class SingleEmployeeBalanceView(generics.RetrieveUpdateAPIView):
+    queryset = Employee.objects.all()
+    permission_classes = [IsAuthenticated, IsOwnerOrStaffEmployee]
+    lookup_url_kwarg = "employee_id"
+    http_method_names = ['get', 'patch']
 
-        try:
-            employee = Employee.objects.get(id=employee_id)
-        except Employee.DoesNotExist:
-            return JsonResponse({"error": "Not found"}, status=404)
+    def get_permissions(self):
+        if self.request.method in ('PATCH', 'PUT'):
+            return [IsAdminUser()]
+        return [IsAuthenticated(), IsOwnerOrStaffEmployee()]
 
-        if employee.user_id != req.user.id and not (req.user.is_staff or req.user.is_superuser):
-            return JsonResponse({"error": "Forbidden"}, status=403)
+    def get_serializer_class(self):
+        if self.request.method == 'PATCH':
+            return EmployeeBalanceUpdateSerializer
+        return EmployeeBalanceReadSerializer
 
-        employee.delete()
+    def get_object(self):
+        queryset = self.filter_queryset(self.get_queryset())
+        if self.request.method == 'PATCH':
+            queryset = queryset.select_for_update()
 
-        return JsonResponse({"message": f"Successfully deleted employee {employee_id}"}, status=200)
+        lookup_url_kwarg = self.lookup_url_kwarg or self.lookup_field
+        filter_kwargs = {self.lookup_field: self.kwargs[lookup_url_kwarg]}
+        obj = generics.get_object_or_404(queryset, **filter_kwargs)
+        self.check_object_permissions(self.request, obj)
+        return obj
+
+    @extend_schema(
+        summary="Créditer le solde d'un employé",
+        request=EmployeeBalanceUpdateSerializer,
+        responses={200: EmployeeBalanceReadSerializer}
+    )
+    @transaction.atomic
+    def patch(self, request, *args, **kwargs):
+        instance = self.get_object()
+        serializer = self.get_serializer(instance, data=request.data, partial=True)
+        serializer.is_valid(raise_exception=True)
+
+        updated_employee = serializer.save()
+
+        read_serializer = EmployeeBalanceReadSerializer(updated_employee)
+        return Response(read_serializer.data, status=status.HTTP_200_OK)
