@@ -48,7 +48,7 @@
 }
 
 .linkActive {
-    color: var(--text);
+    color: var(--primary);
 }
 
 .icon {
@@ -113,8 +113,8 @@
     }
 
     .linkActive {
-        color: var(--text);
-        background: #eeeeee;
+        color: var(--primary);
+        background: var(--primary-soft);
     }
 
     .icon {
