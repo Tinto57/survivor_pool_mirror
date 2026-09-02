@@ -23,10 +23,12 @@ from drf_spectacular.views import SpectacularAPIView, SpectacularSwaggerView
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('api/v1/', include('accounts.urls')),
-    path('api/v1/employees/', EmployeesView.as_view(), name="transactions-collection"),
-    path('api/v1/employees/me/', employee_get_self, name="get-self-employee"),
-    path('api/v1/employees/<int:employee_id>/', SingleEmployeeView.as_view(), name="employee-collection"),
-    path('api/v1/employees/<int:employee_id>/balance/', employee_get_balance, name="get-employee-balance"),
+
+    path('api/v1/', include('wallet.urls')),
+    # path('api/v1/employees/', EmployeesView.as_view(), name="transactions-collection"),
+    # path('api/v1/employees/me/', employee_get_self, name="get-self-employee"),
+    # path('api/v1/employees/<int:employee_id>/', SingleEmployeeView.as_view(), name="employee-collection"),
+    # path('api/v1/employees/<int:employee_id>/balance/', employee_get_balance, name="get-employee-balance"),
 
     path('api/schema/', SpectacularAPIView.as_view(), name='schema'),
     path('api/docs/', SpectacularSwaggerView.as_view(url_name='schema'), name='swagger-ui'),
