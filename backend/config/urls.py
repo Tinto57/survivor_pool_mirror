@@ -22,10 +22,13 @@ from wallet.views import *
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('api/v1/auth/', account_get_token, name="get-token-user"),
+
     path('api/v1/users/', UsersView.as_view(), name="users-collection"),
     path('api/v1/users/me/', account_get_self, name="get-self-account"),
     path('api/v1/users/<int:user_id>/', SingleUserView.as_view(), name="user-collection"),
+
     path('api/v1/employees/', EmployeesView.as_view(), name="transactions-collection"),
+    path('api/v1/employees/me/', employee_get_self, name="get-self-employee"),
     path('api/v1/employees/<int:employee_id>/', SingleEmployeeView.as_view(), name="employee-collection"),
     path('api/v1/employees/<int:employee_id>/balance/', employee_get_balance, name="get-employee-balance"),
 ]

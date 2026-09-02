@@ -21,6 +21,22 @@ def employee_get_balance(req: HttpRequest, employee_id: int) -> JsonResponse:
         return JsonResponse({"error":"Not found"}, status=404)
     return JsonResponse({"balance": e.balance}, status=200)
 
+@require_jwt
+def employee_get_self(req: HttpRequest) -> JsonResponse:
+    """ Get self infos """
+    if req.method != "GET":
+        return JsonResponse({"error": "Method not allowed"}, status=405)
+    try:
+        e = Employee.objects.get(user_id=req.user.id)
+    except Employee.DoesNotExist:
+        return JsonResponse({"error": "Not found"}, status=404)
+    return JsonResponse({"employee": {
+        "id": e.id,
+        "user": e.user_id,
+        "balance": e.balance,
+        "employer": e.employer
+    }}, status=200)
+
 @method_decorator(require_jwt, name="dispatch")
 @method_decorator(csrf_exempt, name="dispatch")
 class EmployeesView(View):
@@ -58,7 +74,7 @@ class EmployeesView(View):
             "employee": {
                 "id"  : employee.id,
                 "user": employee.user.username,
-                "amount": employee.balance,
+                "balance": employee.balance,
                 "employer": employee.employer
             }
         }, status=200)
