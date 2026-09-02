@@ -86,3 +86,21 @@ class SingleEmployeeView(View):
                 "employer": employee.employer
             }
         }, status=200)
+
+    def delete(
+            self       : "SingleEmployeeView",
+            req        : HttpRequest,
+            employee_id: int
+        ) -> JsonResponse:
+
+        try:
+            employee = Employee.objects.get(id=employee_id)
+        except Employee.DoesNotExist:
+            return JsonResponse({"error": "Not found"}, status=404)
+
+        if employee.user_id != req.user.id or not req.user.is_superuser:
+            return JsonResponse({"error": "Forbidden"}, status=401)
+
+        employee.delete()
+
+        return JsonResponse({"message": f"Successfully deleted employee {employee_id}"}, status=200)
