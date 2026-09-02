@@ -2,6 +2,16 @@ from django.db import models
 from django.core.validators import RegexValidator
 
 # Create your models here.
+class Category(models.Model):
+    name = models.CharField(max_length=100, unique=True)
+
+    class Meta:
+        verbose_name_plural = "Categories"
+        ordering = ['name']
+
+    def __str__(self):
+        return self.name
+
 class Partner(models.Model):
     STATUS_CHOICE = [
         ('pending', "En attente"),
@@ -14,6 +24,7 @@ class Partner(models.Model):
     business_name = models.CharField(max_length=200)
     siren = models.CharField(max_length=9, validators=[RegexValidator(r'^\d{9}$', 'Le SIREN doit contenir exactement 9 chiffres.')])
     business_purpose = models.TextField()
+    category = models.ForeignKey(Category, on_delete=models.PROTECT, related_name='partners')
     address = models.CharField(max_length=300)
     latitude = models.DecimalField(max_digits=9, decimal_places=6, null=True, blank=True)
     longitude = models.DecimalField(max_digits=9, decimal_places=6, null=True, blank=True)
