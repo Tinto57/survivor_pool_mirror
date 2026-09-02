@@ -204,6 +204,25 @@ def account_get_token(req: HttpRequest) -> JsonResponse:
         }
     }, status=200)
 
+@require_jwt
+def account_get_self(req: HttpRequest) -> JsonResponse:
+    """ Get self """
+    if req.method != "GET":
+        return JsonResponse({"error": "Method not allowed"}, status=405)
+
+    user: User = req.user;
+
+    return JsonResponse({
+        "user": {
+            "id": user.id,
+            "username": user.username,
+            "first_name": user.first_name,
+            "last_name": user.last_name,
+            "email": user.email,
+            "joined_at": user.date_joined
+        }
+    }, status=200)
+
 @method_decorator(csrf_exempt, name='dispatch')
 class SingleUserView(View):
     @method_decorator(require_jwt)
