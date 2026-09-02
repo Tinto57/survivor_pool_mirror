@@ -1,4 +1,14 @@
 :root {
+    /* Police système d'origine : réservée aux montants (pas de police dédiée aux
+       chiffres dans la charte DSFR, seulement Marianne/Spectral). */
+    --font-system: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial,
+        sans-serif;
+
+    /* Bleu ministériel (charte Cabinet du Ministre) */
+    --primary: #1b3a6b;
+    --primary-soft: #e8edf5;
+    --primary-hover: #142c52;
+
     --bg: #f5f6f8;
     --surface: #ffffff;
     --field: #fafafa;
@@ -36,12 +46,72 @@
 body {
     margin: 0;
 
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial,
-        sans-serif;
+    font-family: var(--font-spectral), -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+        Helvetica, Arial, sans-serif;
     -webkit-font-smoothing: antialiased;
 
     background: var(--bg);
     color: var(--text);
+}
+
+/* Marianne : police officielle de l'État (charte ministérielle), issue du Système de
+   Design de l'État (@gouvfr/dsfr, licence Etalab-2.0) — voir public/fonts/marianne/LICENSE.md */
+@font-face {
+    font-family: "Marianne";
+    src: url("/fonts/marianne/Marianne-Regular.woff2") format("woff2");
+    font-weight: 400;
+    font-style: normal;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: "Marianne";
+    src: url("/fonts/marianne/Marianne-Regular_Italic.woff2") format("woff2");
+    font-weight: 400;
+    font-style: italic;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: "Marianne";
+    src: url("/fonts/marianne/Marianne-Medium.woff2") format("woff2");
+    font-weight: 500;
+    font-style: normal;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: "Marianne";
+    src: url("/fonts/marianne/Marianne-Medium_Italic.woff2") format("woff2");
+    font-weight: 500;
+    font-style: italic;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: "Marianne";
+    src: url("/fonts/marianne/Marianne-Bold.woff2") format("woff2");
+    font-weight: 700;
+    font-style: normal;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: "Marianne";
+    src: url("/fonts/marianne/Marianne-Bold_Italic.woff2") format("woff2");
+    font-weight: 700;
+    font-style: italic;
+    font-display: swap;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+    font-family: "Marianne", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica,
+        Arial, sans-serif;
 }
 
 button {
