@@ -25,7 +25,6 @@ class QRCode(models.Model):
     def __str__(self):
         return f"QR {self.token[:8]}... ({self.amount}€)"
 
-
 class Transaction(models.Model):
     qr_code = models.OneToOneField(QRCode, on_delete=models.PROTECT)
     employee = models.ForeignKey('wallet.Employee', on_delete=models.PROTECT)
