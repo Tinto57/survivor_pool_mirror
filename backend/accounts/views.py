@@ -351,6 +351,7 @@
 from rest_framework import generics, status
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
+from rest_framework.request import Request
 from rest_framework.views import APIView
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework_simplejwt.views import TokenObtainPairView
@@ -426,12 +427,19 @@ class SingleUserView(generics.RetrieveUpdateDestroyAPIView):
         user = self.get_object()
         user_id = user.id
         user.delete()
-        return Response({"message": f"Successfully deleted user {user_id}"}, status=status.HTTP_200_OK)
+        return Response({
+            "message": f"Successfully deleted user {user_id}"
+        }, status=status.HTTP_200_OK)
 
 class CustomTokenObtainPairView(TokenObtainPairView):
     """Remplace account_get_token pour inclure les données utilisateur dans la réponse."""
-    def post(self, request, *args, **kwargs):
-        response = super().post(request, *args, **kwargs)
+    def post(
+            self   : "CustomTokenObtainPairView",
+            request:  Request,
+            *args,
+            **kwargs
+        ) -> Response:
+        response: Response = super().post(request, *args, **kwargs)
         if response.status_code == 200:
             user = User.objects.get(username=request.data["username"])
             token_data = response.data

@@ -22,7 +22,6 @@ class PartnerSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError("SIREN must contain exactly 9 digits")
         return value
 
-
 class UserSerializer(serializers.ModelSerializer):
     """Pour la lecture et la mise à jour (GET, PATCH)."""
     class Meta:
