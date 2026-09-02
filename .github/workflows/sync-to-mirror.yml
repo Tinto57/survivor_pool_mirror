@@ -1,0 +1,23 @@
+name: Sync to Personal Mirror
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Push to Personal Mirror
+        env:
+          PAT_TOKEN: ${{ secrets.MIRROR_PAT }}
+        run: |
+          git remote add mirror https://${PAT_TOKEN}@github.com/Tinto57/survivor_pool_mirror.git
+          git push --force mirror main

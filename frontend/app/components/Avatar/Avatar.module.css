@@ -1,0 +1,71 @@
+.avatar {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+
+    border-radius: 50%;
+
+    font-weight: 700;
+    letter-spacing: 0.01em;
+    text-transform: uppercase;
+    user-select: none;
+}
+
+.sm {
+    width: 40px;
+    height: 40px;
+    font-size: 14px;
+}
+
+.md {
+    width: 48px;
+    height: 48px;
+    font-size: 16px;
+}
+
+.lg {
+    width: 76px;
+    height: 76px;
+    font-size: 26px;
+}
+
+.avatar svg {
+    width: 1.15em;
+    height: 1.15em;
+}
+
+.indigo {
+    background: #eef0ff;
+    color: #4550b5;
+}
+
+.pink {
+    background: #ffeef3;
+    color: #b4436b;
+}
+
+.amber {
+    background: #fff4e5;
+    color: #96601a;
+}
+
+.green {
+    background: #e9f7ef;
+    color: #1f8a4c;
+}
+
+.cyan {
+    background: #e6f5fb;
+    color: #1d6f8f;
+}
+
+.purple {
+    background: #f4edfd;
+    color: #6b46a8;
+}
+
+.neutral {
+    background: var(--neutral-soft);
+    color: var(--text-muted);
+}

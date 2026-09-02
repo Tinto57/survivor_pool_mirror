@@ -1,0 +1,9 @@
+.content {
+    padding-bottom: calc(var(--navbar-height) + env(safe-area-inset-bottom));
+}
+
+@media (min-width: 768px) {
+    .content {
+        padding-bottom: 0;
+    }
+}
