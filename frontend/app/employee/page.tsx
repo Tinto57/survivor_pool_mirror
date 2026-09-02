@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import BalanceCard from "../components/BalanceCard/BalanceCard";
 import PartnerTile from "../components/PartnerTile/PartnerTile";
+import SimulationBadge from "../components/SimulationBadge/SimulationBadge";
 import TransactionRow from "../components/TransactionRow/TransactionRow";
 import { getAccessToken } from "../lib/auth";
 import { getBalance, getPartners, getTransactions } from "../lib/catalog";
@@ -37,6 +38,7 @@ export default function Home() {
         <main className={styles.page}>
             <header className={styles.topbar}>
                 <span className={styles.brand}>Ticket Tout</span>
+                <SimulationBadge size="sm" />
             </header>
 
             {error && <p className={styles.error}>{error}</p>}
