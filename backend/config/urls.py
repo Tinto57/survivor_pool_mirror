@@ -26,4 +26,5 @@ urlpatterns = [
     path('api/v1/user/me', account_get_self, name="get-self-account"),
     path('api/v1/user/<int:user_id>', SingleUserView.as_view(), name="user-collection"),
     path('api/v1/employees', EmployeesView.as_view(), name="transactions-collection"),
+    path('api/v1/employee/<int:employee_id>', SingleEmployeeView.as_view(), name="employee-collection")
 ]

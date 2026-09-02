@@ -292,7 +292,6 @@ class SingleUserView(View):
                 "error": "Forbidden"
             }, status=403)
 
-        # TODO: Add a check to know if the user is admin
         user.delete()
 
         return JsonResponse({
