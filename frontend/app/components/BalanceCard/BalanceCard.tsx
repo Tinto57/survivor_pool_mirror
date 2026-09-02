@@ -2,6 +2,7 @@ import Link from "next/link";
 import { History, QrCode, Store } from "lucide-react";
 import type { Balance } from "../../lib/catalog";
 import { formatAmount, splitAmount } from "../../lib/catalog";
+import SimulationBadge from "../SimulationBadge/SimulationBadge";
 import styles from "./BalanceCard.module.css";
 
 export default function BalanceCard({ balance }: { balance: Balance }) {
@@ -10,7 +11,10 @@ export default function BalanceCard({ balance }: { balance: Balance }) {
 
     return (
         <section className={styles.card}>
-            <p className={styles.label}>Solde Ticket Tout</p>
+            <div className={styles.labelRow}>
+                <p className={styles.label}>Solde Ticket Tout</p>
+                <SimulationBadge />
+            </div>
 
             <p className={styles.amount}>
                 {integer}
@@ -49,14 +53,18 @@ export default function BalanceCard({ balance }: { balance: Balance }) {
 
             <dl className={styles.stats}>
                 <div className={styles.stat}>
-                    <dt className={styles.statLabel}>Crédité ce mois-ci</dt>
+                    <dt className={styles.statLabel}>
+                        Crédité ce mois-ci <SimulationBadge size="sm" />
+                    </dt>
                     <dd className={`${styles.statValue} ${styles.statIn}`}>
                         {formatAmount(balance.topped_up_this_month)}
                     </dd>
                 </div>
 
                 <div className={styles.stat}>
-                    <dt className={styles.statLabel}>Dépensé ce mois-ci</dt>
+                    <dt className={styles.statLabel}>
+                        Dépensé ce mois-ci <SimulationBadge size="sm" />
+                    </dt>
                     <dd className={styles.statValue}>{formatAmount(balance.spent_this_month)}</dd>
                 </div>
             </dl>

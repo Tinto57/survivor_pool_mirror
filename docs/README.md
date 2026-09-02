@@ -18,3 +18,9 @@ fields, relations, constraints and data lifecycle.
 | `partners` | [fr/partners.md](fr/partners.md) | [en/partners.md](en/partners.md) |
 | `transactions` | [fr/transactions.md](fr/transactions.md) | [en/transactions.md](en/transactions.md) |
 | `api` | [fr/api.md](fr/api.md) | [en/api.md](en/api.md) |
+
+## Conformité
+
+| Sujet | Doc |
+|---|---|
+| Mention "Simulation" (demande RGPD) | [fr/mention-simulation.md](fr/mention-simulation.md) |
