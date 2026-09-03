@@ -147,9 +147,26 @@ class PaymentIntentDetailView(APIView):
         return Response(serializer.data, status=status.HTTP_200_OK)
 
 class TransactionsView(generics.ListAPIView):
-    queryset = Transaction.objects.all()
-    permission_classes = [IsAuthenticated, IsAdminUser]
     serializer_class = TransactionSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        user = self.request.user
+
+        if user.is_staff or user.is_superuser:
+            return Transaction.objects.select_related("employee__user", "partner__user").all()
+
+        if hasattr(user, "partner"):
+            return Transaction.objects.filter(
+                partner=user.partner
+            ).select_related("employee__user", "partner__user")
+
+        if hasattr(user, "employee"):
+            return Transaction.objects.filter(
+                employee=user.employee
+            ).select_related("employee__user", "partner__user")
+
+        return Transaction.objects.none()
 
 class SingleTransactionView(generics.RetrieveDestroyAPIView):
     queryset = Transaction.objects.select_related("employee__user", "partner__user").all()
