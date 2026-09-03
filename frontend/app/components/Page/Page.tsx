@@ -7,11 +7,20 @@ type PageProps = {
     aside?: React.ReactNode;
     children: React.ReactNode;
     simulation?: boolean;
+    /** Élargit la colonne : pour les écrans de gestion denses (espace Ministère). */
+    wide?: boolean;
 };
 
-export default function Page({ title, subtitle, aside, children, simulation }: PageProps) {
+export default function Page({
+    title,
+    subtitle,
+    aside,
+    children,
+    simulation,
+    wide,
+}: PageProps) {
     return (
-        <main className={styles.page}>
+        <main className={wide ? `${styles.page} ${styles.wide}` : styles.page}>
             <header className={styles.header}>
                 <div>
                     <div className={styles.titleRow}>
