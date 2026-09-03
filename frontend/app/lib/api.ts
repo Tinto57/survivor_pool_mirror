@@ -95,9 +95,9 @@ async function request<T>(path: string, options: RequestOptions = {}): Promise<T
     return data as T;
 }
 
-/** POST /api/auth — récupère une paire de tokens JWT. */
+/** POST /api/v1/auth/ — récupère une paire de tokens JWT. */
 export function login(username: string, password: string): Promise<LoginResponse> {
-    return request<LoginResponse>("/api/auth", {
+    return request<LoginResponse>("/api/v1/auth/", {
         method: "POST",
         body: { username, password },
     });
@@ -121,19 +121,19 @@ export type RegisterPayload = {
 };
 
 /**
- * POST /api/users — crée le compte et renvoie directement les tokens.
+ * POST /api/v1/users/ — crée le compte et renvoie directement les tokens.
  *
  * Avec role: "partner", le bloc `partner` crée la fiche entreprise en statut
  * "pending" : elle n'est visible au catalogue qu'après validation par un admin.
  */
 export function register(payload: RegisterPayload): Promise<RegisterResponse> {
-    return request<RegisterResponse>("/api/users", {
+    return request<RegisterResponse>("/api/v1/users/", {
         method: "POST",
         body: payload,
     });
 }
 
-/** GET /api/users/{id} — route protégée par JWT. */
+/** GET /api/v1/users/{id}/ — route protégée par JWT. */
 export function getUser(userId: number, token: string): Promise<UserResponse> {
-    return request<UserResponse>(`/api/users/${userId}`, { token });
+    return request<UserResponse>(`/api/v1/users/${userId}/`, { token });
 }
