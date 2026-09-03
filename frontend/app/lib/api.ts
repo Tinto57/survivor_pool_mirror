@@ -1,5 +1,5 @@
 /**
- * Client HTTP de l'API CartePro.
+ * Client HTTP de l'API Ticket Tout.
  *
  * L'URL du backend est configurable via NEXT_PUBLIC_API_URL (voir .env.local),
  * et retombe sur le serveur de dev Django par défaut.

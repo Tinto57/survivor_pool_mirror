@@ -182,7 +182,7 @@ export default function RegisterPage() {
             <div className={styles.card}>
                 <h1 className={styles.title}>Devenir partenaire</h1>
                 <p className={styles.subtitle}>
-                    Créez votre compte partenaire CartePro. Les salariés reçoivent leurs
+                    Créez votre compte partenaire Ticket Tout. Les salariés reçoivent leurs
                     identifiants directement de leur employeur.
                 </p>
 

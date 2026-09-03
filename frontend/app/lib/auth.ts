@@ -1,8 +1,8 @@
 import type { ApiUser, Role, Tokens } from "./api";
 
-const ACCESS_KEY = "cartepro.access";
-const REFRESH_KEY = "cartepro.refresh";
-const ROLE_KEY = "cartepro.role";
+const ACCESS_KEY = "tickettout.access";
+const REFRESH_KEY = "tickettout.refresh";
+const ROLE_KEY = "tickettout.role";
 
 /** Page d'accueil de chaque rôle, en un seul endroit. */
 const ROLE_HOME: Record<Role, string> = {
