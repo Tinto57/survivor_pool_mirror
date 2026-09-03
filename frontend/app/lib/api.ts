@@ -43,9 +43,7 @@ export type RegisterResponse = {
     partner?: ApiPartner;
 };
 
-export type UserResponse = {
-    user: Required<ApiUser>;
-};
+export type UserResponse = Required<ApiUser>;
 
 /** Erreur renvoyée par l'API, avec le code HTTP associé (0 = serveur injoignable). */
 export class ApiError extends Error {
