@@ -76,6 +76,8 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
 
+APPEND_SLASH = True
+
 # NOTE: Set to False when in production !!!!
 CORS_ALLOW_ALL_ORIGINS = True
 

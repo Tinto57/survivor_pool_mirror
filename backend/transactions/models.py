@@ -26,10 +26,12 @@ class QRCode(models.Model):
         return f"QR {self.token[:8]}... ({self.amount}€)"
 
 class Transaction(models.Model):
-    qr_code = models.OneToOneField(QRCode, on_delete=models.PROTECT)
+    # qr_code = models.OneToOneField(QRCode, on_delete=models.PROTECT)
+    token    = models.CharField(max_length=100, unique=True, editable=False)
     employee = models.ForeignKey('wallet.Employee', on_delete=models.PROTECT)
-    partner = models.ForeignKey('partners.Partner', on_delete=models.PROTECT)
-    amount = models.DecimalField(max_digits=10, decimal_places=2)
+    # NOTE: Is `partner` the guy who get the money 🤑 ?
+    partner  = models.ForeignKey('partners.Partner', on_delete=models.PROTECT)
+    amount   = models.DecimalField(max_digits=10, decimal_places=2)
     validated_at = models.DateTimeField(auto_now_add=True)
     is_cancelled = models.BooleanField(default=False)
     cancelled_at = models.DateTimeField(null=True, blank=True)
