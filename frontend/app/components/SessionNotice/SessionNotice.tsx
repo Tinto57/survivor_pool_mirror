@@ -35,7 +35,7 @@ export default function SessionNotice({ role }: SessionNoticeProps) {
         }
 
         getUser(userId, token)
-            .then(({ user: profile }) => {
+            .then((profile) => {
                 // NOTE: chacun chez soi — un partenaire n'a rien à faire sur /admin.
                 if (profile.role !== role) {
                     router.replace(homePathForRole(profile.role));

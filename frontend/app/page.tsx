@@ -39,7 +39,7 @@ export default function RootRedirect() {
 
         // NOTE: session ouverte avant que le rôle ne soit stocké — on le relit.
         getUser(userId, token)
-            .then(({ user }) => {
+            .then((user) => {
                 storeRole(user.role);
                 router.replace(homePathForRole(user.role));
             })

@@ -26,7 +26,7 @@ export default function ReglagesPage() {
         }
 
         getUser(userId, token)
-            .then(({ user: profile }) => setUser(profile))
+            .then((profile) => setUser(profile))
             .catch((err) => {
                 if (err instanceof ApiError && err.status === 401) {
                     logout();
