@@ -1,0 +1,583 @@
+.logout {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+
+    flex-shrink: 0;
+    padding: 8px 14px;
+
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-pill);
+
+    color: var(--text-muted);
+    font-size: 13px;
+    font-weight: 600;
+
+    cursor: pointer;
+    transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+.logout:hover {
+    background: var(--neutral-soft);
+    color: var(--text);
+}
+
+.logout svg {
+    width: 15px;
+    height: 15px;
+}
+
+/* Tableau de bord national */
+
+.stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 12px;
+
+    margin-bottom: 20px;
+}
+
+/* Colonne de navigation + panneau de contenu (grand écran) */
+
+.layout {
+    display: block;
+}
+
+.panel {
+    min-width: 0;
+}
+
+.stat {
+    padding: 16px 14px;
+
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-sm);
+}
+
+.statIcon {
+    width: 18px;
+    height: 18px;
+    color: var(--primary);
+}
+
+.statValue {
+    margin: 10px 0 0;
+
+    font-family: var(--font-system);
+    font-size: 24px;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    font-variant-numeric: tabular-nums;
+}
+
+.statLabel {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 6px;
+
+    margin: 4px 0 0;
+
+    font-size: 12px;
+    line-height: 1.35;
+    color: var(--text-soft);
+}
+
+/* Onglets */
+
+/* Listes */
+
+.list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+/* Demandes d'inscription */
+
+.request {
+    padding: 16px;
+
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-sm);
+}
+
+.requestHead {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.requestName {
+    margin: 0;
+
+    font-size: 16px;
+    font-weight: 700;
+}
+
+.requestMeta {
+    margin: 2px 0 0;
+
+    font-size: 12px;
+    color: var(--text-soft);
+}
+
+.facts {
+    margin: 14px 0 0;
+    padding: 14px 0 0;
+
+    border-top: 1px solid var(--border);
+}
+
+.fact {
+    display: grid;
+    grid-template-columns: 110px 1fr;
+    gap: 10px;
+
+    padding: 3px 0;
+
+    font-size: 13px;
+}
+
+.fact dt {
+    color: var(--text-soft);
+}
+
+.fact dd {
+    margin: 0;
+    line-height: 1.45;
+}
+
+.actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+
+    margin-top: 14px;
+}
+
+.accept,
+.reject,
+.ghost {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+
+    padding: 9px 16px;
+
+    border: 1px solid transparent;
+    border-radius: var(--radius-sm);
+
+    font-size: 13px;
+    font-weight: 600;
+
+    cursor: pointer;
+    transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+.accept svg,
+.reject svg,
+.ghost svg {
+    width: 15px;
+    height: 15px;
+}
+
+.accept {
+    background: var(--primary);
+    color: #ffffff;
+}
+
+.accept:hover {
+    background: var(--primary-hover);
+}
+
+.reject {
+    background: var(--danger);
+    color: #ffffff;
+}
+
+.reject:hover {
+    filter: brightness(0.94);
+}
+
+.reject:disabled {
+    background: var(--neutral-soft);
+    color: var(--text-soft);
+    cursor: not-allowed;
+}
+
+.ghost {
+    background: var(--surface);
+    border-color: var(--border-strong);
+    color: var(--text-muted);
+}
+
+.ghost:hover {
+    background: var(--neutral-soft);
+    color: var(--text);
+}
+
+/* Refus motivé */
+
+.rejectBox {
+    margin-top: 14px;
+    padding-top: 14px;
+
+    border-top: 1px solid var(--border);
+}
+
+.rejectLabel {
+    display: block;
+    margin-bottom: 6px;
+
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text-muted);
+}
+
+.textarea {
+    width: 100%;
+    padding: 10px 12px;
+
+    background: var(--field);
+    border: 1px solid var(--border-strong);
+    border-radius: var(--radius-sm);
+
+    font-family: inherit;
+    font-size: 13px;
+    line-height: 1.45;
+    color: var(--text);
+
+    resize: vertical;
+}
+
+.textarea:focus {
+    outline: 2px solid var(--primary);
+    outline-offset: -1px;
+}
+
+/* Lignes (partenaires, salariés) */
+
+.row {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 12px;
+
+    padding: 12px 14px;
+
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-sm);
+}
+
+.rowBody {
+    flex: 1;
+    min-width: 160px;
+}
+
+.rowName {
+    margin: 0;
+
+    font-size: 15px;
+    font-weight: 600;
+}
+
+.rowMeta {
+    margin: 2px 0 0;
+
+    font-size: 12px;
+    color: var(--text-soft);
+}
+
+.siren {
+    display: none;
+
+    font-size: 12px;
+    color: var(--text-soft);
+}
+
+.pill {
+    padding: 3px 10px;
+
+    background: var(--primary-soft);
+    border-radius: var(--radius-pill);
+
+    color: var(--primary);
+    font-size: 11px;
+    font-weight: 700;
+}
+
+.balance {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+
+    font-family: var(--font-system);
+    font-size: 15px;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+}
+
+/* Coup de cœur du Ministre */
+
+.feature {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+
+    padding: 8px 14px;
+
+    background: var(--surface);
+    border: 1px solid var(--border-strong);
+    border-radius: var(--radius-pill);
+
+    color: var(--text-soft);
+    font-size: 12px;
+    font-weight: 600;
+
+    cursor: pointer;
+    transition: background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+}
+
+.feature svg {
+    width: 15px;
+    height: 15px;
+}
+
+.feature:hover {
+    border-color: var(--danger);
+    color: var(--danger);
+}
+
+.featureOn {
+    background: var(--danger-soft);
+    border-color: var(--danger);
+    color: var(--danger);
+}
+
+.featureOn svg {
+    fill: currentColor;
+}
+
+.featureLabel {
+    white-space: nowrap;
+}
+
+/* Abondement */
+
+.creditBox {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.creditInput {
+    width: 96px;
+    padding: 9px 12px;
+
+    background: var(--field);
+    border: 1px solid var(--border-strong);
+    border-radius: var(--radius-sm);
+
+    font-family: var(--font-system);
+    font-size: 14px;
+    font-variant-numeric: tabular-nums;
+    color: var(--text);
+}
+
+.creditInput:focus {
+    outline: 2px solid var(--primary);
+    outline-offset: -1px;
+}
+
+/* Journal des décisions */
+
+.decision {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+
+    padding: 14px;
+
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-sm);
+}
+
+.tag {
+    flex-shrink: 0;
+    padding: 3px 10px;
+
+    border-radius: var(--radius-pill);
+
+    font-size: 11px;
+    font-weight: 700;
+}
+
+.tagAccepted {
+    background: var(--success-soft);
+    color: var(--success);
+}
+
+.tagRejected {
+    background: var(--danger-soft);
+    color: var(--danger);
+}
+
+.reason {
+    margin: 4px 0 0;
+
+    font-size: 13px;
+    line-height: 1.45;
+    color: var(--text-muted);
+}
+
+/* États */
+
+.notice {
+    margin: 0 0 16px;
+    padding: 10px 14px;
+
+    background: var(--primary-soft);
+    border-radius: var(--radius-sm);
+
+    color: var(--primary);
+    font-size: 13px;
+    font-weight: 600;
+}
+
+.error {
+    margin: 0 0 16px;
+    padding: 10px 14px;
+
+    background: var(--danger-soft);
+    border-radius: var(--radius-sm);
+
+    color: var(--danger);
+    font-size: 13px;
+}
+
+.empty {
+    padding: 40px 20px;
+
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+
+    text-align: center;
+    font-size: 14px;
+    color: var(--text-muted);
+}
+
+.skeleton {
+    height: 320px;
+
+    background: #e9eaec;
+    border-radius: var(--radius-lg);
+
+    animation: pulse 1.4s ease-in-out infinite;
+}
+
+@keyframes pulse {
+    0%,
+    100% {
+        opacity: 1;
+    }
+    50% {
+        opacity: 0.55;
+    }
+}
+
+@media (min-width: 768px) {
+}
+
+/* Grand écran : les 5 indicateurs sur une seule ligne, navigation en rail
+   latéral, et les dossiers en attente sur deux colonnes. */
+@media (min-width: 960px) {
+    .stats {
+        grid-template-columns: repeat(5, 1fr);
+        gap: 14px;
+        margin-bottom: 26px;
+    }
+
+    .statValue {
+        font-size: 27px;
+    }
+
+    .layout {
+        display: grid;
+        grid-template-columns: 208px minmax(0, 1fr);
+        gap: 28px;
+        align-items: start;
+    }
+
+    .list {
+        gap: 14px;
+    }
+
+    /* Les dossiers à instruire tiennent deux par ligne. */
+    .list:has(.request) {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        align-content: start;
+    }
+
+    .request {
+        display: flex;
+        flex-direction: column;
+        padding: 18px;
+    }
+
+    /* Les actions restent alignées en bas quelle que soit la longueur de l'objet social. */
+    .request .actions {
+        margin-top: auto;
+        padding-top: 14px;
+    }
+
+    .facts {
+        flex: 1;
+    }
+
+    /* Lignes en colonnes façon tableau : le vide central est comblé par
+       l'employeur / le SIREN plutôt que laissé à l'abandon. */
+    .row {
+        padding: 14px 18px;
+        gap: 18px;
+    }
+
+    .siren {
+        display: block;
+        flex: 0 0 200px;
+        text-align: right;
+
+        font-variant-numeric: tabular-nums;
+    }
+
+    .balance {
+        flex: 0 0 170px;
+        justify-content: flex-end;
+    }
+
+    .pill {
+        flex: 0 0 auto;
+        min-width: 84px;
+        text-align: center;
+    }
+
+    .decision {
+        padding: 16px 18px;
+    }
+}
