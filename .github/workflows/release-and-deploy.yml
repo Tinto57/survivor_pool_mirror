@@ -35,6 +35,8 @@ jobs:
           npm ci
 
       - name: Build Next.js & Sync Capacitor Android
+        env:
+          NEXT_PUBLIC_API_URL: https://survivor-pool-mirror.onrender.com
         run: |
           cd frontend
           npm run build
