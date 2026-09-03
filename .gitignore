@@ -16,3 +16,6 @@ backend/db.sqlite3
 
 #png
 backend/*.png
+
+#TODO
+TODO.md
