@@ -4,7 +4,7 @@ from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.views import APIView
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import IsAuthenticated, IsAdminUser
 import secrets
 from django.core.cache import cache
 from .serializers import (
@@ -16,6 +16,10 @@ from drf_spectacular.utils import extend_schema, OpenApiResponse
 from rest_framework.exceptions import NotFound
 from decimal import Decimal
 from django.db import transaction
+from .models import Transaction
+from partners.models import Partner
+from .serializers import TransactionSerializer, TransactionCancellationSerializer
+from .permissions import IsParticipantOrStaff
 
 EXPIRE_TIMEOUT = 60 * 5
 
@@ -79,14 +83,29 @@ class PaymentIntentDetailView(APIView):
     @extend_schema(
         summary="Confirmer et exécuter le paiement",
         responses={
-            200: OpenApiResponse(description="Paiement validé avec succès"),
-            400: OpenApiResponse(description="Solde insuffisant"),
+            200: TransactionSerializer,
+            400: OpenApiResponse(description="Solde insuffisant ou compte partenaire inactif"),
+            403: OpenApiResponse(description="Seul un partenaire peut valider un paiement"),
             404: OpenApiResponse(description="Token expiré ou introuvable"),
         }
     )
     def post(self, request, token: str):
-        key   : str = f"PaymentIntent:{token}"
-        payload     = cache.get(key)
+        try:
+            partner = request.user.partner
+        except Partner.DoesNotExist:
+            return Response(
+                {"error": "Only partners can validate payments"},
+                status=status.HTTP_403_FORBIDDEN
+            )
+
+        if partner.status != "active":
+            return Response(
+                {"error": "Partner account is not active"},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        key: str = f"PaymentIntent:{token}"
+        payload = cache.get(key)
 
         if not payload:
             return Response(
@@ -94,23 +113,115 @@ class PaymentIntentDetailView(APIView):
                 status=status.HTTP_404_NOT_FOUND
             )
 
-        amount = Decimal(payload["amount"])
+        amount = Decimal(str(payload["amount"]))
         employee_id = payload["employee_id"]
 
         with transaction.atomic():
             try:
                 emitter = Employee.objects.select_for_update().get(id=employee_id)
             except Employee.DoesNotExist:
-                return Response({"error": "Emitter not found"}, status=status.HTTP_404_NOT_FOUND)
+                return Response(
+                    {"error": "Emitter not found"},
+                    status=status.HTTP_404_NOT_FOUND
+                )
 
             if emitter.balance < amount:
-                return Response({"error": "Insufficient balance"}, status=status.HTTP_400_BAD_REQUEST)
+                return Response(
+                    {"error": "Insufficient balance"},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
 
             emitter.balance -= amount
             emitter.save(update_fields=["balance"])
 
-            # TODO: Create a transaction
+            tx = Transaction.objects.create(
+                token=token,
+                employee=emitter,
+                partner=partner,
+                amount=amount,
+            )
 
         cache.delete(key)
 
-        return Response({"message": "Payment successful"}, status=status.HTTP_200_OK)
+        serializer = TransactionSerializer(tx)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+class TransactionsView(generics.ListAPIView):
+    serializer_class = TransactionSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        user = self.request.user
+
+        if user.is_staff or user.is_superuser:
+            return Transaction.objects.select_related("employee__user", "partner__user").all()
+
+        if hasattr(user, "partner"):
+            return Transaction.objects.filter(
+                partner=user.partner
+            ).select_related("employee__user", "partner__user")
+
+        if hasattr(user, "employee"):
+            return Transaction.objects.filter(
+                employee=user.employee
+            ).select_related("employee__user", "partner__user")
+
+        return Transaction.objects.none()
+
+class SingleTransactionView(generics.RetrieveDestroyAPIView):
+    queryset = Transaction.objects.select_related("employee__user", "partner__user").all()
+    serializer_class = TransactionSerializer
+    lookup_url_kwarg = "transaction_id"
+    http_method_names = ["get", "delete"]
+
+    def get_permissions(self):
+        if self.request.method == "DELETE":
+            return [IsAuthenticated(), IsAdminUser()]
+        return [IsAuthenticated(), IsParticipantOrStaff()]
+
+    @extend_schema(
+        summary="Annuler une transaction et rembourser l'employé (Admin)",
+        responses={
+            200: TransactionSerializer,
+            400: OpenApiResponse(description="Transaction déjà annulée"),
+            404: OpenApiResponse(description="Transaction introuvable"),
+        },
+    )
+    def delete(self, request, *args, **kwargs):
+        transaction_id = self.kwargs[self.lookup_url_kwarg]
+        reason = request.data.get("reason", "Annulation administrative")
+
+        with transaction.atomic():
+            try:
+                # Verrouillage exclusif de la transaction
+                tx = (
+                    Transaction.objects.select_for_update()
+                    .select_related("employee")
+                    .get(id=transaction_id)
+                )
+            except Transaction.DoesNotExist:
+                return Response(
+                    {"error": "Transaction introuvable."},
+                    status=status.HTTP_404_NOT_FOUND,
+                )
+
+            if tx.is_cancelled:
+                return Response(
+                    {"error": "Cette transaction a déjà été annulée."},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+
+            # Verrouille et recrédite uniquement le compte employé
+            employee = tx.employee.__class__.objects.select_for_update().get(id=tx.employee_id)
+            employee.balance += tx.amount
+            employee.save(update_fields=["balance"])
+
+            # Renseigne l'ensemble des champs d'audit du modèle
+            tx.is_cancelled = True
+            tx.cancelled_at = timezone.now()
+            tx.cancelled_by = request.user
+            tx.cancellation_reason = reason
+            tx.save(update_fields=["is_cancelled", "cancelled_at", "cancelled_by", "cancellation_reason"])
+
+        serializer = self.get_serializer(tx)
+        return Response(serializer.data, status=status.HTTP_200_OK)
