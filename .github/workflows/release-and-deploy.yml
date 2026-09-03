@@ -77,12 +77,26 @@ jobs:
           tag_name: v1.0.${{ github.run_number }}
           name: Release v1.0.${{ github.run_number }}
           body: |
-            ## 🚀 survivor_pool Release v1.0.${{ github.run_number }}
+            ## 🚀 Ticket Tout — Release v1.0.${{ github.run_number }}
 
-            ### 📱 Téléchargements & Installation Mobile :
+            ### 🌐 Accès immédiat (recommandé, rien à installer)
+
+            **👉 https://survivor-pool-mirror-lyart.vercel.app**
+
+            Fonctionne sur tablette, ordinateur et mobile, dans n'importe quel navigateur.
+
+            ### 🔑 Comptes de démonstration
+
+            | Rôle | Identifiant | Mot de passe |
+            |---|---|---|
+            | Salarié | `salarie.demo` | `TicketTout2026!` |
+            | Partenaire | `partenaire.demo` | `TicketTout2026!` |
+            | Admin | `admin.demo` | `TicketTout2026!` |
+
+            ### 📱 Installation mobile (optionnel)
 
             - 🤖 **Android** : Téléchargez [`survivor-pool-android.apk`](./survivor-pool-android.apk) et installez-le directement sur votre smartphone Android.
-            - 🍎 **iPhone / iOS** : Ouvrez le site web sur Safari, appuyez sur le bouton **Partager** ➔ **Sur l'écran d'accueil** pour installer l'application instantanément sur votre iPhone !
+            - 🍎 **iPhone / iPad** : Ouvrez le lien web ci-dessus sur Safari, appuyez sur **Partager** ➔ **Sur l'écran d'accueil** pour installer l'application.
           files: |
             survivor-pool-android.apk
         env:
