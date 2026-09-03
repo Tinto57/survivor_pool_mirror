@@ -135,3 +135,25 @@ export function register(payload: RegisterPayload): Promise<RegisterResponse> {
 export function getUser(userId: number, token: string): Promise<UserResponse> {
     return request<UserResponse>(`/api/v1/users/${userId}/`, { token });
 }
+
+export type BalanceUpdateResponse = {
+    id: number;
+    balance: string;
+};
+
+/**
+ * PATCH /api/v1/employees/{id}/balance/ — abondement employeur.
+ *
+ * Réservé aux comptes administrateurs : le montant est ajouté au solde existant.
+ */
+export function creditEmployee(
+    employeeId: number,
+    amount: number,
+    token: string,
+): Promise<BalanceUpdateResponse> {
+    return request<BalanceUpdateResponse>(`/api/v1/employees/${employeeId}/balance/`, {
+        method: "PATCH",
+        body: { amount: amount.toFixed(2) },
+        token,
+    });
+}
