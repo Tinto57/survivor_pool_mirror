@@ -4,7 +4,7 @@ from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.views import APIView
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import IsAuthenticated, IsAdminUser
 import secrets
 from django.core.cache import cache
 from .serializers import (
@@ -16,6 +16,8 @@ from drf_spectacular.utils import extend_schema, OpenApiResponse
 from rest_framework.exceptions import NotFound
 from decimal import Decimal
 from django.db import transaction
+from .models import Transaction
+from .serializers import TransactionSerializer, TransactionCancellationSerializer
 
 EXPIRE_TIMEOUT = 60 * 5
 
@@ -114,3 +116,8 @@ class PaymentIntentDetailView(APIView):
         cache.delete(key)
 
         return Response({"message": "Payment successful"}, status=status.HTTP_200_OK)
+
+class TransactionsView(generics.ListAPIView):
+    queryset = Transaction.objects.all()
+    permission_classes = [IsAuthenticated, IsAdminUser]
+    serializer_class = TransactionSerializer
