@@ -1,0 +1,25 @@
+/* Zone de protection : marge fixe, jamais posé sur une photo ni un autre élément. */
+.wrap {
+    display: inline-flex;
+
+    padding: 8px;
+
+    background: var(--surface);
+}
+
+.image {
+    display: block;
+
+    width: auto;
+    height: 48px;
+}
+
+.sm .image {
+    height: 64px;
+}
+
+@media (min-width: 768px) {
+    .sm .image {
+        height: 72px;
+    }
+}

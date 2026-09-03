@@ -17,6 +17,10 @@
     padding-bottom: env(safe-area-inset-bottom);
 }
 
+.blocMarque {
+    display: none;
+}
+
 .logo {
     display: none;
 }
@@ -69,6 +73,11 @@
         border-top: none;
         border-bottom: 1px solid var(--border);
         box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+    }
+
+    .blocMarque {
+        display: flex;
+        align-items: center;
     }
 
     .logo {

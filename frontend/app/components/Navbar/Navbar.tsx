@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import BlocMarque from "../BlocMarque/BlocMarque";
 import styles from "./Navbar.module.css";
 
 import { House, History, Settings, Store } from "lucide-react";
@@ -22,6 +23,10 @@ export default function Navbar() {
 
     return (
         <nav className={styles.navbar}>
+            <div className={styles.blocMarque}>
+                <BlocMarque />
+            </div>
+
             <Link href="/employee" className={styles.logo}>
                 <span>Ticket Tout</span>
             </Link>

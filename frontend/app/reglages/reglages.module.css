@@ -142,6 +142,13 @@
     font-size: 13px;
 }
 
+.blocMarque {
+    display: flex;
+    justify-content: center;
+
+    margin-top: 28px;
+}
+
 .footnote {
     margin: 28px 0 0;
 
