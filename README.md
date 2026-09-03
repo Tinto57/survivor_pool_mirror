@@ -46,12 +46,8 @@ Authentification par JWT (access + refresh), rôle porté par `accounts.User.rol
 ### Démarrage rapide
 
 ```bash
-# Backend — API Django sur :8000
-cd backend
-python -m venv ../venv && source ../venv/bin/activate
-pip install -r requirements.txt
-python manage.py migrate
-python manage.py runserver
+# Backend — API Django sur :8000 (ensure that you have docker installed!)
+docker compose up
 
 # Frontend — Next.js sur :3000
 cd frontend
