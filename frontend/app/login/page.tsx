@@ -5,7 +5,6 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import styles from "../components/AuthForm/AuthForm.module.css";
 import { Mail, Lock, Eye, EyeOff } from "lucide-react";
-import { isValidEmail } from "../lib/validation";
 import { ApiError, login } from "../lib/api";
 import { homePathForRole, startSession } from "../lib/auth";
 
@@ -23,11 +22,6 @@ export default function LoginPage() {
 
         if (!email || !password) {
             setError("Merci de remplir tous les champs.");
-            return;
-        }
-
-        if (!isValidEmail(email)) {
-            setError("Adresse email invalide.");
             return;
         }
 
@@ -56,18 +50,18 @@ export default function LoginPage() {
                 <form onSubmit={handleSubmit}>
                     <div className={styles.field}>
                         <label className={styles.label} htmlFor="email">
-                            Email
+                            Identifiant
                         </label>
                         <div className={styles.inputWrapper}>
                             <Mail />
                             <input
                                 id="email"
-                                type="email"
+                                type="text"
                                 className={styles.input}
-                                placeholder="ministre@ministère.gouv.fr"
+                                placeholder="salarie.demo"
                                 value={email}
                                 onChange={(e) => setEmail(e.target.value)}
-                                autoComplete="email"
+                                autoComplete="username"
                             />
                         </div>
                     </div>
