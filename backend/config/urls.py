@@ -11,15 +11,12 @@ urlpatterns = [
     path("api/v1/", include("transactions.urls")),
     path(
         "api/schema/",
-        SpectacularAPIView.as_view(permission_classes=[IsAdminRole]),
+        SpectacularAPIView.as_view(),
         name="schema",
     ),
     path(
         "api/docs/",
-        SpectacularSwaggerView.as_view(
-            url_name="schema",
-            permission_classes=[IsAdminRole],
-        ),
+        SpectacularSwaggerView.as_view(),
         name="swagger-ui",
     ),
 ]
