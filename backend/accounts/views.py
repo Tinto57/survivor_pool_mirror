@@ -119,7 +119,7 @@ class UserMeView(generics.RetrieveAPIView):
         tags=["Utilisateurs"],
         summary="Supprimer un utilisateur",
         description="Supprimable par son propriétaire ou par un administrateur.",
-        responses={200: OpenApiResponse(description="Utilisateur supprimé avec succès.")},
+        responses={204: OpenApiResponse(description="Utilisateur supprimé avec succès.")},
     ),
 )
 class SingleUserView(generics.RetrieveUpdateDestroyAPIView):
@@ -128,15 +128,6 @@ class SingleUserView(generics.RetrieveUpdateDestroyAPIView):
     permission_classes = [IsAuthenticated, IsOwnerOrAdmin]
     lookup_url_kwarg = "user_id"
     http_method_names = ["get", "patch", "delete"]
-
-    def destroy(self, request, *args, **kwargs):
-        user = self.get_object()
-        user_id = user.id
-        user.delete()
-        return Response(
-            {"message": f"Successfully deleted user {user_id}"},
-            status=status.HTTP_200_OK,
-        )
 
 
 class CustomTokenObtainPairView(TokenObtainPairView):
