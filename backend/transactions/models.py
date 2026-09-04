@@ -2,7 +2,8 @@ from django.db import models
 from django.utils import timezone
 from datetime import timedelta
 import secrets
-
+from django.core.exceptions import ValidationError
+from django.db import models
 
 def generate_transaction_token():
     return secrets.token_urlsafe(32)
@@ -49,6 +50,14 @@ class Transaction(models.Model):
         blank=True,
         related_name='counter_entry',
     )
+
+    def save(self, *args, **kwargs):
+        if self.pk and not kwargs.get("force_insert", False):
+            raise ValidationError("Une transaction comptable validée est strictement immuable.")
+        super().save(*args, **kwargs)
+
+    def delete(self, *args, **kwargs):
+        raise ValidationError("Interdiction absolue de supprimer une écriture comptable.")
 
     def __str__(self):
         recipient = self.partner.business_name if self.partner else self.employee.employer

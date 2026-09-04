@@ -76,9 +76,10 @@ class AuditIntegrityTestCase(APITestCase):
         )
 
         self.client.force_authenticate(user=self.user_partner)
-        url = f"/api/v1/payment-intents/{token}/"
+        url = f"/api/v1/payments/{token}/"
 
         response_1 = self.client.post(url)
+        print("\n[DEBUG 404 RESPONSE]:", response_1.status_code, response_1.data)
         self.assertEqual(response_1.status_code, status.HTTP_200_OK)
         tx_id_1 = response_1.data["id"]
 

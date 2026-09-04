@@ -109,6 +109,13 @@ class PaymentIntentDetailView(APIView):
         payload = cache.get(key)
 
         if not payload:
+            try:
+                tx = Transaction.objects.all().filter(token=token).first()
+                return Response(
+                    TransactionSerializer(tx).data, status=status.HTTP_200_OK
+                )
+            except Transaction.DoesNotExist:
+                pass
             return Response(
                 {"error": "QR code expired or already used"},
                 status=status.HTTP_404_NOT_FOUND
