@@ -82,15 +82,16 @@ export default function AdminHome() {
     );
 
     const totals = useMemo(() => {
-        const active = transactions.filter((t) => !t.is_cancelled);
+        // Une transaction annulée/contre-passée a counter_entry_of non-nul
+        const active = transactions.filter((t) => t.counter_entry_of === null);
+
+        const payments = active.filter((t) => t.transaction_type === "PAYMENT");
 
         return {
             distributed:
                 employees.reduce((sum, e) => sum + Number(e.balance), 0) +
-                active.filter((t) => t.kind === "payment").reduce((s, t) => s + t.amount, 0),
-            spent: active
-                .filter((t) => t.kind === "payment")
-                .reduce((sum, t) => sum + t.amount, 0),
+                payments.reduce((s, t) => s + Number(t.amount), 0),
+            spent: payments.reduce((sum, t) => sum + Number(t.amount), 0),
         };
     }, [employees, transactions]);
 
