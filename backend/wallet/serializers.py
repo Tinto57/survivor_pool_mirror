@@ -5,13 +5,21 @@ from wallet.models import Employee
 
 
 class EmployeeSerializer(serializers.ModelSerializer):
+    """Fiche salarié complète."""
+
     class Meta:
         model = Employee
         fields = ["id", "user", "balance", "employer"]
         read_only_fields = ["id", "balance"]
+        extra_kwargs = {
+            "user": {"help_text": "Identifiant du compte utilisateur (rôle `employee`) rattaché à ce salarié."},
+            "employer": {"help_text": "Nom de l'employeur du salarié."},
+        }
 
 
 class EmployeeBalanceReadSerializer(serializers.ModelSerializer):
+    """Solde d'un salarié."""
+
     class Meta:
         model = Employee
         fields = ["id", "balance"]

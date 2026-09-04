@@ -71,10 +71,25 @@ REST_FRAMEWORK = {
 }
 
 SPECTACULAR_SETTINGS = {
-    "TITLE": "Survivor API",
-    "DESCRIPTION": "Documentation interactive des endpoints",
+    "TITLE": "CartePro API",
+    "DESCRIPTION": (
+        "API de la carte titre-restaurant/avantages dématérialisée CartePro : "
+        "gestion des comptes (salariés, partenaires, admin), du solde des "
+        "salariés et des transactions de paiement.\n\n"
+        "Authentification par JWT (`Authorization: Bearer <access_token>`), "
+        "obtenu via `POST /api/v1/auth/`."
+    ),
     "VERSION": "1.0.0",
     "SERVE_INCLUDE_SCHEMA": False,
+    "SCHEMA_PATH_PREFIX": "/api/v1",
+    "TAGS": [
+        {"name": "Authentification", "description": "Obtention du token JWT."},
+        {"name": "Utilisateurs", "description": "Inscription et gestion des comptes utilisateurs."},
+        {"name": "Salariés", "description": "Comptes salariés et gestion de leur solde."},
+        {"name": "Paiements", "description": "Intentions de paiement (QR code) entre un salarié et un partenaire."},
+        {"name": "Transactions", "description": "Écritures comptables (paiements, abondements, contre-écritures) et export."},
+    ],
+    "SORT_OPERATIONS": False,
 }
 
 MIDDLEWARE = [

@@ -2,6 +2,7 @@ from decimal import Decimal
 
 from django.db import IntegrityError, transaction
 from django.http import HttpResponse
+from drf_spectacular.types import OpenApiTypes
 from drf_spectacular.utils import extend_schema, OpenApiResponse
 from rest_framework import generics, status
 from rest_framework.permissions import IsAuthenticated
@@ -31,9 +32,20 @@ class PaymentIntentCreateView(APIView):
     permission_classes = [IsEmployee]
 
     @extend_schema(
-        summary="Create a payment intent",
+        tags=["Paiements"],
+        operation_id="payments_create_intent",
+        summary="Créer une intention de paiement",
+        description=(
+            "Un salarié réserve un montant sur son solde et obtient un token à courte durée "
+            "de vie (5 minutes), à encoder en QR code et présenter à un partenaire. "
+            "Réservé aux comptes de rôle `employee`."
+        ),
         request=PaymentIntentCreateSerializer,
-        responses={201: PaymentIntentResponseSerializer},
+        responses={
+            201: PaymentIntentResponseSerializer,
+            400: OpenApiResponse(description="Solde insuffisant."),
+            403: OpenApiResponse(description="Seul un salarié peut générer une intention de paiement."),
+        },
     )
     def post(self, req: Request):
         serializer = PaymentIntentCreateSerializer(data=req.data)
@@ -50,7 +62,7 @@ class PaymentIntentCreateView(APIView):
 
         if employee.balance < amount:
             return Response(
-                {"error": "Not enough cash xD"},
+                {"error": "Insufficient balance"},
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
@@ -66,7 +78,7 @@ class PaymentIntentCreateView(APIView):
             {
                 "token": token,
                 "amount": str(amount),
-                "expire": EXPIRE_TIMEOUT,
+                "expires_in": EXPIRE_TIMEOUT,
             },
             status=status.HTTP_201_CREATED,
         )
@@ -79,10 +91,17 @@ class PaymentIntentDetailView(APIView):
         return [CanInspectPaymentIntent()]
 
     @extend_schema(
+        tags=["Paiements"],
+        operation_id="payments_retrieve_intent",
         summary="Consulter une intention de paiement via son token (scan QR code)",
+        description=(
+            "Consultable par le salarié qui a créé l'intention, par un partenaire actif, "
+            "ou par un administrateur."
+        ),
         responses={
             200: PaymentIntentResponseSerializer,
-            404: OpenApiResponse(description="Token expiré ou introuvable"),
+            403: OpenApiResponse(description="Ni le créateur de l'intention, ni un partenaire actif, ni un administrateur."),
+            404: OpenApiResponse(description="Token expiré ou introuvable."),
         },
     )
     def get(self, request, token: str):
@@ -111,18 +130,26 @@ class PaymentIntentDetailView(APIView):
             {
                 "token": payload.get("token", token),
                 "amount": payload.get("amount"),
-                "expire": EXPIRE_TIMEOUT,
+                "expires_in": EXPIRE_TIMEOUT,
             },
             status=status.HTTP_200_OK,
         )
 
     @extend_schema(
+        tags=["Paiements"],
+        operation_id="payments_confirm_intent",
         summary="Confirmer et exécuter le paiement",
+        description=(
+            "Débite le salarié et crée l'écriture comptable de paiement au bénéfice du partenaire. "
+            "Idempotent : rejouer la confirmation d'un token déjà consommé renvoie la même transaction "
+            "sans débiter à nouveau. Réservé à un compte partenaire actif."
+        ),
+        request=None,
         responses={
             200: TransactionSerializer,
-            400: OpenApiResponse(description="Solde insuffisant ou compte partenaire inactif"),
-            403: OpenApiResponse(description="Seul un partenaire peut valider un paiement"),
-            404: OpenApiResponse(description="Token expiré ou introuvable"),
+            400: OpenApiResponse(description="Solde insuffisant."),
+            403: OpenApiResponse(description="Seul un partenaire actif peut valider un paiement."),
+            404: OpenApiResponse(description="Token expiré, introuvable, ou déjà utilisé par un autre partenaire."),
         },
     )
     def post(self, request, token: str):
@@ -178,6 +205,15 @@ class PaymentIntentDetailView(APIView):
         return Response(TransactionSerializer(tx).data, status=status.HTTP_200_OK)
 
 
+@extend_schema(
+    tags=["Transactions"],
+    summary="Lister les transactions",
+    description=(
+        "Liste les écritures comptables visibles par l'utilisateur authentifié : "
+        "toutes pour un administrateur, uniquement les siennes pour un salarié ou un partenaire."
+    ),
+    responses={200: TransactionSerializer(many=True)},
+)
 class TransactionsView(generics.ListAPIView):
     serializer_class = TransactionSerializer
     permission_classes = [IsAuthenticated]
@@ -201,6 +237,16 @@ class TransactionsView(generics.ListAPIView):
         return Transaction.objects.none()
 
 
+@extend_schema(
+    tags=["Transactions"],
+    summary="Consulter une transaction",
+    description="Consultable par le salarié ou le partenaire impliqué dans la transaction, ou par un administrateur.",
+    responses={
+        200: TransactionSerializer,
+        403: OpenApiResponse(description="L'utilisateur n'est ni impliqué dans la transaction, ni administrateur."),
+        404: OpenApiResponse(description="Transaction introuvable."),
+    },
+)
 class SingleTransactionView(generics.RetrieveAPIView):
     queryset = Transaction.objects.select_related("employee__user", "partner__user").all()
     serializer_class = TransactionSerializer
@@ -213,9 +259,14 @@ class AbondmentCreateView(APIView):
     permission_classes = [IsAdminRole]
 
     @extend_schema(
+        tags=["Transactions"],
         summary="Créditer le solde d'un employé avec un abondement",
+        description="Crée une écriture comptable d'abondement et crédite immédiatement le solde du salarié concerné. Réservé aux administrateurs.",
         request=AbondmentCreateSerializer,
-        responses={201: TransactionSerializer},
+        responses={
+            201: TransactionSerializer,
+            400: OpenApiResponse(description="Montant invalide ou salarié introuvable."),
+        },
     )
     @transaction.atomic
     def post(self, request):
@@ -240,8 +291,19 @@ class CounterEntryCreateView(APIView):
     permission_classes = [IsAdminRole]
 
     @extend_schema(
+        tags=["Transactions"],
         summary="Créer la contre-écriture d'une transaction",
-        responses={201: TransactionSerializer},
+        description=(
+            "Annule une transaction existante en créant sa contre-écriture (un paiement est "
+            "contré par un abondement, et inversement), sans jamais modifier ni supprimer "
+            "l'écriture d'origine. Réservé aux administrateurs."
+        ),
+        request=None,
+        responses={
+            201: TransactionSerializer,
+            400: OpenApiResponse(description="Contre-écriture déjà existante, ou solde insuffisant pour la contre-écriture."),
+            404: OpenApiResponse(description="Transaction introuvable."),
+        },
     )
     @transaction.atomic
     def post(self, request, transaction_id):
@@ -286,6 +348,14 @@ class CounterEntryCreateView(APIView):
 class AdminTransactionsCsvExportView(APIView):
     permission_classes = [IsAdminRole]
 
+    @extend_schema(
+        tags=["Transactions"],
+        operation_id="transactions_export_csv",
+        summary="Exporter toutes les transactions en CSV",
+        description="Génère un export CSV (délimiteur `;`) de toutes les transactions en base. Réservé aux administrateurs.",
+        request=None,
+        responses={(200, "text/csv"): OpenApiTypes.BINARY},
+    )
     def get(self, request, *args, **kwargs):
         csv_data = export_transactions()
         response = HttpResponse(

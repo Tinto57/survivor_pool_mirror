@@ -4,7 +4,7 @@ from rest_framework.response import Response
 from rest_framework.request import Request
 from rest_framework.exceptions import NotFound
 from django.db import transaction
-from drf_spectacular.utils import extend_schema
+from drf_spectacular.utils import extend_schema, extend_schema_view, OpenApiResponse
 
 from accounts.permissions import IsAdminRole
 from wallet.permissions import IsOwnerOrAdminEmployee
@@ -16,6 +16,20 @@ from .serializers import (
 )
 
 
+@extend_schema_view(
+    get=extend_schema(
+        tags=["Salariés"],
+        summary="Lister les salariés",
+        description="Liste tous les comptes salariés. Réservé aux administrateurs.",
+        responses={200: EmployeeSerializer(many=True)},
+    ),
+    post=extend_schema(
+        tags=["Salariés"],
+        summary="Créer un compte salarié",
+        description="Rattache un compte salarié à un utilisateur existant. Réservé aux administrateurs.",
+        responses={201: EmployeeSerializer},
+    ),
+)
 class EmployeesView(generics.ListCreateAPIView):
     queryset = Employee.objects.all()
     serializer_class = EmployeeSerializer
@@ -33,6 +47,18 @@ class EmployeeMe(generics.RetrieveAPIView):
     serializer_class = EmployeeSerializer
     permission_classes = [IsAuthenticated]
 
+    @extend_schema(
+        tags=["Salariés"],
+        summary="Consulter mon profil salarié",
+        description="Renvoie la fiche salarié (dont le solde) de l'utilisateur actuellement authentifié.",
+        responses={
+            200: EmployeeSerializer,
+            404: OpenApiResponse(description="L'utilisateur authentifié n'a pas de fiche salarié."),
+        },
+    )
+    def get(self, request, *args, **kwargs):
+        return super().get(request, *args, **kwargs)
+
     def get_object(self):
         try:
             return self.queryset.get(user=self.request.user)
@@ -40,6 +66,20 @@ class EmployeeMe(generics.RetrieveAPIView):
             raise NotFound(detail="Employee does not exist for you")
 
 
+@extend_schema_view(
+    get=extend_schema(
+        tags=["Salariés"],
+        summary="Consulter un salarié",
+        description="Consultable par le salarié lui-même ou par un administrateur.",
+        responses={200: EmployeeSerializer},
+    ),
+    delete=extend_schema(
+        tags=["Salariés"],
+        summary="Supprimer un compte salarié",
+        description="Supprimable par le salarié lui-même ou par un administrateur.",
+        responses={204: OpenApiResponse(description="Compte salarié supprimé avec succès.")},
+    ),
+)
 class SingleEmployeeView(generics.RetrieveDestroyAPIView):
     queryset = Employee.objects.all()
     serializer_class = EmployeeSerializer
@@ -75,9 +115,23 @@ class SingleEmployeeBalanceView(generics.RetrieveUpdateAPIView):
         return obj
 
     @extend_schema(
-        summary="Créditer le solde d'un employé",
-        request=EmployeeBalanceUpdateSerializer,
+        tags=["Salariés"],
+        summary="Consulter le solde d'un salarié",
+        description="Consultable par le salarié lui-même ou par un administrateur.",
         responses={200: EmployeeBalanceReadSerializer},
+    )
+    def get(self, request, *args, **kwargs):
+        return super().get(request, *args, **kwargs)
+
+    @extend_schema(
+        tags=["Salariés"],
+        summary="Créditer le solde d'un employé",
+        description="Ajoute un montant positif au solde d'un salarié. Réservé aux administrateurs.",
+        request=EmployeeBalanceUpdateSerializer,
+        responses={
+            200: EmployeeBalanceReadSerializer,
+            400: OpenApiResponse(description="Montant invalide (nul, négatif ou mal formé)."),
+        },
     )
     @transaction.atomic
     def patch(self, request, *args, **kwargs):
