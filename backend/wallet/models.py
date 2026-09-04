@@ -22,7 +22,7 @@ class Employee(models.Model):
     class Meta:
         constraints = [
             models.CheckConstraint(
-                check=models.Q(balance__gte=Decimal('0.00')),
+                condition=models.Q(balance__gte=Decimal('0.00')),
                 name='employee_balance_non_negative',
             )
         ]
