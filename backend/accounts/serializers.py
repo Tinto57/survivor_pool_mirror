@@ -9,7 +9,7 @@ PUBLIC_ROLES = ("employee", "partner")
 DEFAULT_PARTNER_CATEGORY = "Non catégorisé"
 
 
-class PartnerSerializer(serializers.ModelSerializer):
+class PartnerRegistrationSerializer(serializers.ModelSerializer):
     """Données de la fiche partenaire à fournir lors de l'inscription d'un compte partenaire."""
 
     category = serializers.PrimaryKeyRelatedField(
@@ -56,7 +56,7 @@ class UserSerializer(serializers.ModelSerializer):
 class UserRegistrationSerializer(serializers.ModelSerializer):
     """Payload d'inscription d'un nouveau compte (salarié ou partenaire)."""
 
-    partner = PartnerSerializer(
+    partner = PartnerRegistrationSerializer(
         required=False,
         help_text="Obligatoire et pris en compte uniquement si `role` vaut `partner`.",
     )

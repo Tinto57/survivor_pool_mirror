@@ -88,6 +88,7 @@ SPECTACULAR_SETTINGS = {
         {"name": "Authentification", "description": "Obtention du token JWT."},
         {"name": "Utilisateurs", "description": "Inscription et gestion des comptes utilisateurs."},
         {"name": "Salariés", "description": "Comptes salariés et gestion de leur solde."},
+        {"name": "Partenaires", "description": "Catalogue des partenaires, catégories et décisions de référencement."},
         {"name": "Paiements", "description": "Intentions de paiement (QR code) entre un salarié et un partenaire."},
         {"name": "Transactions", "description": "Écritures comptables (paiements, abondements, contre-écritures) et export."},
     ],

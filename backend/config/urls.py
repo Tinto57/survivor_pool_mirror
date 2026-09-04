@@ -7,6 +7,7 @@ urlpatterns = [
     path("api/v1/", include("accounts.urls")),
     path("api/v1/", include("wallet.urls")),
     path("api/v1/", include("transactions.urls")),
+    path("api/v1/", include("partners.urls")),
     path(
         "api/schema/",
         SpectacularAPIView.as_view(),
