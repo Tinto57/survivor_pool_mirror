@@ -1,4 +1,4 @@
-from rest_framework.permissions import BasePermission
+from rest_framework.permissions import BasePermission, IsAuthenticated
 
 
 class IsParticipantOrStaff(BasePermission):
@@ -20,3 +20,8 @@ class IsParticipantOrStaff(BasePermission):
             return True
 
         return False
+
+class IsAdminRole(IsAuthenticated):
+    def has_permission(self, request, view):
+        is_auth = super().has_permission(request, view)
+        return is_auth and getattr(request.user, 'role', None) == 'admin'
