@@ -24,6 +24,47 @@ export type Partner = {
     registered_at: string;
 };
 
+/** Partenaire tel que renvoyé par GET /api/v1/partners/ (catégorie imbriquée). */
+type ApiPartner = {
+    id: number;
+    business_name: string;
+    business_purpose: string;
+    category: { id: number; name: string } | null;
+    siren: string;
+    address: string;
+    latitude: number | null;
+    longitude: number | null;
+    status: PartnerStatus;
+    is_featured: boolean;
+    registered_at: string;
+};
+
+/** Corps d'une réponse paginée DRF (toutes les listes de l'API le sont). */
+type Paginated<T> = { count: number; next: string | null; previous: string | null; results: T[] };
+
+/** Le modèle Partner n'a pas de champ ville séparé : dérivée du dernier segment de l'adresse. */
+function cityFromAddress(address: string): string {
+    const segments = address.split(",");
+    return segments.length > 1 ? segments[segments.length - 1].trim() : address;
+}
+
+function toPartner(p: ApiPartner): Partner {
+    return {
+        id: p.id,
+        business_name: p.business_name,
+        business_purpose: p.business_purpose,
+        category: p.category?.name ?? "Non catégorisé",
+        siren: p.siren,
+        address: p.address,
+        city: cityFromAddress(p.address),
+        latitude: p.latitude,
+        longitude: p.longitude,
+        status: p.status,
+        is_featured: p.is_featured,
+        registered_at: p.registered_at,
+    };
+}
+
 /**
  * Trace d'une décision de référencement (acceptation ou refus).
  *
@@ -77,7 +118,7 @@ async function fetchOrSeed<T>(path: string, token: string | null, fallback: T): 
 
         if (!res.ok) {
             const message =
-                typeof data?.error === "string" ? data.error : "Une erreur est survenue.";
+                typeof data?.detail === "string" ? data.detail : "Une erreur est survenue.";
             throw new ApiError(message, res.status);
         }
 
@@ -88,13 +129,36 @@ async function fetchOrSeed<T>(path: string, token: string | null, fallback: T): 
     }
 }
 
-export function getPartners(token: string | null): Promise<Partner[]> {
-    return fetchOrSeed<Partner[]>("/api/partners", token, SEED_PARTNERS);
+export async function getPartners(token: string | null): Promise<Partner[]> {
+    const data = await fetchOrSeed<Paginated<ApiPartner> | Partner[]>(
+        "/api/v1/partners/",
+        token,
+        SEED_PARTNERS,
+    );
+    return Array.isArray(data) ? data : data.results.map(toPartner);
 }
 
+/** GET /api/v1/partners/{id}/ — direct, pour ne pas dépendre de la pagination du catalogue. */
 export async function getPartner(id: number, token: string | null): Promise<Partner | null> {
-    const partners = await getPartners(token);
-    return partners.find((p) => p.id === id) ?? null;
+    try {
+        const headers: Record<string, string> = {};
+        if (token) headers["Authorization"] = `Bearer ${token}`;
+
+        const res = await fetch(`${API_URL}/api/v1/partners/${id}/`, { headers });
+        if (res.status === 404) return SEED_PARTNERS.find((p) => p.id === id) ?? null;
+
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok) {
+            const message =
+                typeof data?.detail === "string" ? data.detail : "Une erreur est survenue.";
+            throw new ApiError(message, res.status);
+        }
+
+        return toPartner(data as ApiPartner);
+    } catch (err) {
+        if (err instanceof ApiError) throw err;
+        return SEED_PARTNERS.find((p) => p.id === id) ?? null;
+    }
 }
 
 export function getBalance(token: string | null): Promise<Balance> {
@@ -105,9 +169,14 @@ export function getTransactions(token: string | null): Promise<Transaction[]> {
     return fetchOrSeed<Transaction[]>("/api/transactions", token, SEED_TRANSACTIONS);
 }
 
-/** Liste des salariés — route réelle, réservée aux comptes administrateurs. */
-export function getEmployees(token: string | null): Promise<AdminEmployee[]> {
-    return fetchOrSeed<AdminEmployee[]>("/api/v1/employees/", token, SEED_EMPLOYEES);
+/** Liste des salariés — route réelle, réservée aux comptes administrateurs (paginée). */
+export async function getEmployees(token: string | null): Promise<AdminEmployee[]> {
+    const data = await fetchOrSeed<Paginated<AdminEmployee> | AdminEmployee[]>(
+        "/api/v1/employees/",
+        token,
+        SEED_EMPLOYEES,
+    );
+    return Array.isArray(data) ? data : data.results;
 }
 
 export function getPartnerDecisions(): PartnerDecision[] {
