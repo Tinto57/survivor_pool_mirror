@@ -72,6 +72,8 @@ REST_FRAMEWORK = {
     "PAGE_SIZE": 20,
 }
 
+APP_VERSION = "1.0.0"
+
 SPECTACULAR_SETTINGS = {
     "TITLE": "CartePro API",
     "DESCRIPTION": (
@@ -81,7 +83,7 @@ SPECTACULAR_SETTINGS = {
         "Authentification par JWT (`Authorization: Bearer <access_token>`), "
         "obtenu via `POST /api/v1/auth/`."
     ),
-    "VERSION": "1.0.0",
+    "VERSION": APP_VERSION,
     "SERVE_INCLUDE_SCHEMA": False,
     "SCHEMA_PATH_PREFIX": "/api/v1",
     "TAGS": [
@@ -91,6 +93,7 @@ SPECTACULAR_SETTINGS = {
         {"name": "Partenaires", "description": "Catalogue des partenaires, catégories et décisions de référencement."},
         {"name": "Paiements", "description": "Intentions de paiement (QR code) entre un salarié et un partenaire."},
         {"name": "Transactions", "description": "Écritures comptables (paiements, abondements, contre-écritures) et export."},
+        {"name": "Système", "description": "État de santé et informations de version de l'API."},
     ],
     "SORT_OPERATIONS": False,
 }
