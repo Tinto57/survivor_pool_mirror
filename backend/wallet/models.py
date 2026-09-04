@@ -38,4 +38,4 @@ class TopUp(models.Model):
     created_by = models.ForeignKey('accounts.User', on_delete=models.SET_NULL, null=True)
 
     def __str__(self):
-        return f"+{self.amount}€ for {self.employee.user.username}"
+        return f"+{self.amount}€ for {self.user.user.username}"

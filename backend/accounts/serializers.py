@@ -1,15 +1,31 @@
 import re
+from django.contrib.auth.password_validation import validate_password
 from rest_framework import serializers
 from django.contrib.auth import get_user_model
-from partners.models import Partner
+from partners.models import Category, Partner
 
 User = get_user_model()
-PUBLIC_ROLES = ('employee', 'partner')
+PUBLIC_ROLES = ("employee", "partner")
+DEFAULT_PARTNER_CATEGORY = "Non catégorisé"
+
 
 class PartnerSerializer(serializers.ModelSerializer):
+    category = serializers.PrimaryKeyRelatedField(
+        queryset=Category.objects.all(),
+        required=False,
+    )
+
     class Meta:
         model = Partner
-        fields = ["business_name", "siren", "business_purpose", "address", "latitude", "longitude"]
+        fields = [
+            "business_name",
+            "siren",
+            "business_purpose",
+            "address",
+            "latitude",
+            "longitude",
+            "category",
+        ]
         extra_kwargs = {
             "business_name": {"required": True},
             "siren": {"required": True},
@@ -22,15 +38,15 @@ class PartnerSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError("SIREN must contain exactly 9 digits")
         return value
 
+
 class UserSerializer(serializers.ModelSerializer):
-    """Pour la lecture et la mise à jour (GET, PATCH)."""
     class Meta:
         model = User
         fields = ["id", "username", "first_name", "last_name", "email", "date_joined", "role"]
         read_only_fields = ["id", "username", "date_joined", "role"]
 
+
 class UserRegistrationSerializer(serializers.ModelSerializer):
-    """Gère l'inscription complexe (POST) avec création de Partenaire imbriquée."""
     partner = PartnerSerializer(required=False)
     password = serializers.CharField(write_only=True)
 
@@ -41,6 +57,10 @@ class UserRegistrationSerializer(serializers.ModelSerializer):
     def validate_role(self, value):
         if value not in PUBLIC_ROLES:
             raise serializers.ValidationError("Invalid role")
+        return value
+
+    def validate_password(self, value):
+        validate_password(value)
         return value
 
     def validate(self, attrs):
@@ -58,5 +78,8 @@ class UserRegistrationSerializer(serializers.ModelSerializer):
         user = User.objects.create_user(**validated_data, password=password)
 
         if user.role == "partner" and partner_data:
+            if not partner_data.get("category"):
+                category, _ = Category.objects.get_or_create(name=DEFAULT_PARTNER_CATEGORY)
+                partner_data["category"] = category
             Partner.objects.create(user=user, status="pending", **partner_data)
         return user

@@ -1,3 +1,1 @@
-from django.shortcuts import render
-
-# Create your views here.
+# Partner HTTP routes are not exposed yet; models are used from accounts/transactions.
