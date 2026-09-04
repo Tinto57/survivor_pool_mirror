@@ -7,6 +7,7 @@ from django.db import transaction
 from drf_spectacular.utils import extend_schema, extend_schema_view, OpenApiResponse
 
 from accounts.permissions import IsAdminRole
+from config.serializers import ErrorDetailSerializer
 from wallet.permissions import IsOwnerOrAdminEmployee
 from .models import Employee
 from .serializers import (
@@ -53,7 +54,7 @@ class EmployeeMe(generics.RetrieveAPIView):
         description="Renvoie la fiche salarié (dont le solde) de l'utilisateur actuellement authentifié.",
         responses={
             200: EmployeeSerializer,
-            404: OpenApiResponse(description="L'utilisateur authentifié n'a pas de fiche salarié."),
+            404: OpenApiResponse(response=ErrorDetailSerializer, description="L'utilisateur authentifié n'a pas de fiche salarié."),
         },
     )
     def get(self, request, *args, **kwargs):
@@ -130,7 +131,7 @@ class SingleEmployeeBalanceView(generics.RetrieveUpdateAPIView):
         request=EmployeeBalanceUpdateSerializer,
         responses={
             200: EmployeeBalanceReadSerializer,
-            400: OpenApiResponse(description="Montant invalide (nul, négatif ou mal formé)."),
+            400: OpenApiResponse(response=ErrorDetailSerializer, description="Montant invalide (nul, négatif ou mal formé)."),
         },
     )
     @transaction.atomic

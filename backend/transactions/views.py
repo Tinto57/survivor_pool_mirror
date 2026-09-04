@@ -13,6 +13,7 @@ from django.core.cache import cache
 import secrets
 
 from accounts.permissions import IsAdminRole, IsActivePartner, IsEmployee, is_admin_role
+from config.serializers import ErrorDetailSerializer
 from partners.models import Partner
 from wallet.models import Employee
 from .models import Transaction
@@ -43,8 +44,8 @@ class PaymentIntentCreateView(APIView):
         request=PaymentIntentCreateSerializer,
         responses={
             201: PaymentIntentResponseSerializer,
-            400: OpenApiResponse(description="Solde insuffisant."),
-            403: OpenApiResponse(description="Seul un salarié peut générer une intention de paiement."),
+            400: OpenApiResponse(response=ErrorDetailSerializer, description="Solde insuffisant."),
+            403: OpenApiResponse(response=ErrorDetailSerializer, description="Seul un salarié peut générer une intention de paiement."),
         },
     )
     def post(self, req: Request):
@@ -56,13 +57,13 @@ class PaymentIntentCreateView(APIView):
             employee = Employee.objects.get(user=req.user)
         except Employee.DoesNotExist:
             return Response(
-                {"error": "Only employees can generate payment intents"},
+                {"detail": "Only employees can generate payment intents"},
                 status=status.HTTP_403_FORBIDDEN,
             )
 
         if employee.balance < amount:
             return Response(
-                {"error": "Insufficient balance"},
+                {"detail": "Insufficient balance"},
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
@@ -100,15 +101,15 @@ class PaymentIntentDetailView(APIView):
         ),
         responses={
             200: PaymentIntentResponseSerializer,
-            403: OpenApiResponse(description="Ni le créateur de l'intention, ni un partenaire actif, ni un administrateur."),
-            404: OpenApiResponse(description="Token expiré ou introuvable."),
+            403: OpenApiResponse(response=ErrorDetailSerializer, description="Ni le créateur de l'intention, ni un partenaire actif, ni un administrateur."),
+            404: OpenApiResponse(response=ErrorDetailSerializer, description="Token expiré ou introuvable."),
         },
     )
     def get(self, request, token: str):
         payload = cache.get(f"PaymentIntent:{token}")
         if not payload:
             return Response(
-                {"error": "QR code expired or invalid"},
+                {"detail": "QR code expired or invalid"},
                 status=status.HTTP_404_NOT_FOUND,
             )
 
@@ -124,7 +125,7 @@ class PaymentIntentDetailView(APIView):
         is_active_partner = partner is not None and partner.status == "active"
 
         if not (is_admin_role(user) or is_creator or is_active_partner):
-            return Response({"error": "Forbidden"}, status=status.HTTP_403_FORBIDDEN)
+            return Response({"detail": "Forbidden"}, status=status.HTTP_403_FORBIDDEN)
 
         return Response(
             {
@@ -147,9 +148,9 @@ class PaymentIntentDetailView(APIView):
         request=None,
         responses={
             200: TransactionSerializer,
-            400: OpenApiResponse(description="Solde insuffisant."),
-            403: OpenApiResponse(description="Seul un partenaire actif peut valider un paiement."),
-            404: OpenApiResponse(description="Token expiré, introuvable, ou déjà utilisé par un autre partenaire."),
+            400: OpenApiResponse(response=ErrorDetailSerializer, description="Solde insuffisant."),
+            403: OpenApiResponse(response=ErrorDetailSerializer, description="Seul un partenaire actif peut valider un paiement."),
+            404: OpenApiResponse(response=ErrorDetailSerializer, description="Token expiré, introuvable, ou déjà utilisé par un autre partenaire."),
         },
     )
     def post(self, request, token: str):
@@ -169,13 +170,13 @@ class PaymentIntentDetailView(APIView):
                     emitter = Employee.objects.select_for_update().get(id=employee_id)
                 except Employee.DoesNotExist:
                     return Response(
-                        {"error": "Emitter not found"},
+                        {"detail": "Emitter not found"},
                         status=status.HTTP_404_NOT_FOUND,
                     )
 
                 if emitter.balance < amount:
                     return Response(
-                        {"error": "Insufficient balance"},
+                        {"detail": "Insufficient balance"},
                         status=status.HTTP_400_BAD_REQUEST,
                     )
 
@@ -199,7 +200,7 @@ class PaymentIntentDetailView(APIView):
         tx = Transaction.objects.filter(token=token).first()
         if tx is None or tx.partner_id != partner.id:
             return Response(
-                {"error": "QR code expired or already used"},
+                {"detail": "QR code expired or already used"},
                 status=status.HTTP_404_NOT_FOUND,
             )
         return Response(TransactionSerializer(tx).data, status=status.HTTP_200_OK)
@@ -243,8 +244,8 @@ class TransactionsView(generics.ListAPIView):
     description="Consultable par le salarié ou le partenaire impliqué dans la transaction, ou par un administrateur.",
     responses={
         200: TransactionSerializer,
-        403: OpenApiResponse(description="L'utilisateur n'est ni impliqué dans la transaction, ni administrateur."),
-        404: OpenApiResponse(description="Transaction introuvable."),
+        403: OpenApiResponse(response=ErrorDetailSerializer, description="L'utilisateur n'est ni impliqué dans la transaction, ni administrateur."),
+        404: OpenApiResponse(response=ErrorDetailSerializer, description="Transaction introuvable."),
     },
 )
 class SingleTransactionView(generics.RetrieveAPIView):
@@ -265,7 +266,7 @@ class AbondmentCreateView(APIView):
         request=AbondmentCreateSerializer,
         responses={
             201: TransactionSerializer,
-            400: OpenApiResponse(description="Montant invalide ou salarié introuvable."),
+            400: OpenApiResponse(response=ErrorDetailSerializer, description="Montant invalide ou salarié introuvable."),
         },
     )
     @transaction.atomic
@@ -301,8 +302,8 @@ class CounterEntryCreateView(APIView):
         request=None,
         responses={
             201: TransactionSerializer,
-            400: OpenApiResponse(description="Contre-écriture déjà existante, ou solde insuffisant pour la contre-écriture."),
-            404: OpenApiResponse(description="Transaction introuvable."),
+            400: OpenApiResponse(response=ErrorDetailSerializer, description="Contre-écriture déjà existante, ou solde insuffisant pour la contre-écriture."),
+            404: OpenApiResponse(response=ErrorDetailSerializer, description="Transaction introuvable."),
         },
     )
     @transaction.atomic
@@ -311,13 +312,13 @@ class CounterEntryCreateView(APIView):
             tx = Transaction.objects.select_for_update().get(id=transaction_id)
         except Transaction.DoesNotExist:
             return Response(
-                {"error": "Transaction introuvable."},
+                {"detail": "Transaction introuvable."},
                 status=status.HTTP_404_NOT_FOUND,
             )
 
         if hasattr(tx, "counter_entry"):
             return Response(
-                {"error": "Cette transaction possède déjà une contre-écriture."},
+                {"detail": "Cette transaction possède déjà une contre-écriture."},
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
@@ -328,7 +329,7 @@ class CounterEntryCreateView(APIView):
         else:
             if employee.balance < tx.amount:
                 return Response(
-                    {"error": "Solde insuffisant pour la contre-écriture."},
+                    {"detail": "Solde insuffisant pour la contre-écriture."},
                     status=status.HTTP_400_BAD_REQUEST,
                 )
             employee.balance -= tx.amount

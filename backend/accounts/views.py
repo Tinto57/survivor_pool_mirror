@@ -9,6 +9,7 @@ from django.contrib.auth.models import update_last_login
 from django.db import transaction
 from drf_spectacular.utils import extend_schema, extend_schema_view, OpenApiResponse
 
+from config.serializers import ErrorDetailSerializer
 from partners.models import Partner
 from .serializers import (
     LoginResponseSerializer,
@@ -39,7 +40,7 @@ User = get_user_model()
         request=UserRegistrationSerializer,
         responses={
             201: RegistrationResponseSerializer,
-            400: OpenApiResponse(description="Données invalides (mot de passe faible, rôle inconnu, SIREN invalide, fiche partenaire manquante...)."),
+            400: OpenApiResponse(response=ErrorDetailSerializer, description="Données invalides (mot de passe faible, rôle inconnu, SIREN invalide, fiche partenaire manquante...)."),
         },
     ),
 )
@@ -147,7 +148,7 @@ class CustomTokenObtainPairView(TokenObtainPairView):
         description="Authentifie un utilisateur avec son nom d'utilisateur et son mot de passe, et renvoie une paire de tokens JWT.",
         responses={
             200: LoginResponseSerializer,
-            401: OpenApiResponse(description="Identifiants invalides."),
+            401: OpenApiResponse(response=ErrorDetailSerializer, description="Identifiants invalides."),
         },
     )
     def post(self, request: Request, *args, **kwargs) -> Response:
