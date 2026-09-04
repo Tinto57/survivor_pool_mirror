@@ -250,7 +250,7 @@ class AdminTransactionsCsvExportView(APIView):
 
         Génère à la volée le CSV des transactions. Réservé au rôle admin.
     """
-    permission_classes = [IsAdminRole]
+    permission_classes = [IsAdminUser]
 
     def get(self, request, *args, **kwargs):
         csv_data = export_transactions()

@@ -183,28 +183,27 @@ class Command(BaseCommand):
 
             Transaction.objects.bulk_create(valid_transactions_to_create)
 
-            # Persistance de la date validée
             for tx_obj in valid_transactions_to_create:
                 Transaction.objects.filter(id=tx_obj.id).update(validated_at=tx_obj.validated_at)
 
-            # Mise à jour des soldes finaux
             for emp_id, data in employee_state.items():
                 Employee.objects.filter(id=emp_id).update(
                     balance=Decimal(data["balance_cents"]) / Decimal(100)
                 )
 
-        csv_content = export_transactions(csv_rows)
+        csv_content = export_transactions()
         with open("transactions.csv", "w", newline="", encoding="utf-8") as f:
             f.write(csv_content)
 
         zero_balances = [e for e, d in employee_state.items() if d["balance_cents"] == 0]
         under_five = [e for e, d in employee_state.items() if 0 < d["balance_cents"] < 500]
         rejected_count = sum(1 for r in csv_rows if r["status"] == "REJECTED_INSUFFICIENT_FUNDS")
+        exported_count = Transaction.objects.count()
 
         self.stdout.write(self.style.SUCCESS(
             f"Seed exécuté avec succès !\n"
-            f"- Transactions CSV : {len(csv_rows)} (dont {rejected_count} refusées)\n"
-            f"- Transactions en base : {Transaction.objects.count()}\n"
+            f"- Transactions CSV : {exported_count} validées (dont {rejected_count} refusées)\n"
+            f"- Transactions en base : {exported_count}\n"
             f"- Salariés à 0 € : {len(zero_balances)} (IDs: {zero_balances})\n"
             f"- Salariés < 5 € : {len(under_five)} (IDs: {under_five})\n"
             f"- Fichier exporté : transactions.csv"
