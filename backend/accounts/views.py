@@ -356,6 +356,7 @@ from rest_framework.views import APIView
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework_simplejwt.views import TokenObtainPairView
 from django.contrib.auth import get_user_model
+from django.contrib.auth.models import update_last_login
 from django.db import transaction
 
 from partners.models import Partner
@@ -442,6 +443,10 @@ class CustomTokenObtainPairView(TokenObtainPairView):
         response: Response = super().post(request, *args, **kwargs)
         if response.status_code == 200:
             user = User.objects.get(username=request.data["username"])
+            # NOTE: SimpleJWT ne met pas à jour last_login par défaut — sans ça,
+            # un compte activement utilisé serait pris pour "jamais utilisé" par
+            # la politique de purge à 13 mois (accounts.purge_expired_data).
+            update_last_login(None, user)
             token_data = response.data
             response.data = {
                 "message": "Ok",

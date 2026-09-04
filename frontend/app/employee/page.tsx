@@ -36,6 +36,8 @@ export default function Home() {
 
     return (
         <main className={styles.page}>
+            <h1 className="sr-only">Accueil</h1>
+
             <header className={styles.topbar}>
                 <span className={styles.brand}>Ticket Tout</span>
                 <SimulationBadge size="sm" />

@@ -42,7 +42,7 @@ export default function LoginPage() {
     }
 
     return (
-        <div className={styles.wrapper}>
+        <main className={styles.wrapper}>
             <div className={styles.card}>
                 <h1 className={styles.title}>Content de vous revoir</h1>
                 <p className={styles.subtitle}>Connectez-vous à votre compte Ticket Tout</p>
@@ -104,6 +104,6 @@ export default function LoginPage() {
                     <Link href="/register">Créer un compte partenaire</Link>
                 </p>
             </div>
-        </div>
+        </main>
     );
 }

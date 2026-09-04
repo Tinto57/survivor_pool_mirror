@@ -1,5 +1,11 @@
 import { API_URL, ApiError } from "./api";
-import { SEED_BALANCE, SEED_PARTNERS, SEED_TRANSACTIONS } from "./seed";
+import {
+    SEED_BALANCE,
+    SEED_DECISIONS,
+    SEED_EMPLOYEES,
+    SEED_PARTNERS,
+    SEED_TRANSACTIONS,
+} from "./seed";
 
 export type PartnerStatus = "pending" | "active" | "suspended" | "closed";
 
@@ -8,12 +14,38 @@ export type Partner = {
     business_name: string;
     business_purpose: string;
     category: string;
+    siren: string;
     address: string;
     city: string;
     latitude: number | null;
     longitude: number | null;
     status: PartnerStatus;
     is_featured: boolean;
+    registered_at: string;
+};
+
+/**
+ * Trace d'une décision de référencement (acceptation ou refus).
+ *
+ * Exigence juridique : chaque décision est horodatée, porte l'identifiant de
+ * l'agent qui l'a prise, et un motif écrit pour les refus.
+ */
+export type PartnerDecision = {
+    id: number;
+    partner_id: number;
+    partner_name: string;
+    decision: "accepted" | "rejected";
+    reason: string;
+    agent: string;
+    created_at: string;
+};
+
+/** Salarié tel que renvoyé par GET /api/v1/employees/ (réservé aux admins). */
+export type AdminEmployee = {
+    id: number;
+    user: number;
+    balance: string;
+    employer: string;
 };
 
 export type Balance = {
@@ -71,6 +103,15 @@ export function getBalance(token: string | null): Promise<Balance> {
 
 export function getTransactions(token: string | null): Promise<Transaction[]> {
     return fetchOrSeed<Transaction[]>("/api/transactions", token, SEED_TRANSACTIONS);
+}
+
+/** Liste des salariés — route réelle, réservée aux comptes administrateurs. */
+export function getEmployees(token: string | null): Promise<AdminEmployee[]> {
+    return fetchOrSeed<AdminEmployee[]>("/api/v1/employees/", token, SEED_EMPLOYEES);
+}
+
+export function getPartnerDecisions(): PartnerDecision[] {
+    return SEED_DECISIONS;
 }
 
 const EURO = new Intl.NumberFormat("fr-FR", {

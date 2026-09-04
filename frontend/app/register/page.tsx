@@ -178,7 +178,7 @@ export default function RegisterPage() {
     }
 
     return (
-        <div className={styles.wrapper}>
+        <main className={styles.wrapper}>
             <div className={styles.card}>
                 <h1 className={styles.title}>Devenir partenaire</h1>
                 <p className={styles.subtitle}>
@@ -495,6 +495,6 @@ export default function RegisterPage() {
                     Déjà un compte ? <Link href="/login">Se connecter</Link>
                 </p>
             </div>
-        </div>
+        </main>
     );
 }
