@@ -19,3 +19,6 @@ backend/*.png
 
 #TODO
 TODO.md
+
+# CSVs
+*.csv

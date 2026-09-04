@@ -19,7 +19,8 @@ from django.db import transaction
 from .models import Transaction
 from partners.models import Partner
 from .serializers import TransactionSerializer, TransactionCancellationSerializer
-from .permissions import IsParticipantOrStaff
+from .permissions import IsParticipantOrStaff, IsAdminRole
+from django.http import HttpResponse
 
 EXPIRE_TIMEOUT = 60 * 5
 
@@ -193,7 +194,6 @@ class SingleTransactionView(generics.RetrieveDestroyAPIView):
 
         with transaction.atomic():
             try:
-                # Verrouillage exclusif de la transaction
                 tx = (
                     Transaction.objects.select_for_update()
                     .select_related("employee")
@@ -211,12 +211,10 @@ class SingleTransactionView(generics.RetrieveDestroyAPIView):
                     status=status.HTTP_400_BAD_REQUEST,
                 )
 
-            # Verrouille et recrédite uniquement le compte employé
             employee = tx.employee.__class__.objects.select_for_update().get(id=tx.employee_id)
             employee.balance += tx.amount
             employee.save(update_fields=["balance"])
 
-            # Renseigne l'ensemble des champs d'audit du modèle
             tx.is_cancelled = True
             tx.cancelled_at = timezone.now()
             tx.cancelled_by = request.user
@@ -225,3 +223,19 @@ class SingleTransactionView(generics.RetrieveDestroyAPIView):
 
         serializer = self.get_serializer(tx)
         return Response(serializer.data, status=status.HTTP_200_OK)
+
+# class AdminTransactionsCsvExportView(APIView):
+#     """GET /api/v1/admin/transactions.csv
+
+#         Génère à la volée le CSV des transactions. Réservé au rôle admin.
+#     """
+#     permission_classes = [IsAdminRole]
+
+#     def get(self, request, *args, **kwargs):
+#         # csv_data = export_csv()
+
+#         response = HttpResponse(
+#             csv_data.encode('utf-8'), content_type='text/csv; charset=utf-8'
+#         )
+#         response['Content-Disposition'] = 'attachment; filename="transactions.csv"'
+#         return response
