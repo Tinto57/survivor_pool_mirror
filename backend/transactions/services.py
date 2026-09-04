@@ -12,6 +12,7 @@ def export_transactions() -> str:
         'employee_id',
         'partner_id',
         'amount_cents',
+        'transaction_type',
         'status',
     ]
 
@@ -26,15 +27,14 @@ def export_transactions() -> str:
         date_str = tx.validated_at.strftime('%Y-%m-%dT%H:%M:%SZ')
         amount_cents = int(round(tx.amount * 100))
 
-        status = 'CANCELLED' if tx.is_cancelled else 'VALIDATED'
-
         writer.writerow({
             'id': tx.id,
             'date_iso8601': date_str,
             'employee_id': tx.employee_id,
             'partner_id': tx.partner_id,
             'amount_cents': amount_cents,
-            'status': status,
+            'transaction_type': tx.transaction_type,
+            'status': 'VALIDATED',
         })
 
     return output.getvalue()

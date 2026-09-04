@@ -18,7 +18,7 @@ from decimal import Decimal
 from django.db import transaction
 from .models import Transaction
 from partners.models import Partner
-from .serializers import TransactionSerializer, TransactionCancellationSerializer
+from .serializers import TransactionSerializer, AbondmentCreateSerializer
 from .permissions import IsParticipantOrStaff, IsAdminRole
 from django.http import HttpResponse
 
@@ -137,6 +137,7 @@ class PaymentIntentDetailView(APIView):
 
             tx = Transaction.objects.create(
                 token=token,
+                transaction_type=Transaction.PAYMENT,
                 employee=emitter,
                 partner=partner,
                 amount=amount,
@@ -169,73 +170,93 @@ class TransactionsView(generics.ListAPIView):
 
         return Transaction.objects.none()
 
-class SingleTransactionView(generics.RetrieveDestroyAPIView):
+class SingleTransactionView(generics.RetrieveAPIView):
     queryset = Transaction.objects.select_related("employee__user", "partner__user").all()
     serializer_class = TransactionSerializer
     lookup_url_kwarg = "transaction_id"
-    http_method_names = ["get", "delete"]
+    http_method_names = ["get"]
 
     def get_permissions(self):
-        if self.request.method == "DELETE":
-            return [IsAuthenticated(), IsAdminUser()]
         return [IsAuthenticated(), IsParticipantOrStaff()]
 
+class AbondmentCreateView(APIView):
+    permission_classes = [IsAdminUser]
+
     @extend_schema(
-        summary="Annuler une transaction et rembourser l'employé (Admin)",
-        responses={
-            200: TransactionSerializer,
-            400: OpenApiResponse(description="Transaction déjà annulée"),
-            404: OpenApiResponse(description="Transaction introuvable"),
-        },
+        summary="Créditer le solde d'un employé avec un abondement",
+        request=AbondmentCreateSerializer,
+        responses={201: TransactionSerializer},
     )
-    def delete(self, request, *args, **kwargs):
-        transaction_id = self.kwargs[self.lookup_url_kwarg]
-        reason = request.data.get("reason", "Annulation administrative")
+    @transaction.atomic
+    def post(self, request):
+        serializer = AbondmentCreateSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        employee = Employee.objects.select_for_update().get(
+            id=serializer.validated_data["employee"].id
+        )
+        amount = serializer.validated_data["amount"]
+        employee.balance += amount
+        employee.save(update_fields=["balance"])
 
-        with transaction.atomic():
-            try:
-                tx = (
-                    Transaction.objects.select_for_update()
-                    .select_related("employee")
-                    .get(id=transaction_id)
-                )
-            except Transaction.DoesNotExist:
-                return Response(
-                    {"error": "Transaction introuvable."},
-                    status=status.HTTP_404_NOT_FOUND,
-                )
+        tx = Transaction.objects.create(
+            transaction_type=Transaction.ABONDMENT,
+            employee=employee,
+            amount=amount,
+        )
+        return Response(TransactionSerializer(tx).data, status=status.HTTP_201_CREATED)
 
-            if tx.is_cancelled:
-                return Response(
-                    {"error": "Cette transaction a déjà été annulée."},
-                    status=status.HTTP_400_BAD_REQUEST,
-                )
 
-            employee = tx.employee.__class__.objects.select_for_update().get(id=tx.employee_id)
+class CounterEntryCreateView(APIView):
+    permission_classes = [IsAdminUser]
+
+    @extend_schema(
+        summary="Créer la contre-écriture d'une transaction",
+        responses={201: TransactionSerializer},
+    )
+    @transaction.atomic
+    def post(self, request, transaction_id):
+        try:
+            tx = Transaction.objects.select_for_update().get(id=transaction_id)
+        except Transaction.DoesNotExist:
+            return Response({"error": "Transaction introuvable."}, status=status.HTTP_404_NOT_FOUND)
+
+        if hasattr(tx, "counter_entry"):
+            return Response({"error": "Cette transaction possède déjà une contre-écriture."}, status=status.HTTP_400_BAD_REQUEST)
+
+        employee = Employee.objects.select_for_update().get(id=tx.employee_id)
+        if tx.transaction_type == Transaction.PAYMENT:
             employee.balance += tx.amount
-            employee.save(update_fields=["balance"])
+            counter_type = Transaction.ABONDMENT
+        else:
+            if employee.balance < tx.amount:
+                return Response({"error": "Solde insuffisant pour la contre-écriture."}, status=status.HTTP_400_BAD_REQUEST)
+            employee.balance -= tx.amount
+            counter_type = Transaction.PAYMENT
+        employee.save(update_fields=["balance"])
 
-            tx.is_cancelled = True
-            tx.cancelled_at = timezone.now()
-            tx.cancelled_by = request.user
-            tx.cancellation_reason = reason
-            tx.save(update_fields=["is_cancelled", "cancelled_at", "cancelled_by", "cancellation_reason"])
+        counter_entry = Transaction.objects.create(
+            transaction_type=counter_type,
+            employee=employee,
+            partner=tx.partner if counter_type == Transaction.PAYMENT else None,
+            amount=tx.amount,
+            counter_entry_of=tx,
+        )
+        return Response(TransactionSerializer(counter_entry).data, status=status.HTTP_201_CREATED)
 
-        serializer = self.get_serializer(tx)
-        return Response(serializer.data, status=status.HTTP_200_OK)
+from .services import export_transactions
 
-# class AdminTransactionsCsvExportView(APIView):
-#     """GET /api/v1/admin/transactions.csv
+class AdminTransactionsCsvExportView(APIView):
+    """GET /api/v1/admin/transactions.csv
 
-#         Génère à la volée le CSV des transactions. Réservé au rôle admin.
-#     """
-#     permission_classes = [IsAdminRole]
+        Génère à la volée le CSV des transactions. Réservé au rôle admin.
+    """
+    permission_classes = [IsAdminRole]
 
-#     def get(self, request, *args, **kwargs):
-#         # csv_data = export_csv()
+    def get(self, request, *args, **kwargs):
+        csv_data = export_transactions()
 
-#         response = HttpResponse(
-#             csv_data.encode('utf-8'), content_type='text/csv; charset=utf-8'
-#         )
-#         response['Content-Disposition'] = 'attachment; filename="transactions.csv"'
-#         return response
+        response = HttpResponse(
+            csv_data.encode('utf-8'), content_type='text/csv; charset=utf-8'
+        )
+        response['Content-Disposition'] = 'attachment; filename="transactions.csv"'
+        return response

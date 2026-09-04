@@ -1,6 +1,7 @@
 import csv
 from datetime import datetime, timedelta, timezone
 from decimal import Decimal
+import io
 import random
 import secrets
 
@@ -11,7 +12,7 @@ from accounts.models import User
 from partners.models import Category, Partner
 from transactions.models import QRCode, Transaction
 from wallet.models import Employee, TopUp
-
+from transactions.services import export_transactions
 
 class Command(BaseCommand):
     help = "Seed déterministe CartePro conforme au cahier des charges (50 salariés, 12 partenaires, 200 tx, CSV)."
@@ -129,17 +130,11 @@ class Command(BaseCommand):
             timestamps = sorted(random.sample(range(3600, total_seconds - 3600), 200))
             
             assignments = [
-                # (150 €) -> 45 + 55 + 50 = 150 € -> reste 0 € -> refus 22 €
                 (10, 1, 4500), (40, 1, 5500), (80, 1, 5000), (150, 1, 2200),
-                # (120 €) -> 60 + 40 + 20 = 120 € -> reste 0 € -> refus 15 €
                 (15, 2, 6000), (60, 2, 4000), (110, 2, 2000), (160, 2, 1500),
-                # (100 €) -> 55 + 45 = 100 € -> reste 0 € -> refus 18 €
                 (25, 3, 5500), (90, 3, 4500), (170, 3, 1800),
-                # (80 €) -> 45 + 32.50 = 77.50 € -> reste 2,50 € -> refus 12 €
                 (30, 4, 4500), (100, 4, 3250), (180, 4, 1200),
-                # (95 €) -> 50 + 41.20 = 91.20 € -> reste 3,80 € -> refus 14 €
                 (35, 5, 5000), (120, 5, 4120), (190, 5, 1400),
-                # refus
                 (45, 6, 6000), (195, 6, 50000),
             ]
 
@@ -171,7 +166,7 @@ class Command(BaseCommand):
                         partner=partners_by_id[partner_id],
                         amount=Decimal(amount) / Decimal(100),
                         validated_at=tx_date,
-                        is_cancelled=False
+                        transaction_type=Transaction.PAYMENT
                     ))
                 else:
                     status = "REJECTED_INSUFFICIENT_FUNDS"
@@ -188,19 +183,19 @@ class Command(BaseCommand):
 
             Transaction.objects.bulk_create(valid_transactions_to_create)
 
+            # Persistance de la date validée
             for tx_obj in valid_transactions_to_create:
                 Transaction.objects.filter(id=tx_obj.id).update(validated_at=tx_obj.validated_at)
 
+            # Mise à jour des soldes finaux
             for emp_id, data in employee_state.items():
                 Employee.objects.filter(id=emp_id).update(
                     balance=Decimal(data["balance_cents"]) / Decimal(100)
                 )
 
-        csv_fields = ["id", "date_iso8601", "employee_id", "partner_id", "amount_cents", "status"]
+        csv_content = export_transactions(csv_rows)
         with open("transactions.csv", "w", newline="", encoding="utf-8") as f:
-            writer = csv.DictWriter(f, fieldnames=csv_fields, delimiter=";")
-            writer.writeheader()
-            writer.writerows(csv_rows)
+            f.write(csv_content)
 
         zero_balances = [e for e, d in employee_state.items() if d["balance_cents"] == 0]
         under_five = [e for e, d in employee_state.items() if 0 < d["balance_cents"] < 500]

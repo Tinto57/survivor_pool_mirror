@@ -26,11 +26,11 @@ export type Balance = {
 export type Transaction = {
     id: number;
     amount: number;
-    kind: "payment" | "topup";
+    transaction_type: "PAYMENT" | "ABONDMENT";
     validated_at: string;
     partner_id: number | null;
     partner_name: string;
-    is_cancelled: boolean;
+    counter_entry_of: number | null;
 };
 
 async function fetchOrSeed<T>(path: string, token: string | null, fallback: T): Promise<T> {
