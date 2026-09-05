@@ -1,5 +1,3 @@
-from decimal import Decimal
-
 from django.db import IntegrityError, transaction
 from django.http import HttpResponse
 from drf_spectacular.types import OpenApiTypes
@@ -20,7 +18,7 @@ from .models import Transaction
 from .permissions import CanInspectPaymentIntent, IsParticipantOrAdmin
 from .serializers import (
     AbondmentCreateSerializer,
-    PaymentIntentCreateSerializer,
+    PaymentConfirmSerializer,
     PaymentIntentResponseSerializer,
     TransactionSerializer,
 )
@@ -37,22 +35,18 @@ class PaymentIntentCreateView(APIView):
         operation_id="payments_create_intent",
         summary="Créer une intention de paiement",
         description=(
-            "Un salarié réserve un montant sur son solde et obtient un token à courte durée "
-            "de vie (5 minutes), à encoder en QR code et présenter à un partenaire. "
-            "Réservé aux comptes de rôle `employee`."
+            "Un salarié obtient un token à courte durée de vie (5 minutes), à encoder en QR "
+            "code et présenter à un partenaire. Le montant n'est pas fixé ici : c'est le "
+            "partenaire qui le choisit en confirmant le paiement. Réservé aux comptes de rôle "
+            "`employee`."
         ),
-        request=PaymentIntentCreateSerializer,
+        request=None,
         responses={
             201: PaymentIntentResponseSerializer,
-            400: OpenApiResponse(response=ErrorDetailSerializer, description="Solde insuffisant."),
             403: OpenApiResponse(response=ErrorDetailSerializer, description="Seul un salarié peut générer une intention de paiement."),
         },
     )
     def post(self, req: Request):
-        serializer = PaymentIntentCreateSerializer(data=req.data)
-        serializer.is_valid(raise_exception=True)
-        amount = serializer.validated_data["amount"]
-
         try:
             employee = Employee.objects.get(user=req.user)
         except Employee.DoesNotExist:
@@ -61,16 +55,9 @@ class PaymentIntentCreateView(APIView):
                 status=status.HTTP_403_FORBIDDEN,
             )
 
-        if employee.balance < amount:
-            return Response(
-                {"detail": "Insufficient balance"},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
-
         token = secrets.token_urlsafe(32)
         payload = {
             "token": token,
-            "amount": str(amount),
             "employee_id": employee.id,
         }
         cache.set(f"PaymentIntent:{token}", payload, timeout=EXPIRE_TIMEOUT)
@@ -78,7 +65,6 @@ class PaymentIntentCreateView(APIView):
         return Response(
             {
                 "token": token,
-                "amount": str(amount),
                 "expires_in": EXPIRE_TIMEOUT,
             },
             status=status.HTTP_201_CREATED,
@@ -130,7 +116,6 @@ class PaymentIntentDetailView(APIView):
         return Response(
             {
                 "token": payload.get("token", token),
-                "amount": payload.get("amount"),
                 "expires_in": EXPIRE_TIMEOUT,
             },
             status=status.HTTP_200_OK,
@@ -141,14 +126,17 @@ class PaymentIntentDetailView(APIView):
         operation_id="payments_confirm_intent",
         summary="Confirmer et exécuter le paiement",
         description=(
-            "Débite le salarié et crée l'écriture comptable de paiement au bénéfice du partenaire. "
-            "Idempotent : rejouer la confirmation d'un token déjà consommé renvoie la même transaction "
-            "sans débiter à nouveau. Réservé à un compte partenaire actif."
+            "Le partenaire choisit le montant du paiement et le confirme : le salarié est "
+            "débité et l'écriture comptable est créée au bénéfice du partenaire. "
+            "Idempotent : rejouer la confirmation d'un token déjà consommé renvoie la même "
+            "transaction sans débiter à nouveau (le montant renvoyé au rejeu est celui de la "
+            "transaction déjà créée, pas celui du corps de la requête). Réservé à un compte "
+            "partenaire actif."
         ),
-        request=None,
+        request=PaymentConfirmSerializer,
         responses={
             200: TransactionSerializer,
-            400: OpenApiResponse(response=ErrorDetailSerializer, description="Solde insuffisant."),
+            400: OpenApiResponse(response=ErrorDetailSerializer, description="Solde insuffisant ou montant invalide."),
             403: OpenApiResponse(response=ErrorDetailSerializer, description="Seul un partenaire actif peut valider un paiement."),
             404: OpenApiResponse(response=ErrorDetailSerializer, description="Token expiré, introuvable, ou déjà utilisé par un autre partenaire."),
         },
@@ -161,7 +149,9 @@ class PaymentIntentDetailView(APIView):
         if not payload:
             return self._replay_or_not_found(token, partner)
 
-        amount = Decimal(str(payload["amount"]))
+        serializer = PaymentConfirmSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        amount = serializer.validated_data["amount"]
         employee_id = payload["employee_id"]
 
         try:

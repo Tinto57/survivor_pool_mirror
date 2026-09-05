@@ -3,20 +3,20 @@ from rest_framework import serializers
 from .models import Transaction
 from wallet.models import Employee
 
-class PaymentIntentCreateSerializer(serializers.Serializer):
-    """Ce que le client envoie pour générer le paiement"""
+class PaymentIntentResponseSerializer(serializers.Serializer):
+    """Intention de paiement : token à encoder en QR code et durée de validité. Le montant n'est pas encore fixé."""
+    token = serializers.CharField(help_text="Token opaque à encoder en QR code et transmettre au partenaire.")
+    expires_in = serializers.IntegerField(help_text="Durée de validité restante du token, en secondes.")
+
+
+class PaymentConfirmSerializer(serializers.Serializer):
+    """Ce que le partenaire envoie pour fixer le montant et valider le paiement."""
     amount = serializers.DecimalField(
         max_digits=10,
         decimal_places=2,
         min_value=Decimal("0.01"),
-        help_text="Montant de la transaction"
+        help_text="Montant du paiement, choisi par le partenaire."
     )
-
-class PaymentIntentResponseSerializer(serializers.Serializer):
-    """Intention de paiement : token à encoder en QR code, montant réservé et durée de validité."""
-    token = serializers.CharField(help_text="Token opaque à encoder en QR code et transmettre au partenaire.")
-    amount = serializers.CharField(help_text="Montant réservé sur le solde du salarié.")
-    expires_in = serializers.IntegerField(help_text="Durée de validité restante du token, en secondes.")
 
 class TransactionSerializer(serializers.ModelSerializer):
     """Écriture comptable, immuable une fois créée."""

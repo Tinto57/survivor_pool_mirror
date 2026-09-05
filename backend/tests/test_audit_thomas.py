@@ -75,14 +75,14 @@ class AuditIntegrityTestCase(APITestCase):
 
         cache.set(
             f"PaymentIntent:{token}",
-            {"employee_id": self.employee.id, "amount": str(amount)},
+            {"employee_id": self.employee.id},
             timeout=300,
         )
 
         self.client.force_authenticate(user=self.user_partner)
         url = f"/api/v1/payments/{token}/"
 
-        response_1 = self.client.post(url)
+        response_1 = self.client.post(url, {"amount": str(amount)}, format="json")
         self.assertEqual(response_1.status_code, status.HTTP_200_OK)
         tx_id_1 = response_1.data["id"]
 

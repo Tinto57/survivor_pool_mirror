@@ -143,18 +143,18 @@ class PermissionApiTests(APITestCase):
         token = "emp-cannot-confirm"
         cache.set(
             f"PaymentIntent:{token}",
-            {"token": token, "employee_id": self.employee.id, "amount": "10.00"},
+            {"token": token, "employee_id": self.employee.id},
             timeout=300,
         )
         self.client.force_authenticate(user=self.employee_user)
-        response = self.client.post(f"/api/v1/payments/{token}/")
+        response = self.client.post(f"/api/v1/payments/{token}/", {"amount": "10.00"}, format="json")
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
     def test_other_employee_cannot_read_payment_intent(self):
         token = "private-intent"
         cache.set(
             f"PaymentIntent:{token}",
-            {"token": token, "employee_id": self.employee.id, "amount": "10.00"},
+            {"token": token, "employee_id": self.employee.id},
             timeout=300,
         )
         self.client.force_authenticate(user=self.other_employee_user)
