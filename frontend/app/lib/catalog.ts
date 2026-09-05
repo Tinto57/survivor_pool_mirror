@@ -161,12 +161,95 @@ export async function getPartner(id: number, token: string | null): Promise<Part
     }
 }
 
-export function getBalance(token: string | null): Promise<Balance> {
-    return fetchOrSeed<Balance>("/api/wallet/balance", token, SEED_BALANCE);
+/** Fiche salarié telle que renvoyée par GET /api/v1/employees/me/. */
+type ApiEmployeeMe = {
+    id: number;
+    user: number;
+    balance: string;
+    employer: string;
+};
+
+/** Écriture comptable telle que renvoyée par GET /api/v1/transactions/. */
+type ApiTransaction = {
+    id: number;
+    transaction_type: "PAYMENT" | "ABONDMENT";
+    partner: number | null;
+    amount: string;
+    validated_at: string;
+    counter_entry_of: number | null;
+};
+
+function isInCurrentMonth(iso: string): boolean {
+    const date = new Date(iso);
+    const now = new Date();
+    return date.getFullYear() === now.getFullYear() && date.getMonth() === now.getMonth();
 }
 
-export function getTransactions(token: string | null): Promise<Transaction[]> {
-    return fetchOrSeed<Transaction[]>("/api/transactions", token, SEED_TRANSACTIONS);
+/**
+ * GET /api/v1/employees/me/ — solde et employeur du salarié authentifié.
+ *
+ * Les stats "crédité/dépensé ce mois-ci" ne sont pas renvoyées par l'API : on
+ * les recalcule côté client à partir de l'historique des transactions.
+ */
+export async function getBalance(token: string | null): Promise<Balance> {
+    try {
+        const headers: Record<string, string> = {};
+        if (token) headers["Authorization"] = `Bearer ${token}`;
+
+        const res = await fetch(`${API_URL}/api/v1/employees/me/`, { headers });
+        if (res.status === 404) return SEED_BALANCE;
+
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok) {
+            const message =
+                typeof data?.detail === "string" ? data.detail : "Une erreur est survenue.";
+            throw new ApiError(message, res.status);
+        }
+
+        const employee = data as ApiEmployeeMe;
+        const transactions = await getTransactions(token);
+        const thisMonth = transactions.filter((t) => isInCurrentMonth(t.validated_at));
+
+        return {
+            amount: Number(employee.balance),
+            employer: employee.employer,
+            topped_up_this_month: thisMonth
+                .filter((t) => t.transaction_type === "ABONDMENT")
+                .reduce((sum, t) => sum + t.amount, 0),
+            spent_this_month: thisMonth
+                .filter((t) => t.transaction_type === "PAYMENT")
+                .reduce((sum, t) => sum + t.amount, 0),
+        };
+    } catch (err) {
+        if (err instanceof ApiError) throw err;
+        return SEED_BALANCE;
+    }
+}
+
+/** GET /api/v1/transactions/ — historique visible par l'utilisateur authentifié (paginé côté API). */
+export async function getTransactions(token: string | null): Promise<Transaction[]> {
+    const data = await fetchOrSeed<Paginated<ApiTransaction> | Transaction[]>(
+        "/api/v1/transactions/",
+        token,
+        SEED_TRANSACTIONS,
+    );
+    if (Array.isArray(data)) return data;
+
+    const partners = await getPartners(token);
+    const partnerNames = new Map(partners.map((p) => [p.id, p.business_name]));
+
+    return data.results.map((t) => ({
+        id: t.id,
+        amount: Number(t.amount),
+        transaction_type: t.transaction_type,
+        validated_at: t.validated_at,
+        partner_id: t.partner,
+        partner_name:
+            t.partner === null
+                ? "Abondement employeur"
+                : partnerNames.get(t.partner) ?? `Partenaire #${t.partner}`,
+        counter_entry_of: t.counter_entry_of,
+    }));
 }
 
 /** Liste des salariés — route réelle, réservée aux comptes administrateurs (paginée). */
