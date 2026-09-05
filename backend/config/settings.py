@@ -195,5 +195,9 @@ if _TESTING:
             "BACKEND": "django.core.cache.backends.locmem.LocMemCache",
         }
     }
+    # Le hasher PBKDF2 par défaut est volontairement lent (sécurité) ; la
+    # suite de tests crée de nombreux utilisateurs (`create_user`), ce qui la
+    # rend inutilement lente en environnement de test.
+    PASSWORD_HASHERS = ["django.contrib.auth.hashers.MD5PasswordHasher"]
 
 AUTH_USER_MODEL = "accounts.User"

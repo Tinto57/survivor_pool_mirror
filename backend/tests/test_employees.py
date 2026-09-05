@@ -1,10 +1,8 @@
 from decimal import Decimal
 
 from django.contrib.auth import get_user_model
-from django.db.models.deletion import ProtectedError
 from rest_framework import status
 
-from partners.models import Partner
 from transactions.models import Transaction
 from wallet.models import Employee
 from .base import BaseAPITestCase, STRONG_PASSWORD
@@ -142,16 +140,16 @@ class SingleEmployeeTests(BaseAPITestCase):
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
     def test_admin_cannot_delete_employee_with_existing_transactions(self):
-        # Gap constaté : `Transaction.employee` est en `on_delete=PROTECT`,
-        # mais aucune vue ne convertit le `ProtectedError` qui en résulte en
-        # réponse HTTP propre (ex : 409/400) — la requête plante avec une
-        # exception non gérée. Ce test documente le comportement actuel.
+        # `Transaction.employee` est en `on_delete=PROTECT` : la suppression
+        # doit échouer proprement (409), sans exception non gérée, et sans
+        # supprimer le salarié.
         Transaction.objects.create(
             employee=self.employee, partner=self.partner, amount=Decimal("5.00")
         )
         self.client.force_authenticate(user=self.admin)
-        with self.assertRaises(ProtectedError):
-            self.client.delete(f"/api/v1/employees/{self.employee.id}/")
+        response = self.client.delete(f"/api/v1/employees/{self.employee.id}/")
+        self.assertEqual(response.status_code, status.HTTP_409_CONFLICT)
+        self.assertTrue(Employee.objects.filter(id=self.employee.id).exists())
 
     def test_put_not_allowed(self):
         self.client.force_authenticate(user=self.employee_user)
@@ -230,20 +228,14 @@ class EmployeeBalanceTests(BaseAPITestCase):
         )
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
-    def test_credit_missing_amount_currently_crashes(self):
-        # Bug constaté : la vue force `partial=True` sur un serializer avec un
-        # seul champ requis (`amount`) ; avec un body vide, `is_valid()` passe
-        # (le champ devient optionnel) mais `EmployeeBalanceUpdateSerializer.update`
-        # fait `validated_data["amount"]` sans filet, d'où un `KeyError` non
-        # rattrapé (500) au lieu d'un 400. Ce test documente le comportement
-        # actuel, pas une garantie souhaitable.
+    def test_credit_missing_amount_is_rejected(self):
         self.client.force_authenticate(user=self.admin)
-        with self.assertRaises(KeyError):
-            self.client.patch(
-                f"/api/v1/employees/{self.employee.id}/balance/",
-                {},
-                format="json",
-            )
+        response = self.client.patch(
+            f"/api/v1/employees/{self.employee.id}/balance/",
+            {},
+            format="json",
+        )
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
     def test_credit_non_numeric_amount_is_rejected(self):
         self.client.force_authenticate(user=self.admin)

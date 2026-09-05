@@ -4,6 +4,7 @@ from rest_framework.response import Response
 from rest_framework.request import Request
 from rest_framework.exceptions import NotFound
 from django.db import transaction
+from django.db.models.deletion import ProtectedError
 from drf_spectacular.utils import extend_schema, extend_schema_view, OpenApiResponse
 
 from accounts.permissions import IsAdminRole
@@ -78,7 +79,10 @@ class EmployeeMe(generics.RetrieveAPIView):
         tags=["Salariés"],
         summary="Supprimer un compte salarié",
         description="Supprimable par le salarié lui-même ou par un administrateur.",
-        responses={204: OpenApiResponse(description="Compte salarié supprimé avec succès.")},
+        responses={
+            204: OpenApiResponse(description="Compte salarié supprimé avec succès."),
+            409: OpenApiResponse(response=ErrorDetailSerializer, description="Des transactions sont rattachées à ce salarié."),
+        },
     ),
 )
 class SingleEmployeeView(generics.RetrieveDestroyAPIView):
@@ -87,6 +91,17 @@ class SingleEmployeeView(generics.RetrieveDestroyAPIView):
     permission_classes = [IsAuthenticated, IsOwnerOrAdminEmployee]
     lookup_url_kwarg = "employee_id"
     http_method_names = ["get", "delete"]
+
+    def destroy(self, request, *args, **kwargs):
+        instance = self.get_object()
+        try:
+            instance.delete()
+        except ProtectedError:
+            return Response(
+                {"detail": "Impossible de supprimer ce salarié : des transactions lui sont rattachées."},
+                status=status.HTTP_409_CONFLICT,
+            )
+        return Response(status=status.HTTP_204_NO_CONTENT)
 
 
 class SingleEmployeeBalanceView(generics.RetrieveUpdateAPIView):
@@ -137,7 +152,7 @@ class SingleEmployeeBalanceView(generics.RetrieveUpdateAPIView):
     @transaction.atomic
     def patch(self, request, *args, **kwargs):
         instance = self.get_object()
-        serializer = self.get_serializer(instance, data=request.data, partial=True)
+        serializer = self.get_serializer(instance, data=request.data)
         serializer.is_valid(raise_exception=True)
 
         updated_employee = serializer.save()
