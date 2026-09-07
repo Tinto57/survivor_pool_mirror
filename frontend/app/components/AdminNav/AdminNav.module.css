@@ -1,0 +1,128 @@
+.nav {
+    display: flex;
+    gap: 8px;
+
+    margin: 0 -16px 18px;
+    padding: 0 16px;
+
+    overflow-x: auto;
+    scrollbar-width: none;
+}
+
+.nav::-webkit-scrollbar {
+    display: none;
+}
+
+/* Les intitulés de groupe n'ont de sens qu'en colonne : masqués en pastilles. */
+.group {
+    display: none;
+}
+
+.item {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    flex-shrink: 0;
+
+    padding: 8px 16px;
+
+    background: var(--neutral-soft);
+    border: none;
+    border-radius: var(--radius-pill);
+
+    color: var(--text-muted);
+    font-family: inherit;
+    font-size: 13px;
+    font-weight: 600;
+    text-decoration: none;
+
+    cursor: pointer;
+    transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+.item:hover {
+    background: var(--neutral-soft-hover);
+}
+
+.itemActive,
+.itemActive:hover {
+    background: var(--primary);
+    color: #ffffff;
+}
+
+.count {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
+    min-width: 18px;
+    height: 18px;
+    padding: 0 5px;
+
+    background: var(--danger);
+    border-radius: var(--radius-pill);
+
+    color: #ffffff;
+    font-size: 11px;
+    font-weight: 700;
+}
+
+@media (min-width: 960px) {
+    .nav {
+        position: sticky;
+        top: 88px;
+
+        flex-direction: column;
+        gap: 2px;
+
+        margin: 0;
+        padding: 10px;
+
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: var(--radius-md);
+        box-shadow: var(--shadow-sm);
+
+        overflow: visible;
+    }
+
+    .group {
+        display: block;
+
+        margin: 10px 0 4px;
+        padding: 0 14px;
+
+        font-size: 11px;
+        font-weight: 700;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+        color: var(--text-soft);
+    }
+
+    .group:first-child {
+        margin-top: 2px;
+    }
+
+    .item {
+        justify-content: space-between;
+        width: 100%;
+
+        padding: 10px 14px;
+
+        background: transparent;
+        border-radius: var(--radius-sm);
+
+        font-size: 14px;
+        text-align: left;
+    }
+
+    .item:hover {
+        background: var(--neutral-soft);
+    }
+
+    .itemActive,
+    .itemActive:hover {
+        background: var(--primary);
+        color: #ffffff;
+    }
+}

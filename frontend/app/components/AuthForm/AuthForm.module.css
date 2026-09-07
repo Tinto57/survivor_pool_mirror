@@ -59,7 +59,7 @@
 
     border-radius: 50%;
     background: #f3f3f3;
-    color: #999999;
+    color: var(--text-soft);
 
     font-size: 13px;
     font-weight: 700;
@@ -168,7 +168,7 @@
 
     width: 17px;
     height: 17px;
-    color: #999999;
+    color: var(--text-soft);
 }
 
 .input {
@@ -220,7 +220,7 @@
     cursor: pointer;
     padding: 4px;
 
-    color: #999999;
+    color: var(--text-soft);
 }
 
 .passwordToggle svg {
@@ -245,7 +245,7 @@
     gap: 6px;
 
     font-size: 12px;
-    color: #999999;
+    color: var(--text-soft);
 
     transition: color 0.2s ease;
 }
@@ -257,7 +257,7 @@
 }
 
 .passwordHintValid {
-    color: #1f8a4c;
+    color: var(--success);
 }
 
 .autocompleteWrapper {
@@ -304,7 +304,7 @@
     width: 14px;
     height: 14px;
     flex-shrink: 0;
-    color: #999999;
+    color: var(--text-soft);
 }
 
 .suggestionItem:hover,
@@ -320,7 +320,7 @@
     margin-top: 6px;
 
     font-size: 12px;
-    color: #999999;
+    color: var(--text-soft);
 }
 
 .geocodeStatus svg {
@@ -330,7 +330,7 @@
 }
 
 .geocodeStatusSuccess {
-    color: #1f8a4c;
+    color: var(--success);
 }
 
 .geocodeStatusError {
@@ -398,7 +398,7 @@
 }
 
 .submit:disabled {
-    background: #999999;
+    background: var(--text-soft);
     cursor: not-allowed;
 }
 

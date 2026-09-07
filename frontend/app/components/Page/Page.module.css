@@ -6,6 +6,10 @@
     padding: 20px 16px 32px;
 }
 
+.wide {
+    max-width: 1240px;
+}
+
 .header {
     display: flex;
     align-items: flex-start;

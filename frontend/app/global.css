@@ -16,9 +16,13 @@
     --border-strong: #e0e0e0;
     --text: #111111;
     --text-muted: #666666;
-    --text-soft: #999999;
+    /* #6b6b6b, pas #999999 : RGAA/WCAG AA exige 4,5:1 sur fond blanc et #f5f6f8,
+       et #999999 n'atteint que ~2,8:1 (audit axe-core du 2026-09-04). */
+    --text-soft: #6b6b6b;
 
-    --success: #1f8a4c;
+    /* #146c2e, pas #1f8a4c : #1f8a4c n'atteint que ~4,0:1 sur fond --success-soft,
+       sous le seuil AA 4,5:1 (audit axe-core du 2026-09-04). */
+    --success: #146c2e;
     --success-soft: #e9f7ef;
     --danger: #c0392b;
     --danger-soft: #fdecea;
@@ -120,4 +124,20 @@ button {
 
 a {
     color: inherit;
+}
+
+/* RGAA/WCAG : masque visuellement un titre nécessaire aux lecteurs d'écran sans
+   changer la mise en page. */
+.sr-only {
+    position: absolute;
+
+    width: 1px;
+    height: 1px;
+    margin: -1px;
+    padding: 0;
+
+    overflow: hidden;
+    white-space: nowrap;
+    clip-path: inset(50%);
+    border: 0;
 }

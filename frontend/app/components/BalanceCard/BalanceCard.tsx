@@ -1,7 +1,6 @@
-import Link from "next/link";
-import { History, QrCode, Store } from "lucide-react";
 import type { Balance } from "../../lib/catalog";
 import { formatAmount, splitAmount } from "../../lib/catalog";
+import FakeQrCode from "../FakeQrCode/FakeQrCode";
 import SimulationBadge from "../SimulationBadge/SimulationBadge";
 import styles from "./BalanceCard.module.css";
 
@@ -27,29 +26,7 @@ export default function BalanceCard({ balance }: { balance: Balance }) {
                     : "à dépenser chez vos partenaires préférés !"}
             </p>
 
-            <div className={styles.actions}>
-                <div className={`${styles.action} ${styles.actionDisabled}`}>
-                    <span className={styles.actionCircle}>
-                        <QrCode className={styles.actionIcon} aria-hidden="true" />
-                    </span>
-                    <span className={styles.actionLabel}>Payer</span>
-                    <span className={styles.soon}>Bientôt</span>
-                </div>
-
-                <Link href="/catalogue" className={styles.action}>
-                    <span className={styles.actionCircle}>
-                        <Store className={styles.actionIcon} aria-hidden="true" />
-                    </span>
-                    <span className={styles.actionLabel}>Partenaires</span>
-                </Link>
-
-                <Link href="/historique" className={styles.action}>
-                    <span className={styles.actionCircle}>
-                        <History className={styles.actionIcon} aria-hidden="true" />
-                    </span>
-                    <span className={styles.actionLabel}>Historique</span>
-                </Link>
-            </div>
+            <FakeQrCode />
 
             <dl className={styles.stats}>
                 <div className={styles.stat}>
