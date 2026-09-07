@@ -4,7 +4,14 @@ import type { Transaction } from "../../lib/catalog";
 import { formatAmount, formatDateTime } from "../../lib/catalog";
 import styles from "./TransactionRow.module.css";
 
-export default function TransactionRow({ transaction }: { transaction: Transaction }) {
+export default function TransactionRow({
+    transaction,
+    enteredOverdraft = false,
+}: {
+    transaction: Transaction;
+    /** Marque la première écriture ayant fait passer le solde en découvert. */
+    enteredOverdraft?: boolean;
+}) {
     const isTopUp = transaction.transaction_type === "ABONDMENT";
 
     const amountClass = [
@@ -26,6 +33,7 @@ export default function TransactionRow({ transaction }: { transaction: Transacti
                 <p className={styles.name}>{transaction.partner_name}</p>
                 <p className={styles.meta}>
                     {formatDateTime(transaction.validated_at)}
+                    {enteredOverdraft && <span className={styles.overdraftBadge}>Passage en découvert</span>}
                 </p>
             </div>
 
