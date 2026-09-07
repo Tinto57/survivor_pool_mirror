@@ -89,6 +89,18 @@ class PartnerListTests(BaseAPITestCase):
         for partner in response.data["results"]:
             self.assertEqual(partner["category"]["id"], self.category.id)
 
+    def test_filter_by_non_numeric_category_is_rejected(self):
+        self.client.force_authenticate(user=self.employee_user)
+        response = self.client.get("/api/v1/partners/?category=not-a-number")
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn("category", response.data)
+
+    def test_filter_by_unknown_numeric_category_returns_empty(self):
+        self.client.force_authenticate(user=self.employee_user)
+        response = self.client.get("/api/v1/partners/?category=999999")
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data["results"], [])
+
     def test_search_by_business_name(self):
         self.client.force_authenticate(user=self.employee_user)
         response = self.client.get("/api/v1/partners/?q=Actif 2")

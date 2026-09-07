@@ -1,3 +1,4 @@
+from django.db.models.deletion import ProtectedError
 from rest_framework import generics, status
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
@@ -119,7 +120,10 @@ class UserMeView(generics.RetrieveAPIView):
         tags=["Utilisateurs"],
         summary="Supprimer un utilisateur",
         description="Supprimable par son propriétaire ou par un administrateur.",
-        responses={204: OpenApiResponse(description="Utilisateur supprimé avec succès.")},
+        responses={
+            204: OpenApiResponse(description="Utilisateur supprimé avec succès."),
+            409: OpenApiResponse(response=ErrorDetailSerializer, description="Des transactions sont rattachées au salarié ou au partenaire lié à ce compte."),
+        },
     ),
 )
 class SingleUserView(generics.RetrieveUpdateDestroyAPIView):
@@ -128,6 +132,17 @@ class SingleUserView(generics.RetrieveUpdateDestroyAPIView):
     permission_classes = [IsAuthenticated, IsOwnerOrAdmin]
     lookup_url_kwarg = "user_id"
     http_method_names = ["get", "patch", "delete"]
+
+    def destroy(self, request, *args, **kwargs):
+        instance = self.get_object()
+        try:
+            instance.delete()
+        except ProtectedError:
+            return Response(
+                {"detail": "Impossible de supprimer ce compte : des transactions sont rattachées au salarié ou au partenaire lié."},
+                status=status.HTTP_409_CONFLICT,
+            )
+        return Response(status=status.HTTP_204_NO_CONTENT)
 
 
 class CustomTokenObtainPairView(TokenObtainPairView):
