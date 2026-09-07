@@ -29,7 +29,7 @@ export default function AdminNav({
     const onDashboard = section === "dashboard";
 
     return (
-        <nav className={styles.nav} aria-label="Sections de l'espace Ministère">
+        <nav className={styles.nav} aria-label="Sections de l'espace administration">
             <p className={styles.group}>Pilotage</p>
 
             {DASHBOARD_TABS.map(({ id, label }) => {
