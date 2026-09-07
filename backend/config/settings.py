@@ -34,6 +34,14 @@ if not SECRET_KEY:
 DEBUG = _env_bool("DEBUG", "0")
 
 ALLOWED_HOSTS = _env_list("ALLOWED_HOSTS")
+
+# Render injecte automatiquement cette variable sur tout web service, sans
+# qu'on ait besoin de la déclarer dans render.yaml : on l'ajoute d'office
+# pour ne pas avoir à connaître/deviner le sous-domaine *.onrender.com.
+render_external_hostname = os.getenv("RENDER_EXTERNAL_HOSTNAME")
+if render_external_hostname and render_external_hostname not in ALLOWED_HOSTS:
+    ALLOWED_HOSTS.append(render_external_hostname)
+
 if not ALLOWED_HOSTS:
     if DEBUG or _TESTING:
         ALLOWED_HOSTS = ["localhost", "127.0.0.1", "testserver"]
