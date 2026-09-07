@@ -1,3 +1,5 @@
+from decimal import Decimal
+
 from django.db import IntegrityError, transaction
 from django.http import HttpResponse
 from drf_spectacular.types import OpenApiTypes
@@ -14,7 +16,7 @@ import secrets
 from accounts.permissions import IsAdminRole, IsActivePartner, IsEmployee, is_admin_role
 from config.serializers import ErrorDetailSerializer
 from partners.models import Partner
-from wallet.models import Employee
+from wallet.models import Employee, OVERDRAFT_LIMIT
 from .models import Transaction
 from .permissions import CanInspectPaymentIntent, IsParticipantOrAdmin
 from .serializers import (
@@ -165,7 +167,7 @@ class PaymentIntentDetailView(APIView):
                         status=status.HTTP_404_NOT_FOUND,
                     )
 
-                if emitter.balance < amount:
+                if emitter.balance - amount < OVERDRAFT_LIMIT:
                     return Response(
                         {"detail": "Insufficient balance"},
                         status=status.HTTP_400_BAD_REQUEST,
@@ -227,6 +229,33 @@ class TransactionsView(generics.ListAPIView):
             ).select_related("employee__user", "partner__user")
 
         return Transaction.objects.none()
+
+    def get_serializer_context(self):
+        context = super().get_serializer_context()
+        user = self.request.user
+
+        if hasattr(user, "employee"):
+            context["balance_after_map"] = self._balance_after_map(user.employee)
+
+        return context
+
+    def _balance_after_map(self, employee) -> dict:
+        """Reconstitue, pour chaque écriture du salarié, le solde juste après elle.
+
+        Transaction n'a pas de solde figé (immuable, pas de champ balance_after
+        stocké) : on part du solde actuel et on retranche les deltas en ordre
+        chronologique inverse pour retrouver le solde après chaque écriture.
+        """
+        transactions = list(
+            Transaction.objects.filter(employee=employee).order_by("-validated_at", "-id")
+        )
+        running = employee.balance
+        balance_after_map = {}
+        for tx in transactions:
+            balance_after_map[tx.id] = running
+            delta = tx.amount if tx.transaction_type == Transaction.ABONDMENT else -tx.amount
+            running -= delta
+        return balance_after_map
 
 
 @extend_schema(
@@ -318,7 +347,7 @@ class CounterEntryCreateView(APIView):
             employee.balance += tx.amount
             counter_type = Transaction.ABONDMENT
         else:
-            if employee.balance < tx.amount:
+            if employee.balance - tx.amount < OVERDRAFT_LIMIT:
                 return Response(
                     {"detail": "Solde insuffisant pour la contre-écriture."},
                     status=status.HTTP_400_BAD_REQUEST,
