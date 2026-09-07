@@ -1,7 +1,7 @@
 from django.db import transaction
 from drf_spectacular.utils import extend_schema, extend_schema_view, OpenApiParameter, OpenApiResponse
 from rest_framework import generics, status
-from rest_framework.exceptions import NotFound
+from rest_framework.exceptions import NotFound, ValidationError
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -76,6 +76,8 @@ class PartnersView(generics.ListAPIView):
 
         category_param = self.request.query_params.get("category")
         if category_param:
+            if not category_param.isdigit():
+                raise ValidationError({"category": "Doit être un identifiant numérique."})
             queryset = queryset.filter(category_id=category_param)
 
         query = self.request.query_params.get("q")

@@ -4,7 +4,7 @@ from drf_spectacular.types import OpenApiTypes
 from drf_spectacular.utils import extend_schema, OpenApiResponse
 from rest_framework import generics, status
 from rest_framework.permissions import IsAuthenticated
-from rest_framework.renderers import BaseRenderer
+from rest_framework.renderers import BaseRenderer, JSONRenderer
 from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -293,7 +293,7 @@ class CounterEntryCreateView(APIView):
         request=None,
         responses={
             201: TransactionSerializer,
-            400: OpenApiResponse(response=ErrorDetailSerializer, description="Contre-écriture déjà existante, ou solde insuffisant pour la contre-écriture."),
+            400: OpenApiResponse(response=ErrorDetailSerializer, description="Contre-écriture déjà existante, transaction non contre-passable (ex : paiement annulé), ou solde insuffisant pour la contre-écriture."),
             404: OpenApiResponse(response=ErrorDetailSerializer, description="Transaction introuvable."),
         },
     )
@@ -310,6 +310,12 @@ class CounterEntryCreateView(APIView):
         if hasattr(tx, "counter_entry"):
             return Response(
                 {"detail": "Cette transaction possède déjà une contre-écriture."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        if tx.transaction_type not in (Transaction.PAYMENT, Transaction.ABONDMENT):
+            return Response(
+                {"detail": "Seules les transactions de type paiement ou abondement peuvent être contre-passées."},
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
@@ -349,6 +355,19 @@ class CSVRenderer(BaseRenderer):
 class AdminTransactionsCsvExportView(APIView):
     permission_classes = [IsAdminRole]
     renderer_classes = [CSVRenderer]
+
+    def finalize_response(self, request, response, *args, **kwargs):
+        # Une erreur DRF (401/403/404...) passe aussi par CSVRenderer, qui ne
+        # sait pas sérialiser le dict {"detail": ...} : on bascule sur du JSON
+        # pour ces réponses-là. Le chemin succès (HttpResponse brute, plus bas)
+        # n'est pas concerné par cette bascule.
+        # NB : c'est `request.accepted_renderer` qu'il faut réécrire, pas
+        # `response.accepted_renderer` — la classe de base copie l'un vers
+        # l'autre juste après, ce qui écraserait silencieusement le nôtre.
+        if getattr(response, "exception", False):
+            request.accepted_renderer = JSONRenderer()
+            request.accepted_media_type = "application/json"
+        return super().finalize_response(request, response, *args, **kwargs)
 
     @extend_schema(
         tags=["Transactions"],
