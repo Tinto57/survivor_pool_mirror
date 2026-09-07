@@ -145,7 +145,7 @@ class Command(BaseCommand):
             assignments.sort(key=lambda x: x[0])
 
             csv_rows = []
-            valid_transactions_to_create = []
+            transactions_to_create = []
             tx_id = 1
 
             for idx, emp_id, amount in assignments:
@@ -156,17 +156,20 @@ class Command(BaseCommand):
                 if employee_state[emp_id]["balance_cents"] >= amount:
                     employee_state[emp_id]["balance_cents"] -= amount
                     status = "VALIDATED"
-                    valid_transactions_to_create.append(Transaction(
-                        id=tx_id,
-                        token=secrets.token_urlsafe(32),
-                        employee=employee_state[emp_id]["obj"],
-                        partner=partners_by_id[partner_id],
-                        amount=Decimal(amount) / Decimal(100),
-                        validated_at=tx_date,
-                        transaction_type=Transaction.PAYMENT
-                    ))
+                    tx_type = Transaction.PAYMENT
                 else:
                     status = "REJECTED_INSUFFICIENT_FUNDS"
+                    tx_type = Transaction.PAYMENT_CANCELLED
+
+                transactions_to_create.append(Transaction(
+                    id=tx_id,
+                    token=secrets.token_urlsafe(32),
+                    employee=employee_state[emp_id]["obj"],
+                    partner=partners_by_id[partner_id],
+                    amount=Decimal(amount) / Decimal(100),
+                    validated_at=tx_date,
+                    transaction_type=tx_type
+                ))
 
                 csv_rows.append({
                     "id": tx_id,
@@ -178,9 +181,9 @@ class Command(BaseCommand):
                 })
                 tx_id += 1
 
-            Transaction.objects.bulk_create(valid_transactions_to_create)
+            Transaction.objects.bulk_create(transactions_to_create)
 
-            for tx_obj in valid_transactions_to_create:
+            for tx_obj in transactions_to_create:
                 Transaction.objects.filter(id=tx_obj.id).update(validated_at=tx_obj.validated_at)
 
             for emp_id, data in employee_state.items():
@@ -199,8 +202,8 @@ class Command(BaseCommand):
 
         self.stdout.write(self.style.SUCCESS(
             f"Seed exécuté avec succès !\n"
-            f"- Transactions CSV : {exported_count} validées (dont {rejected_count} refusées)\n"
-            f"- Transactions en base : {exported_count}\n"
+            f"- Transactions en base : {exported_count} (dont {rejected_count} annulées pour solde insuffisant)\n"
+            f"- Transactions CSV : {exported_count}\n"
             f"- Salariés à 0 € : {len(zero_balances)} (IDs: {zero_balances})\n"
             f"- Salariés < 5 € : {len(under_five)} (IDs: {under_five})\n"
             f"- Fichier exporté : transactions.csv"

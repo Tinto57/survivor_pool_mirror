@@ -12,8 +12,6 @@ def export_transactions() -> str:
         'employee_id',
         'partner_id',
         'amount_cents',
-        'mention',
-        'transaction_type',
         'status',
     ]
 
@@ -34,8 +32,6 @@ def export_transactions() -> str:
             'employee_id': tx.employee_id,
             'partner_id': tx.partner_id,
             'amount_cents': amount_cents,
-            'mention': 'SIMULATION',
-            'transaction_type': tx.transaction_type,
             'status': 'VALIDATED',
         })
 
