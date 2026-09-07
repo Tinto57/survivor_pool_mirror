@@ -20,10 +20,16 @@ class PaymentConfirmSerializer(serializers.Serializer):
 
 class TransactionSerializer(serializers.ModelSerializer):
     """Écriture comptable, immuable une fois créée."""
+
+    balance_after = serializers.SerializerMethodField(
+        help_text="Solde du salarié juste après cette écriture. Fourni uniquement quand le "
+        "salarié consulte ses propres transactions, `null` sinon (partenaire, admin)."
+    )
+
     class Meta:
         model = Transaction
-        fields = ["id", "token", "transaction_type", "employee", "partner", "amount", "validated_at", "counter_entry_of"]
-        read_only_fields = list(fields)
+        fields = ["id", "token", "transaction_type", "employee", "partner", "amount", "validated_at", "counter_entry_of", "balance_after"]
+        read_only_fields = ["id", "token", "transaction_type", "employee", "partner", "amount", "validated_at", "counter_entry_of"]
         extra_kwargs = {
             "transaction_type": {"help_text": "`PAYMENT` (débit salarié → partenaire) ou `ABONDMENT` (crédit du solde salarié)."},
             "employee": {"help_text": "Identifiant du salarié concerné par l'écriture."},
@@ -32,6 +38,9 @@ class TransactionSerializer(serializers.ModelSerializer):
             "validated_at": {"help_text": "Date et heure de validation de l'écriture (immuable)."},
             "counter_entry_of": {"help_text": "Identifiant de la transaction d'origine si cette écriture est une contre-écriture."},
         }
+
+    def get_balance_after(self, obj: Transaction):
+        return self.context.get("balance_after_map", {}).get(obj.id)
 
 
 class AbondmentCreateSerializer(serializers.Serializer):
