@@ -4,6 +4,7 @@ from drf_spectacular.types import OpenApiTypes
 from drf_spectacular.utils import extend_schema, OpenApiResponse
 from rest_framework import generics, status
 from rest_framework.permissions import IsAuthenticated
+from rest_framework.renderers import BaseRenderer
 from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -336,8 +337,18 @@ class CounterEntryCreateView(APIView):
         return Response(TransactionSerializer(counter_entry).data, status=status.HTTP_201_CREATED)
 
 
+class CSVRenderer(BaseRenderer):
+    media_type = "text/csv"
+    format = "csv"
+    charset = "utf-8"
+
+    def render(self, data, accepted_media_type=None, renderer_context=None):
+        return data
+
+
 class AdminTransactionsCsvExportView(APIView):
     permission_classes = [IsAdminRole]
+    renderer_classes = [CSVRenderer]
 
     @extend_schema(
         tags=["Transactions"],

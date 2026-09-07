@@ -313,10 +313,7 @@ class AdminTransactionsCsvExportTests(BaseAPITestCase):
         content = response.content.decode("utf-8")
         self.assertIn("1234", content)  # amount_cents
 
-    def test_csv_export_carries_the_simulation_mention_on_every_row(self):
-        # Exigence RGPD (voir docs/fr/mention-simulation.md) : une mention
-        # "Simulation" visible partout où un montant apparaît, y compris dans
-        # cet export brut qui n'est traversé par aucun écran du frontend.
+    def test_csv_export_does_not_carry_a_mention_column(self):
         Transaction.objects.create(
             token="tx-csv-mention",
             transaction_type=Transaction.PAYMENT,
@@ -327,8 +324,8 @@ class AdminTransactionsCsvExportTests(BaseAPITestCase):
         self.client.force_authenticate(user=self.admin)
         response = self.client.get("/api/v1/admin/transactions.csv/")
         header, row = response.content.decode("utf-8").strip().split("\r\n")
-        self.assertIn("mention", header.split(";"))
-        self.assertIn("SIMULATION", row.split(";"))
+        self.assertNotIn("mention", header.split(";"))
+        self.assertNotIn("SIMULATION", row.split(";"))
 
     def test_export_with_no_transactions_returns_header_only(self):
         self.client.force_authenticate(user=self.admin)

@@ -32,9 +32,11 @@ class QRCode(models.Model):
 class Transaction(models.Model):
     PAYMENT = 'PAYMENT'
     ABONDMENT = 'ABONDMENT'
+    PAYMENT_CANCELLED = 'PAYMENT_CANCELLED'
     TYPE_CHOICES = [
         (PAYMENT, 'Payment'),
         (ABONDMENT, 'Abondment'),
+        (PAYMENT_CANCELLED, 'Payment Cancelled'),
     ]
 
     token    = models.CharField(max_length=100, default=generate_transaction_token, unique=True, editable=False)
