@@ -4,9 +4,12 @@ import FakeQrCode from "../FakeQrCode/FakeQrCode";
 import SimulationBadge from "../SimulationBadge/SimulationBadge";
 import styles from "./BalanceCard.module.css";
 
+const OVERDRAFT_LIMIT = 150;
+
 export default function BalanceCard({ balance }: { balance: Balance }) {
     const { integer, cents } = splitAmount(balance.amount);
-    const empty = balance.amount <= 0;
+    const overdraft = balance.amount < 0;
+    const empty = balance.amount === 0;
 
     return (
         <section className={styles.card}>
@@ -15,13 +18,15 @@ export default function BalanceCard({ balance }: { balance: Balance }) {
                 <SimulationBadge />
             </div>
 
-            <p className={styles.amount}>
+            <p className={overdraft ? `${styles.amount} ${styles.amountOverdraft}` : styles.amount}>
                 {integer}
                 <span className={styles.cents}>{cents}</span>
             </p>
 
             <p className={styles.tagline}>
-                {empty
+                {overdraft
+                    ? `Le Ministère vous fait confiance : continuez à dépenser jusqu'à -${OVERDRAFT_LIMIT} €, on régularise au prochain abondement.`
+                    : empty
                     ? "Votre prochain abondement arrive bientôt, gardez le sourire !"
                     : "à dépenser chez vos partenaires préférés !"}
             </p>

@@ -244,7 +244,8 @@ class CounterEntryTests(BaseAPITestCase):
         self.assertEqual(self.employee.balance, Decimal("85.00"))
 
     def test_countering_abondment_with_insufficient_balance_is_rejected(self):
-        self.employee.balance = Decimal("5.00")
+        # Le découvert autorisé va jusqu'à -150€ : au-delà, la contre-écriture doit échouer.
+        self.employee.balance = Decimal("-140.00")
         self.employee.save(update_fields=["balance"])
         self.client.force_authenticate(user=self.admin)
         response = self.client.post(
@@ -252,7 +253,7 @@ class CounterEntryTests(BaseAPITestCase):
         )
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.employee.refresh_from_db()
-        self.assertEqual(self.employee.balance, Decimal("5.00"))
+        self.assertEqual(self.employee.balance, Decimal("-140.00"))
 
     def test_cannot_counter_twice(self):
         self.client.force_authenticate(user=self.admin)

@@ -1,6 +1,7 @@
 import type {
     AdminEmployee,
     Balance,
+    MinisterSpotlight,
     Partner,
     PartnerDecision,
     Transaction,
@@ -220,6 +221,7 @@ export const SEED_TRANSACTIONS: Transaction[] = [
         partner_id: null,
         partner_name: "Abondement employeur",
         counter_entry_of: null,
+        balance_after: 132.5,
     },
     {
         id: 7,
@@ -229,6 +231,7 @@ export const SEED_TRANSACTIONS: Transaction[] = [
         partner_id: 1,
         partner_name: "Poney Dream 78",
         counter_entry_of: null,
+        balance_after: -47.5,
     },
     {
         id: 6,
@@ -238,6 +241,7 @@ export const SEED_TRANSACTIONS: Transaction[] = [
         partner_id: 3,
         partner_name: "Glaces Artisanales Corrèze",
         counter_entry_of: null,
+        balance_after: -23.5,
     },
     {
         id: 5,
@@ -247,6 +251,7 @@ export const SEED_TRANSACTIONS: Transaction[] = [
         partner_id: 2,
         partner_name: "KostumParty",
         counter_entry_of: null,
+        balance_after: -15,
     },
     {
         id: 4,
@@ -256,6 +261,7 @@ export const SEED_TRANSACTIONS: Transaction[] = [
         partner_id: 4,
         partner_name: "Chapelier Fontaine",
         counter_entry_of: null,
+        balance_after: 0,
     },
     {
         id: 3,
@@ -265,6 +271,7 @@ export const SEED_TRANSACTIONS: Transaction[] = [
         partner_id: null,
         partner_name: "Abondement employeur",
         counter_entry_of: null,
+        balance_after: 62,
     },
     {
         id: 2,
@@ -274,6 +281,7 @@ export const SEED_TRANSACTIONS: Transaction[] = [
         partner_id: 1,
         partner_name: "Poney Dream 78",
         counter_entry_of: null,
+        balance_after: -88,
     },
     {
         id: 1,
@@ -283,5 +291,54 @@ export const SEED_TRANSACTIONS: Transaction[] = [
         partner_id: null,
         partner_name: "Abondement employeur",
         counter_entry_of: null,
+        balance_after: -56,
+    },
+];
+
+export const SEED_SPOTLIGHT: MinisterSpotlight = {
+    id: 3,
+    partner: {
+        id: 4,
+        business_name: "Chapelier Fontaine",
+        category: "Mode",
+        address: "8 rue des Filatiers, 31000 Toulouse",
+    },
+    message:
+        "Un artisan comme on n'en fait plus. Foncez chez Chapelier Fontaine, vous ne le regretterez pas !",
+    is_active: true,
+    click_count: 214,
+    published_by: "ministre.berlier",
+    published_at: "2026-09-05T07:30:00",
+};
+
+export const SEED_SPOTLIGHT_HISTORY: MinisterSpotlight[] = [
+    SEED_SPOTLIGHT,
+    {
+        id: 2,
+        partner: {
+            id: 1,
+            business_name: "Poney Dream 78",
+            category: "Loisirs",
+            address: "Chemin des Écuries, 78120 Rambouillet",
+        },
+        message: "Une balade au grand air, ça n'a pas de prix (enfin si, mais c'est nous qui payons).",
+        is_active: false,
+        click_count: 856,
+        published_by: "ministre.berlier",
+        published_at: "2026-08-20T09:00:00",
+    },
+    {
+        id: 1,
+        partner: {
+            id: 5,
+            business_name: "Librairie du Vieux Port",
+            category: "Culture",
+            address: "21 quai du Port, 13002 Marseille",
+        },
+        message: "La culture, ça se cultive. Un détour par cette librairie marseillaise s'impose.",
+        is_active: false,
+        click_count: 431,
+        published_by: "ministre.berlier",
+        published_at: "2026-08-05T09:00:00",
     },
 ];

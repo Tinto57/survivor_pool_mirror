@@ -14,7 +14,7 @@ const DASHBOARD_TABS: { id: DashboardTab; label: string }[] = [
 
 type AdminNavProps = {
     /** Espace affiché : le pilotage bascule en liens quand on est ailleurs. */
-    section: "dashboard" | "registre";
+    section: "dashboard" | "registre" | "coup-de-coeur";
     activeTab?: DashboardTab;
     onSelectTab?: (tab: DashboardTab) => void;
     pendingCount?: number;
@@ -62,6 +62,18 @@ export default function AdminNav({
                     </button>
                 );
             })}
+
+            <p className={styles.group}>Communication</p>
+
+            <Link
+                href="/admin/coup-de-coeur"
+                className={
+                    section === "coup-de-coeur" ? `${styles.item} ${styles.itemActive}` : styles.item
+                }
+                aria-current={section === "coup-de-coeur" ? "page" : undefined}
+            >
+                Coup de cœur du Ministre
+            </Link>
 
             <p className={styles.group}>Conformité</p>
 

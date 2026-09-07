@@ -4,6 +4,8 @@ import {
     SEED_DECISIONS,
     SEED_EMPLOYEES,
     SEED_PARTNERS,
+    SEED_SPOTLIGHT,
+    SEED_SPOTLIGHT_HISTORY,
     SEED_TRANSACTIONS,
 } from "./seed";
 
@@ -104,6 +106,19 @@ export type Transaction = {
     partner_id: number | null;
     partner_name: string;
     counter_entry_of: number | null;
+    /** Solde du salarié juste après cette écriture. Fourni uniquement sur ses propres transactions. */
+    balance_after: number | null;
+};
+
+/** Coup de cœur du Ministre : mise en avant unique, publiée depuis l'espace administration. */
+export type MinisterSpotlight = {
+    id: number;
+    partner: { id: number; business_name: string; category: string; address: string };
+    message: string;
+    is_active?: boolean;
+    click_count?: number;
+    published_by?: string | null;
+    published_at?: string;
 };
 
 async function fetchOrSeed<T>(path: string, token: string | null, fallback: T): Promise<T> {
@@ -177,6 +192,7 @@ type ApiTransaction = {
     amount: string;
     validated_at: string;
     counter_entry_of: number | null;
+    balance_after: string | null;
 };
 
 function isInCurrentMonth(iso: string): boolean {
@@ -249,7 +265,75 @@ export async function getTransactions(token: string | null): Promise<Transaction
                 ? "Abondement employeur"
                 : partnerNames.get(t.partner) ?? `Partenaire #${t.partner}`,
         counter_entry_of: t.counter_entry_of,
+        balance_after: t.balance_after === null || t.balance_after === undefined ? null : Number(t.balance_after),
     }));
+}
+
+/** Partenaire allégé tel que renvoyé dans une entrée de Coup de cœur du Ministre. */
+type ApiSpotlightPartner = { id: number; business_name: string; category: string; address: string };
+
+type ApiMinisterSpotlight = {
+    id: number;
+    partner: ApiSpotlightPartner;
+    message: string;
+    is_active?: boolean;
+    click_count?: number;
+    published_by?: string | null;
+    published_at?: string;
+};
+
+/**
+ * GET /api/v1/ministre/coup-de-coeur/ — public, sans authentification.
+ *
+ * `null` si aucune mise en avant n'est active (204 sans contenu) ; ne peut pas
+ * passer par `fetchOrSeed` car un 204 n'a pas de corps JSON à parser.
+ */
+export async function getMinisterSpotlight(token: string | null): Promise<MinisterSpotlight | null> {
+    try {
+        const headers: Record<string, string> = {};
+        if (token) headers["Authorization"] = `Bearer ${token}`;
+
+        const res = await fetch(`${API_URL}/api/v1/ministre/coup-de-coeur/`, { headers });
+        if (res.status === 204) return null;
+        if (res.status === 404) return SEED_SPOTLIGHT;
+
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok) {
+            const message =
+                typeof data?.detail === "string" ? data.detail : "Une erreur est survenue.";
+            throw new ApiError(message, res.status);
+        }
+
+        return data as ApiMinisterSpotlight;
+    } catch (err) {
+        if (err instanceof ApiError) throw err;
+        return SEED_SPOTLIGHT;
+    }
+}
+
+/** GET /api/v1/ministre/coup-de-coeur/historique/ — historique complet, réservé aux administrateurs. */
+export async function getMinisterSpotlightHistory(token: string | null): Promise<MinisterSpotlight[]> {
+    const data = await fetchOrSeed<Paginated<ApiMinisterSpotlight> | ApiMinisterSpotlight[]>(
+        "/api/v1/ministre/coup-de-coeur/historique/",
+        token,
+        SEED_SPOTLIGHT_HISTORY,
+    );
+    return Array.isArray(data) ? data : data.results;
+}
+
+/**
+ * GET /api/v1/ministre/coup-de-coeur/toutes/ — public, sans authentification.
+ *
+ * Tous les Coups de cœur (actif et archivés), sans le compteur de clics
+ * (réservé à l'historique admin).
+ */
+export async function getAllMinisterSpotlights(token: string | null): Promise<MinisterSpotlight[]> {
+    const data = await fetchOrSeed<Paginated<ApiMinisterSpotlight> | ApiMinisterSpotlight[]>(
+        "/api/v1/ministre/coup-de-coeur/toutes/",
+        token,
+        SEED_SPOTLIGHT_HISTORY,
+    );
+    return Array.isArray(data) ? data : data.results;
 }
 
 /** Liste des salariés — route réelle, réservée aux comptes administrateurs (paginée). */
