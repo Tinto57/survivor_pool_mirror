@@ -158,6 +158,60 @@ export function creditEmployee(
     });
 }
 
+export type OverdraftTotalResponse = {
+    total_advanced: string;
+};
+
+/** GET /api/v1/employees/decouvert-total/ — total avancé par le Ministère, réservé aux administrateurs. */
+export function getOverdraftTotal(token: string): Promise<OverdraftTotalResponse> {
+    return request<OverdraftTotalResponse>("/api/v1/employees/decouvert-total/", { token });
+}
+
+export type MinisterSpotlightResponse = {
+    id: number;
+    partner: { id: number; business_name: string; category: string; address: string };
+    message: string;
+    is_active: boolean;
+    click_count: number;
+    published_by: string | null;
+    published_at: string;
+};
+
+/** POST /api/v1/ministre/coup-de-coeur/click/ — public, ne doit jamais bloquer la navigation. */
+export function postSpotlightClick(): void {
+    fetch(`${API_URL}/api/v1/ministre/coup-de-coeur/click/`, { method: "POST" }).catch(() => {});
+}
+
+/**
+ * POST /api/v1/ministre/coup-de-coeur/historique/ — publie un nouveau Coup de cœur du
+ * Ministre. Désactive automatiquement la mise en avant précédente. Réservé aux administrateurs.
+ */
+export function publishSpotlight(
+    partnerId: number,
+    message: string,
+    token: string,
+): Promise<MinisterSpotlightResponse> {
+    return request<MinisterSpotlightResponse>("/api/v1/ministre/coup-de-coeur/historique/", {
+        method: "POST",
+        body: { partner: partnerId, message },
+        token,
+    });
+}
+
+/**
+ * POST /api/v1/ministre/coup-de-coeur/{id}/republier/ — réactive une publication archivée
+ * sans la recréer (le compteur de clics est conservé). Réservé aux administrateurs.
+ */
+export function republishSpotlight(
+    spotlightId: number,
+    token: string,
+): Promise<MinisterSpotlightResponse> {
+    return request<MinisterSpotlightResponse>(
+        `/api/v1/ministre/coup-de-coeur/${spotlightId}/republier/`,
+        { method: "POST", token },
+    );
+}
+
 export type PartnerDecisionResponse = {
     id: number;
     partner: number;
