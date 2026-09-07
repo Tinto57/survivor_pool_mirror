@@ -3,29 +3,37 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import BalanceCard from "../components/BalanceCard/BalanceCard";
+import MinisterSpotlight from "../components/MinisterSpotlight/MinisterSpotlight";
 import PartnerTile from "../components/PartnerTile/PartnerTile";
 import SimulationBadge from "../components/SimulationBadge/SimulationBadge";
 import TransactionRow from "../components/TransactionRow/TransactionRow";
 import { getAccessToken } from "../lib/auth";
-import { getBalance, getPartners, getTransactions } from "../lib/catalog";
-import type { Balance, Partner, Transaction } from "../lib/catalog";
+import { getBalance, getMinisterSpotlight, getPartners, getTransactions } from "../lib/catalog";
+import type { Balance, MinisterSpotlight as MinisterSpotlightType, Partner, Transaction } from "../lib/catalog";
 import styles from "./employee.module.css";
 
 export default function Home() {
     const [balance, setBalance] = useState<Balance | null>(null);
     const [partners, setPartners] = useState<Partner[]>([]);
     const [transactions, setTransactions] = useState<Transaction[]>([]);
+    const [spotlight, setSpotlight] = useState<MinisterSpotlightType | null>(null);
     const [error, setError] = useState<string | null>(null);
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
         const token = getAccessToken();
 
-        Promise.all([getBalance(token), getPartners(token), getTransactions(token)])
-            .then(([nextBalance, nextPartners, nextTransactions]) => {
+        Promise.all([
+            getBalance(token),
+            getPartners(token),
+            getTransactions(token),
+            getMinisterSpotlight(token),
+        ])
+            .then(([nextBalance, nextPartners, nextTransactions, nextSpotlight]) => {
                 setBalance(nextBalance);
                 setPartners(nextPartners);
                 setTransactions(nextTransactions);
+                setSpotlight(nextSpotlight);
             })
             .catch((err) => setError(err instanceof Error ? err.message : "Une erreur est survenue."))
             .finally(() => setLoading(false));
@@ -44,6 +52,8 @@ export default function Home() {
             </header>
 
             {error && <p className={styles.error} role="alert">{error}</p>}
+
+            {!loading && spotlight && <MinisterSpotlight spotlight={spotlight} />}
 
             {loading ? (
                 <div className={styles.skeleton} aria-hidden="true" />
