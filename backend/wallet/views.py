@@ -1,10 +1,15 @@
+from decimal import Decimal
+
 from rest_framework import generics, status
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.request import Request
+from rest_framework.views import APIView
 from rest_framework.exceptions import NotFound
 from django.db import transaction
+from django.db.models import Sum
 from django.db.models.deletion import ProtectedError
+from django.db.models.functions import Coalesce
 from drf_spectacular.utils import extend_schema, extend_schema_view, OpenApiResponse
 
 from accounts.permissions import IsAdminRole
@@ -42,6 +47,26 @@ class EmployeesView(generics.ListCreateAPIView):
         serializer.is_valid(raise_exception=True)
         serializer.save()
         return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+
+class EmployeesOverdraftTotalView(APIView):
+    permission_classes = [IsAdminRole]
+
+    @extend_schema(
+        tags=["Salariés"],
+        summary="Total du découvert avancé par le Ministère",
+        description=(
+            "Somme, en valeur absolue, des soldes négatifs de tous les salariés : le montant "
+            "que le Ministère avance actuellement, tous salariés confondus. Réservé aux "
+            "administrateurs."
+        ),
+        responses={200: OpenApiResponse(description="`{\"total_advanced\": \"123.45\"}`")},
+    )
+    def get(self, request, *args, **kwargs):
+        total_negative = Employee.objects.filter(balance__lt=0).aggregate(
+            total=Coalesce(Sum("balance"), Decimal("0.00"))
+        )["total"]
+        return Response({"total_advanced": str(abs(total_negative))}, status=status.HTTP_200_OK)
 
 
 class EmployeeMe(generics.RetrieveAPIView):
