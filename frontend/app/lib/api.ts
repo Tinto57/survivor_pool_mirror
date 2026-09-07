@@ -136,6 +136,10 @@ export function getUser(userId: number, token: string): Promise<UserResponse> {
     return request<UserResponse>(`/api/v1/users/${userId}/`, { token });
 }
 
+export function getUserSelf(): Promise<UserResponse> {
+    return request<UserResponse>(`/api/v1/users/me/`);
+}
+
 export type BalanceUpdateResponse = {
     id: number;
     balance: string;

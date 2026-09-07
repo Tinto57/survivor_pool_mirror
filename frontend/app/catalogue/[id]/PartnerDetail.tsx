@@ -3,13 +3,13 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
-import { ArrowLeft, BadgeCheck, Heart, MapPin, Navigation } from "lucide-react";
-import Avatar from "../../components/Avatar/Avatar";
+import { ArrowLeft, MapPin, Navigation } from "lucide-react";
 import Page from "../../components/Page/Page";
 import { getAccessToken } from "../../lib/auth";
 import { getPartner } from "../../lib/catalog";
 import type { Partner } from "../../lib/catalog";
 import styles from "./partner.module.css";
+import PartnerProfile from "@/app/components/PartnerProfile/PartnerProfile";
 
 export default function PartnerDetail() {
     const params = useParams();
@@ -59,28 +59,7 @@ export default function PartnerDetail() {
                 <ArrowLeft className={styles.backIcon} aria-hidden="true" />
             </Link>
 
-            <header className={styles.hero}>
-                <Avatar name={partner.business_name} size="lg" />
-
-                <h1 className={styles.name}>{partner.business_name}</h1>
-                <p className={styles.category}>
-                    {partner.category} · {partner.city}
-                </p>
-
-                <div className={styles.badges}>
-                    <span className={styles.official}>
-                        <BadgeCheck className={styles.badgeIcon} aria-hidden="true" />
-                        Partenaire Officiel du Ministère
-                    </span>
-
-                    {partner.is_featured && (
-                        <span className={styles.featured}>
-                            <Heart className={styles.badgeIconFilled} aria-hidden="true" />
-                            Coup de cœur du Ministre
-                        </span>
-                    )}
-                </div>
-            </header>
+            <PartnerProfile partner={partner}/>
 
             <section className={styles.card}>
                 <h2 className={styles.cardTitle}>À propos</h2>

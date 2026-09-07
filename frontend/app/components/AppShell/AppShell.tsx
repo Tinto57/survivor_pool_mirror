@@ -4,7 +4,7 @@ import { usePathname } from "next/navigation";
 import Navbar from "../Navbar/Navbar";
 import styles from "./AppShell.module.css";
 
-const BARE_ROUTES = ["/login", "/register", "/partner", "/admin"];
+const BARE_ROUTES = ["/login", "/register", "/admin"];
 
 export default function AppShell({ children }: { children: React.ReactNode }) {
     const pathname = usePathname();
