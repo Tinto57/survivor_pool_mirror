@@ -59,14 +59,21 @@ class AuditIntegrityTestCase(APITestCase):
         self.assertTrue(Transaction.objects.filter(id=tx.id).exists())
 
     ## Test 2
-    def test_02_employee_balance_never_negative_constraint(self):
+    def test_02_employee_balance_overdraft_limit_constraint(self):
+        # Le découvert est autorisé jusqu'à -150€ : en-deçà, la contrainte doit refuser.
+        with transaction.atomic():
+            self.employee.balance = Decimal("-150.00")
+            self.employee.save()
+        self.employee.refresh_from_db()
+        self.assertEqual(self.employee.balance, Decimal("-150.00"))
+
         with self.assertRaises(IntegrityError):
             with transaction.atomic():
-                self.employee.balance = Decimal("-10.00")
+                self.employee.balance = Decimal("-150.01")
                 self.employee.save()
 
         self.employee.refresh_from_db()
-        self.assertEqual(self.employee.balance, Decimal("50.00"))
+        self.assertEqual(self.employee.balance, Decimal("-150.00"))
 
     ## Test 3
     def test_03_payment_intent_idempotency_on_replay(self):
