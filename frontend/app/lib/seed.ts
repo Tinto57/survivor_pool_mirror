@@ -154,8 +154,8 @@ export const SEED_PARTNERS: Partner[] = [
 ];
 
 export const SEED_EMPLOYEES: AdminEmployee[] = [
-    { id: 1, user: 1, balance: "132.50", employer: "Ministère du Job et Bonheur" },
-    { id: 2, user: 4, balance: "78.00", employer: "Ministère du Job et Bonheur" },
+    { id: 1, user: 1, balance: "132.50", employer: "Ticket Tout" },
+    { id: 2, user: 4, balance: "78.00", employer: "Ticket Tout" },
     { id: 3, user: 5, balance: "215.40", employer: "Mairie de Nancy" },
     { id: 4, user: 6, balance: "46.90", employer: "Mairie de Nancy" },
     { id: 5, user: 7, balance: "180.00", employer: "Agence Régionale de Santé Grand Est" },
@@ -206,7 +206,7 @@ export const SEED_DECISIONS: PartnerDecision[] = [
 
 export const SEED_BALANCE: Balance = {
     amount: 132.5,
-    employer: "Ministère du Job et Bonheur",
+    employer: "Ticket Tout",
     topped_up_this_month: 180,
     spent_this_month: 47.5,
 };
