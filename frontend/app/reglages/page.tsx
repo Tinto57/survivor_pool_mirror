@@ -4,7 +4,6 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { IdCard, LogOut, ShieldCheck } from "lucide-react";
 import Avatar from "../components/Avatar/Avatar";
-import BlocMarque from "../components/BlocMarque/BlocMarque";
 import Page from "../components/Page/Page";
 import { ApiError, getUser } from "../lib/api";
 import type { ApiUser } from "../lib/api";
@@ -49,7 +48,7 @@ export default function ReglagesPage() {
 
     return (
         <Page title="Réglages">
-            {error && <p className={styles.error}>{error}</p>}
+            {error && <p className={styles.error} role="alert">{error}</p>}
 
             {!user && !error ? (
                 <div className={styles.skeleton} aria-hidden="true" />
@@ -85,10 +84,6 @@ export default function ReglagesPage() {
                             <LogOut className={styles.logoutIcon} aria-hidden="true" />
                             Se déconnecter
                         </button>
-
-                        <div className={styles.blocMarque}>
-                            <BlocMarque />
-                        </div>
                     </>
                 )
             )}

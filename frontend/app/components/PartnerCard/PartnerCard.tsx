@@ -14,7 +14,7 @@ export default function PartnerCard({ partner }: { partner: Partner }) {
                     <p className={styles.name}>
                         {partner.business_name}
                         {partner.is_featured && (
-                            <Heart className={styles.heart} aria-label="Coup de cœur du Ministre" />
+                            <Heart className={styles.heart} aria-label="Coup de cœur" />
                         )}
                     </p>
                     <p className={styles.meta}>

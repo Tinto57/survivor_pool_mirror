@@ -7,7 +7,7 @@ type PageProps = {
     aside?: React.ReactNode;
     children: React.ReactNode;
     simulation?: boolean;
-    /** Élargit la colonne : pour les écrans de gestion denses (espace Ministère). */
+    /** Élargit la colonne : pour les écrans de gestion denses (espace administration). */
     wide?: boolean;
 };
 
@@ -20,7 +20,11 @@ export default function Page({
     wide,
 }: PageProps) {
     return (
-        <main className={wide ? `${styles.page} ${styles.wide}` : styles.page}>
+        <main
+            id="main-content"
+            tabIndex={-1}
+            className={wide ? `${styles.page} ${styles.wide}` : styles.page}
+        >
             <header className={styles.header}>
                 <div>
                     <div className={styles.titleRow}>

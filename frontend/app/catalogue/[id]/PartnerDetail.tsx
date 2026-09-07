@@ -39,7 +39,7 @@ export default function PartnerDetail() {
         return (
             <Page title="Partenaire introuvable">
                 <p className={styles.info}>
-                    {error ?? "Ce partenaire n'est plus référencé par le Ministère."}
+                    {error ?? "Ce partenaire n'est plus référencé au catalogue."}
                 </p>
                 <Link href="/catalogue" className={styles.backLink}>
                     Retour au catalogue
@@ -54,7 +54,7 @@ export default function PartnerDetail() {
             : partner.address;
 
     return (
-        <main className={styles.page}>
+        <main id="main-content" tabIndex={-1} className={styles.page}>
             <Link href="/catalogue" className={styles.back} aria-label="Retour au catalogue">
                 <ArrowLeft className={styles.backIcon} aria-hidden="true" />
             </Link>
@@ -70,13 +70,13 @@ export default function PartnerDetail() {
                 <div className={styles.badges}>
                     <span className={styles.official}>
                         <BadgeCheck className={styles.badgeIcon} aria-hidden="true" />
-                        Partenaire Officiel du Ministère
+                        Partenaire officiel
                     </span>
 
                     {partner.is_featured && (
                         <span className={styles.featured}>
                             <Heart className={styles.badgeIconFilled} aria-hidden="true" />
-                            Coup de cœur du Ministre
+                            Coup de cœur
                         </span>
                     )}
                 </div>

@@ -23,7 +23,7 @@ export type ApiUser = {
     email?: string;
 };
 
-/** Fiche partenaire créée à l'inscription, en attente de validation par le Ministère. */
+/** Fiche partenaire créée à l'inscription, en attente de validation. */
 export type ApiPartner = {
     id: number;
     business_name: string;

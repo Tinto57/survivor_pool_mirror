@@ -19,7 +19,7 @@ export default function TransactionRow({ transaction }: { transaction: Transacti
             <Avatar
                 name={transaction.partner_name}
                 size="sm"
-                icon={isTopUp ? <ArrowDownLeft /> : undefined}
+                icon={isTopUp ? <ArrowDownLeft aria-hidden="true" /> : undefined}
             />
 
             <div className={styles.body}>
