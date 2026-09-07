@@ -2,6 +2,8 @@ from django.db import models
 from decimal import Decimal
 from django.core.validators import MinValueValidator
 
+OVERDRAFT_LIMIT = Decimal('-150.00')
+
 class Employee(models.Model):
     user = models.OneToOneField('accounts.User', on_delete=models.CASCADE)
     employer = models.CharField(max_length=200)
@@ -11,8 +13,8 @@ class Employee(models.Model):
         default=Decimal('0.00'),
         validators=[
             MinValueValidator(
-                Decimal('0.00'),
-                message='Le solde ne peut pas être négatif.',
+                OVERDRAFT_LIMIT,
+                message='Le solde ne peut pas descendre sous le découvert autorisé de 150€.',
             )
         ],
     )
@@ -20,8 +22,8 @@ class Employee(models.Model):
     class Meta:
         constraints = [
             models.CheckConstraint(
-                condition=models.Q(balance__gte=Decimal('0.00')),
-                name='employee_balance_non_negative',
+                condition=models.Q(balance__gte=OVERDRAFT_LIMIT),
+                name='employee_balance_overdraft_limit',
             )
         ]
 
