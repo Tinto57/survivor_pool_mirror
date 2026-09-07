@@ -86,7 +86,7 @@ async function request<T>(path: string, options: RequestOptions = {}): Promise<T
 
     if (!res.ok) {
         const message =
-            typeof data?.error === "string" ? data.error : "Une erreur est survenue.";
+            typeof data?.detail === "string" ? data.detail : "Une erreur est survenue.";
         throw new ApiError(message, res.status);
     }
 
@@ -154,6 +154,32 @@ export function creditEmployee(
     return request<BalanceUpdateResponse>(`/api/v1/employees/${employeeId}/balance/`, {
         method: "PATCH",
         body: { amount: amount.toFixed(2) },
+        token,
+    });
+}
+
+export type PartnerDecisionResponse = {
+    id: number;
+    partner: number;
+    decision: "accepted" | "rejected";
+    reason: string;
+    agent: string | null;
+    created_at: string;
+};
+
+/**
+ * POST /api/v1/partners/{id}/decision/ — accepte ou refuse une demande de
+ * référencement en attente. Réservé aux comptes administrateurs.
+ */
+export function decidePartner(
+    partnerId: number,
+    decision: "accepted" | "rejected",
+    reason: string,
+    token: string,
+): Promise<PartnerDecisionResponse> {
+    return request<PartnerDecisionResponse>(`/api/v1/partners/${partnerId}/decision/`, {
+        method: "POST",
+        body: reason ? { decision, reason } : { decision },
         token,
     });
 }
