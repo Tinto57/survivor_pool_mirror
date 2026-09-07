@@ -138,7 +138,7 @@ export default function AdminHome() {
         );
         setNotice(
             partner.is_featured
-                ? `${partner.business_name} retiré du Coup de cœur du Ministre.`
+                ? `${partner.business_name} retiré du Coup de cœur.`
                 : `${partner.business_name} mis en avant sur l'accueil salarié.`,
         );
     }
@@ -175,11 +175,11 @@ export default function AdminHome() {
         router.replace("/login");
     }
 
-    if (guardError && !admin) return <p className={styles.error}>{guardError}</p>;
+    if (guardError && !admin) return <p className={styles.error} role="alert">{guardError}</p>;
 
     if (!admin) {
         return (
-            <Page title="Espace Ministère">
+            <Page title="Espace administration">
                 <div className={styles.skeleton} aria-hidden="true" />
             </Page>
         );
@@ -187,7 +187,7 @@ export default function AdminHome() {
 
     return (
         <Page
-            title="Espace Ministère"
+            title="Espace administration"
             subtitle={`Connecté en tant que ${admin.username}.`}
             simulation
             wide
@@ -239,7 +239,7 @@ export default function AdminHome() {
                     {notice}
                 </p>
             )}
-            {error && <p className={styles.error}>{error}</p>}
+            {error && <p className={styles.error} role="alert">{error}</p>}
 
             <div className={styles.layout}>
                 <AdminNav
@@ -373,7 +373,7 @@ export default function AdminHome() {
                                             : styles.feature
                                     }
                                     aria-pressed={partner.is_featured}
-                                    title="Coup de cœur du Ministre"
+                                    title="Coup de cœur"
                                     onClick={() => handleToggleFeatured(partner)}
                                 >
                                     <Heart aria-hidden="true" />
