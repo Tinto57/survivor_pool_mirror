@@ -109,7 +109,7 @@ export default function HistoriquePage() {
                 ))}
             </div>
 
-            {error && <p className={styles.error}>{error}</p>}
+            {error && <p className={styles.error} role="alert">{error}</p>}
 
             {loading ? (
                 <p className={styles.info}>Chargement de l&apos;historique...</p>
