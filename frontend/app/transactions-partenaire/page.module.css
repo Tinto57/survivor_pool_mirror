@@ -1,0 +1,255 @@
+.summary {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0;
+
+    margin-bottom: 18px;
+
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-sm);
+}
+
+.summaryCard {
+    padding: 16px;
+}
+
+.summaryCard + .summaryCard {
+    border-left: 1px solid var(--border);
+}
+
+.summaryLabel {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+
+    margin: 0;
+
+    color: var(--text-soft);
+    font-size: 12px;
+}
+
+.summaryValue {
+    margin: 5px 0 0;
+
+    font-family: var(--font-system);
+    font-size: 24px;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    font-variant-numeric: tabular-nums;
+}
+
+.tableWrap {
+    overflow: hidden;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-sm);
+}
+
+.table {
+    width: 100%;
+    min-width: 0;
+
+    border-collapse: collapse;
+    table-layout: fixed;
+}
+
+.thead {
+    background: var(--surface);
+}
+
+.th {
+    padding: 12px 14px;
+
+    border-bottom: 1px solid var(--border);
+
+    color: var(--text-soft);
+    text-align: left;
+    font-size: 13px;
+    font-weight: 600;
+    white-space: normal;
+}
+
+.row {
+    background: var(--surface);
+}
+
+.row:hover,
+.rowAlt:hover {
+    background: var(--field);
+}
+
+.rowAlt {
+    background: var(--surface);
+}
+
+.td {
+    padding: 11px 14px;
+
+    border-bottom: 1px solid var(--border);
+
+    font-size: 14px;
+    white-space: normal;
+}
+
+.tdStrong {
+    padding: 11px 14px;
+
+    border-bottom: 1px solid var(--border);
+
+    font-family: var(--font-system);
+    font-size: 14px;
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+    white-space: normal;
+}
+
+.tdCode {
+    padding: 11px 14px;
+
+    border-bottom: 1px solid var(--border);
+
+    color: var(--text-soft);
+    font-family: var(--font-system);
+    font-size: 13px;
+    white-space: normal;
+    overflow-wrap: anywhere;
+}
+
+.statusOk {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
+    padding: 3px 10px;
+
+    border: none;
+    border-radius: var(--radius-pill);
+
+    color: var(--success);
+    background: var(--success-soft);
+    font-size: 11px;
+    font-weight: 700;
+}
+
+.statusCancelled {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
+    padding: 3px 10px;
+
+    border: none;
+    border-radius: var(--radius-pill);
+
+    color: var(--danger);
+    background: var(--danger-soft);
+    font-size: 11px;
+    font-weight: 700;
+}
+
+@media (max-width: 767px) {
+    .summary {
+        grid-template-columns: 1fr;
+    }
+
+    .summaryCard + .summaryCard {
+        border-left: 0;
+        border-top: 1px solid var(--border);
+    }
+
+    .tableWrap {
+        overflow: visible;
+        border: 0;
+        border-radius: 0;
+        box-shadow: none;
+        background: transparent;
+    }
+
+    .table,
+    .thead,
+    .table tbody,
+    .table tr,
+    .table td {
+        display: block;
+        width: 100%;
+    }
+
+    .thead {
+        display: none;
+    }
+
+    .row,
+    .rowAlt {
+        margin-bottom: 12px;
+        border: 1px solid var(--border);
+        border-radius: var(--radius-md);
+        box-shadow: var(--shadow-sm);
+        background: var(--surface);
+        overflow: hidden;
+    }
+
+    .td,
+    .tdStrong,
+    .tdCode {
+        position: relative;
+        display: flex;
+        align-items: flex-start;
+        justify-content: flex-start;
+        flex-direction: column;
+        gap: 0;
+        min-height: 0;
+        padding: 11px 14px;
+        text-align: left;
+        border-bottom: 1px solid var(--border);
+    }
+
+    .row .td:last-child,
+    .row .tdStrong:last-child,
+    .row .tdCode:last-child,
+    .rowAlt .td:last-child,
+    .rowAlt .tdStrong:last-child,
+    .rowAlt .tdCode:last-child {
+        border-bottom: 0;
+    }
+
+    .td:nth-child(1)::before {
+        content: "Date";
+    }
+
+    .td:nth-child(2)::before {
+        content: "Salarié";
+    }
+
+    .tdStrong:nth-child(3)::before {
+        content: "Montant";
+    }
+
+    .td:nth-child(4)::before {
+        content: "Statut";
+    }
+
+    .tdCode:nth-child(5)::before {
+        content: "Référence";
+    }
+
+    .td::before,
+    .tdStrong::before,
+    .tdCode::before {
+        display: block;
+        margin-bottom: 6px;
+
+        color: var(--text-soft);
+        font-size: 12px;
+        font-weight: 600;
+        text-align: left;
+        white-space: nowrap;
+    }
+
+    .tdStrong,
+    .tdCode {
+        align-items: flex-start;
+    }
+}
