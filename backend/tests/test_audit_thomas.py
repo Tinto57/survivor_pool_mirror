@@ -20,7 +20,9 @@ class AuditIntegrityTestCase(APITestCase):
         self.user_emp = User.objects.create_user(
             username="emp_dupont", email="dupont@test.fr", password="password123", role="employee"
         )
-        self.employee = Employee.objects.create(user=self.user_emp, balance=Decimal("50.00"))
+        self.employee = Employee.objects.create(
+            user=self.user_emp, employer="Test SA", balance=Decimal("50.00")
+        )
 
         self.user_partner = User.objects.create_user(
             username="resto_delice", email="contact@delice.fr", password="password123", role="partner"
@@ -30,6 +32,8 @@ class AuditIntegrityTestCase(APITestCase):
             user=self.user_partner,
             business_name="Le Délice",
             siren="123456789",
+            business_purpose="Restauration",
+            address="1 rue Test",
             category=self.category,
             status="active",
         )
@@ -71,15 +75,14 @@ class AuditIntegrityTestCase(APITestCase):
 
         cache.set(
             f"PaymentIntent:{token}",
-            {"employee_id": self.employee.id, "amount": str(amount)},
+            {"employee_id": self.employee.id},
             timeout=300,
         )
 
         self.client.force_authenticate(user=self.user_partner)
         url = f"/api/v1/payments/{token}/"
 
-        response_1 = self.client.post(url)
-        print("\n[DEBUG 404 RESPONSE]:", response_1.status_code, response_1.data)
+        response_1 = self.client.post(url, {"amount": str(amount)}, format="json")
         self.assertEqual(response_1.status_code, status.HTTP_200_OK)
         tx_id_1 = response_1.data["id"]
 

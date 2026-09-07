@@ -1,7 +1,5 @@
-import csv
 from datetime import datetime, timedelta, timezone
 from decimal import Decimal
-import io
 import random
 import secrets
 
@@ -11,7 +9,7 @@ from django.db import transaction
 from accounts.models import User
 from partners.models import Category, Partner
 from transactions.models import QRCode, Transaction
-from wallet.models import Employee, TopUp
+from wallet.models import Employee
 from transactions.services import export_transactions
 
 class Command(BaseCommand):
@@ -60,7 +58,6 @@ class Command(BaseCommand):
         with transaction.atomic():
             Transaction.objects.all().delete()
             QRCode.objects.all().delete()
-            TopUp.objects.all().delete()
             Employee.objects.all().delete()
             Partner.objects.all().delete()
             Category.objects.all().delete()

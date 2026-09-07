@@ -5,7 +5,7 @@ from django.core.management import call_command
 from django.test import TestCase
 from django.utils import timezone
 
-from accounts.management.commands.purge_expired_data import RETENTION_MONTHS, months_ago
+from accounts.management.commands.purge_expired_data import months_ago
 from partners.models import Category, Partner, PartnerDecision
 from transactions.models import QRCode
 from wallet.models import Employee

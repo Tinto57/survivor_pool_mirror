@@ -12,9 +12,13 @@ pour chaque emplacement demandé, ce qui est fait et ce qui reste à faire ou à
 | Historique des transactions | Badge sur le titre de page + sur "Reçu au total"/"Dépensé au total" | `frontend/app/historique/page.tsx` |
 | Titres de pages | Prop `simulation` ajoutée au composant `Page`, réutilisable sur tout futur écran | `frontend/app/components/Page/Page.tsx` |
 | Écran d'accueil employé | Badge dans le bandeau supérieur, à côté du solde affiché | `frontend/app/employee/page.tsx` |
+| Export CSV des transactions (`GET /api/v1/admin/transactions.csv/`, réservé aux administrateurs) | Colonne dédiée `mention` valant `SIMULATION` sur chaque ligne, à côté de `amount_cents` | `backend/transactions/services.py::export_transactions` |
 
 Le composant `SimulationBadge` (`frontend/app/components/SimulationBadge/`) est centralisé :
-toute nouvelle mention doit le réutiliser plutôt que recréer un badge ad hoc.
+toute nouvelle mention doit le réutiliser plutôt que recréer un badge ad hoc. Cet export CSV
+n'étant consommé par aucun écran du frontend (pas de bouton "Exporter" dans `/admin` : c'est un
+outil brut, téléchargé directement par un administrateur), la mention y est portée par le
+contenu du fichier lui-même plutôt que par un composant d'interface.
 
 ## Pas fait — techniquement impossible actuellement
 
@@ -28,7 +32,6 @@ la fonctionnalité elle-même n'est pas développée, il n'y a donc rien à anno
 | Tableau de bord financier du partenaire | Non implémenté — même page stub | Idem |
 | Tableau de bord national | Non implémenté — page `/admin` affiche "arrivent bientôt" | Idem |
 | Messages d'erreur citant un montant | Aucun message d'erreur de ce type n'existe dans le code actuel (aucun endpoint d'encaissement n'est encore branché) | Rien à annoter tant que ces messages n'existent pas |
-| Documents/exports générés par l'app | Aucune génération de PDF/CSV/reçu n'existe, ni côté frontend ni côté backend | Rien à annoter tant que cette fonctionnalité n'existe pas |
 
 **Engagement :** chacun de ces emplacements devra intégrer `SimulationBadge` (ou une variante
 adaptée au format, ex. PDF) au moment de son développement — ce n'est pas une exemption
