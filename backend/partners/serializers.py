@@ -1,6 +1,6 @@
 from rest_framework import serializers
 
-from .models import Category, Partner, PartnerDecision
+from .models import Category, MinisterSpotlight, Partner, PartnerDecision
 
 
 class CategorySerializer(serializers.ModelSerializer):
@@ -92,3 +92,55 @@ class PartnerDecisionSerializer(serializers.ModelSerializer):
 
     def get_agent(self, obj: PartnerDecision) -> str | None:
         return obj.agent.username if obj.agent_id else None
+
+
+class SpotlightPartnerSerializer(serializers.ModelSerializer):
+    """Fiche partenaire allégée, telle qu'affichée dans le Coup de cœur du Ministre."""
+
+    category = serializers.CharField(source="category.name", read_only=True)
+
+    class Meta:
+        model = Partner
+        fields = ["id", "business_name", "category", "address"]
+        read_only_fields = list(fields)
+
+
+class MinisterSpotlightPublicSerializer(serializers.ModelSerializer):
+    """Coup de cœur du Ministre tel que visible publiquement (sans le compteur de clics)."""
+
+    partner = SpotlightPartnerSerializer(read_only=True)
+
+    class Meta:
+        model = MinisterSpotlight
+        fields = ["id", "partner", "message", "is_active", "published_at"]
+        read_only_fields = list(fields)
+
+
+class MinisterSpotlightSerializer(serializers.ModelSerializer):
+    """Publication du Coup de cœur du Ministre, avec ses statistiques (vue admin)."""
+
+    partner = SpotlightPartnerSerializer(read_only=True)
+    published_by = serializers.SerializerMethodField(
+        help_text="Nom d'utilisateur de l'administrateur ayant publié cette entrée."
+    )
+
+    class Meta:
+        model = MinisterSpotlight
+        fields = ["id", "partner", "message", "is_active", "click_count", "published_by", "published_at"]
+        read_only_fields = list(fields)
+
+    def get_published_by(self, obj: MinisterSpotlight) -> str | None:
+        return obj.published_by.username if obj.published_by_id else None
+
+
+class MinisterSpotlightCreateSerializer(serializers.Serializer):
+    """Payload de publication d'un nouveau Coup de cœur du Ministre."""
+
+    partner = serializers.PrimaryKeyRelatedField(
+        queryset=Partner.objects.filter(status="active"),
+        help_text="Identifiant du partenaire actif à mettre en avant.",
+    )
+    message = serializers.CharField(
+        max_length=280,
+        help_text="Message du Ministre accompagnant la mise en avant (deux lignes environ).",
+    )
