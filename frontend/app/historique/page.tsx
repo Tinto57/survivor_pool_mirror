@@ -58,6 +58,15 @@ export default function HistoriquePage() {
 
     const groups = useMemo(() => groupByMonth(visible), [visible]);
 
+    /** Première écriture (la plus ancienne) ayant fait passer le solde en découvert. */
+    const overdraftEntryId = useMemo(() => {
+        const chronological = [...transactions].sort(
+            (a, b) => Date.parse(a.validated_at) - Date.parse(b.validated_at),
+        );
+        const entry = chronological.find((t) => t.balance_after !== null && t.balance_after < 0);
+        return entry?.id ?? null;
+    }, [transactions]);
+
     const totals = useMemo(() => {
         return {
             spent: transactions
@@ -126,7 +135,11 @@ export default function HistoriquePage() {
 
                         <ul className={styles.list}>
                             {items.map((transaction) => (
-                                <TransactionRow key={transaction.id} transaction={transaction} />
+                                <TransactionRow
+                                    key={transaction.id}
+                                    transaction={transaction}
+                                    enteredOverdraft={transaction.id === overdraftEntryId}
+                                />
                             ))}
                         </ul>
                     </section>
