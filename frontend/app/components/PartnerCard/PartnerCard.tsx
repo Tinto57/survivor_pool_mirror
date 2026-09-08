@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ChevronRight, Heart } from "lucide-react";
+import { ChevronRight } from "lucide-react";
 import Avatar from "../Avatar/Avatar";
 import type { Partner } from "../../lib/catalog";
 import styles from "./PartnerCard.module.css";
@@ -11,12 +11,7 @@ export default function PartnerCard({ partner }: { partner: Partner }) {
                 <Avatar name={partner.business_name} />
 
                 <div className={styles.body}>
-                    <p className={styles.name}>
-                        {partner.business_name}
-                        {partner.is_featured && (
-                            <Heart className={styles.heart} aria-label="Coup de cœur" />
-                        )}
-                    </p>
+                    <p className={styles.name}>{partner.business_name}</p>
                     <p className={styles.meta}>
                         {partner.category} · {partner.city}
                     </p>

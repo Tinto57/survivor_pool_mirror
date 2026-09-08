@@ -62,19 +62,6 @@ export default function AdminNav({
                     </button>
                 );
             })}
-
-            <p className={styles.group}>Communication</p>
-
-            <Link
-                href="/admin/coup-de-coeur"
-                className={
-                    section === "coup-de-coeur" ? `${styles.item} ${styles.itemActive}` : styles.item
-                }
-                aria-current={section === "coup-de-coeur" ? "page" : undefined}
-            >
-                Coup de cœur du Ministre
-            </Link>
-
             <p className={styles.group}>Conformité</p>
 
             <Link
