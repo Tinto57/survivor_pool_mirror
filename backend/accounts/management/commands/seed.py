@@ -13,7 +13,7 @@ from wallet.models import Employee
 from transactions.services import export_transactions
 
 class Command(BaseCommand):
-    help = "Seed déterministe CartePro conforme au cahier des charges (50 salariés, 12 partenaires, 200 tx, CSV)."
+    help = "Seed déterministe CartePro conforme au cahier des charges (50 salariés, 6 partenaires, 200 tx, CSV)."
 
     def handle(self, *args, **options):
         random.seed(42)
@@ -21,18 +21,12 @@ class Command(BaseCommand):
         total_seconds = 90 * 24 * 3600
 
         partners_raw = [
-            ("Le Bistrot du Palais", "Restauration", "12 Rue de Rivoli, 75001 Paris", "123456781"),
-            ("Brasserie Bellecour", "Restauration", "15 Place Bellecour, 69002 Lyon", "123456782"),
-            ("La Table Lorraine", "Restauration", "4 Place Stanislas, 54000 Nancy", "123456783"),
-            ("Boulangerie Saint-Honoré", "Alimentation", "8 Rue Saint-Honoré, 75001 Paris", "123456784"),
-            ("Les Halles Gourmandes", "Alimentation", "22 Rue Sainte-Catherine, 33000 Bordeaux", "123456785"),
-            ("Primeur & Terroir", "Alimentation", "5 Rue Mercière, 69002 Lyon", "123456786"),
-            ("VéloCité Express", "Mobilité", "30 Boulevard Saint-Germain, 75005 Paris", "123456787"),
-            ("Éco-Trott Services", "Mobilité", "18 Rue Saint-Dizier, 54000 Nancy", "123456788"),
-            ("Navette & Bus Région", "Mobilité", "10 Cours Lafayette, 69003 Lyon", "123456789"),
-            ("Librairie Gutenberg", "Culture & Loisirs", "40 Boulevard Saint-Michel, 75005 Paris", "123456790"),
-            ("Cinéma Lumière", "Culture & Loisirs", "7 Place Gambetta, 33000 Bordeaux", "123456791"),
-            ("Espace Bloc & Grimpe", "Sport & Bien-être", "12 Rue de la Commanderie, 54000 Nancy", "123456792"),
+            ("Le Comptoir du Midi", "Restauration", "22 Rue du Midi, 13001 Marseille", "300000001"),
+            ("Épicerie Sainte-Claire", "Alimentation", "6 Rue Sainte-Claire, 67000 Strasbourg", "300000002"),
+            ("Librairie Vasseur", "Culture", "9 Place du Théâtre, 59800 Lille", "300000003"),
+            ("Pharmacie du Parc", "Santé", "3 Avenue du Parc, 69006 Lyon", "300000004"),
+            ("Transports Régionaux Unifiés", "Mobilité", "1 Esplanade de la Gare, 44000 Nantes", "300000005"),
+            ("Sport Loisirs Aubagne", "Sport", "5 Boulevard des Sports, 13400 Aubagne", "300000006"),
         ]
 
         first_names = [
@@ -151,7 +145,7 @@ class Command(BaseCommand):
             for idx, emp_id, amount in assignments:
                 tx_date = date_ref + timedelta(seconds=timestamps[idx])
                 iso_date = tx_date.strftime("%Y-%m-%dT%H:%M:%SZ")
-                partner_id = random.randint(1, 12)
+                partner_id = random.randint(1, len(partners_raw))
 
                 if employee_state[emp_id]["balance_cents"] >= amount:
                     employee_state[emp_id]["balance_cents"] -= amount
