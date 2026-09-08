@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import { Spectral } from "next/font/google";
 import AppShell from "./components/AppShell/AppShell";
+import Footer from "./components/Footer/Footer";
+import SkipLink from "./components/SkipLink/SkipLink";
 import "./global.css";
 
 const spectral = Spectral({
@@ -12,7 +14,7 @@ const spectral = Spectral({
 export const metadata: Metadata = {
     title: "CartePro",
     description:
-        "Votre budget CartePro à dépenser chez les partenaires du Ministère du Job et Bonheur.",
+        "Votre budget CartePro à dépenser chez nos partenaires",
 };
 
 export const viewport = {
@@ -28,7 +30,9 @@ export default function RootLayout({
     return (
         <html lang="fr" className={spectral.variable}>
             <body>
+                <SkipLink />
                 <AppShell>{children}</AppShell>
+                <Footer />
             </body>
         </html>
     );

@@ -18,7 +18,7 @@ import AdminNav from "../components/AdminNav/AdminNav";
 import type { DashboardTab } from "../components/AdminNav/AdminNav";
 import SimulationBadge from "../components/SimulationBadge/SimulationBadge";
 import Avatar from "../components/Avatar/Avatar";
-import { ApiError, creditEmployee } from "../lib/api";
+import { ApiError, creditEmployee, decidePartner } from "../lib/api";
 import { getAccessToken, logout } from "../lib/auth";
 import { useAdminGuard } from "./useAdminGuard";
 import {
@@ -82,65 +82,73 @@ export default function AdminHome() {
     );
 
     const totals = useMemo(() => {
-        const active = transactions.filter((t) => !t.is_cancelled);
+        // Une transaction annulée/contre-passée a counter_entry_of non-nul
+        const active = transactions.filter((t) => t.counter_entry_of === null);
+
+        const payments = active.filter((t) => t.transaction_type === "PAYMENT");
 
         return {
             distributed:
                 employees.reduce((sum, e) => sum + Number(e.balance), 0) +
-                active.filter((t) => t.kind === "payment").reduce((s, t) => s + t.amount, 0),
-            spent: active
-                .filter((t) => t.kind === "payment")
-                .reduce((sum, t) => sum + t.amount, 0),
+                payments.reduce((s, t) => s + Number(t.amount), 0),
+            spent: payments.reduce((sum, t) => sum + Number(t.amount), 0),
         };
     }, [employees, transactions]);
 
-    /** Enregistre la décision dans le journal : horodatage, agent, motif écrit. */
-    function recordDecision(partner: Partner, decision: PartnerDecision["decision"], why: string) {
+    /** Enregistre dans le journal local la décision telle que renvoyée par l'API. */
+    function recordDecision(
+        partner: Partner,
+        result: { id: number; decision: PartnerDecision["decision"]; reason: string; agent: string | null; created_at: string },
+    ) {
         setDecisions((current) => [
             {
-                id: Math.max(0, ...current.map((d) => d.id)) + 1,
+                id: result.id,
                 partner_id: partner.id,
                 partner_name: partner.business_name,
-                decision,
-                reason: why,
-                agent: admin?.username ?? "inconnu",
-                created_at: new Date().toISOString(),
+                decision: result.decision,
+                reason: result.reason,
+                agent: result.agent ?? admin?.username ?? "inconnu",
+                created_at: result.created_at,
             },
             ...current,
         ]);
     }
 
-    function handleAccept(partner: Partner) {
-        setPartners((current) =>
-            current.map((p) => (p.id === partner.id ? { ...p, status: "active" } : p)),
-        );
-        recordDecision(partner, "accepted", "Dossier conforme, SIREN et objet social vérifiés.");
-        setNotice(`${partner.business_name} est désormais référencé.`);
+    async function handleAccept(partner: Partner) {
+        const token = getAccessToken();
+        if (!token) return;
+
+        setError(null);
+        try {
+            const result = await decidePartner(partner.id, "accepted", "", token);
+            setPartners((current) =>
+                current.map((p) => (p.id === partner.id ? { ...p, status: "active" } : p)),
+            );
+            recordDecision(partner, result);
+            setNotice(`${partner.business_name} est désormais référencé.`);
+        } catch (err) {
+            setError(err instanceof ApiError ? err.message : "Le référencement a échoué.");
+        }
     }
 
-    function handleReject(partner: Partner) {
+    async function handleReject(partner: Partner) {
         if (!reason.trim()) return;
+        const token = getAccessToken();
+        if (!token) return;
 
-        setPartners((current) =>
-            current.map((p) => (p.id === partner.id ? { ...p, status: "closed" } : p)),
-        );
-        recordDecision(partner, "rejected", reason.trim());
-        setNotice(`Refus enregistré pour ${partner.business_name}, avec son motif.`);
-        setRejecting(null);
-        setReason("");
-    }
-
-    function handleToggleFeatured(partner: Partner) {
-        setPartners((current) =>
-            current.map((p) =>
-                p.id === partner.id ? { ...p, is_featured: !p.is_featured } : p,
-            ),
-        );
-        setNotice(
-            partner.is_featured
-                ? `${partner.business_name} retiré du Coup de cœur du Ministre.`
-                : `${partner.business_name} mis en avant sur l'accueil salarié.`,
-        );
+        setError(null);
+        try {
+            const result = await decidePartner(partner.id, "rejected", reason.trim(), token);
+            setPartners((current) =>
+                current.map((p) => (p.id === partner.id ? { ...p, status: "closed" } : p)),
+            );
+            recordDecision(partner, result);
+            setNotice(`Refus enregistré pour ${partner.business_name}, avec son motif.`);
+            setRejecting(null);
+            setReason("");
+        } catch (err) {
+            setError(err instanceof ApiError ? err.message : "Le refus a échoué.");
+        }
     }
 
     async function handleCredit(employee: AdminEmployee) {
@@ -175,11 +183,11 @@ export default function AdminHome() {
         router.replace("/login");
     }
 
-    if (guardError && !admin) return <p className={styles.error}>{guardError}</p>;
+    if (guardError && !admin) return <p className={styles.error} role="alert">{guardError}</p>;
 
     if (!admin) {
         return (
-            <Page title="Espace Ministère">
+            <Page title="Espace administration">
                 <div className={styles.skeleton} aria-hidden="true" />
             </Page>
         );
@@ -187,7 +195,7 @@ export default function AdminHome() {
 
     return (
         <Page
-            title="Espace Ministère"
+            title="Espace administration"
             subtitle={`Connecté en tant que ${admin.username}.`}
             simulation
             wide
@@ -232,6 +240,7 @@ export default function AdminHome() {
                         Dépensé chez les partenaires <SimulationBadge size="sm" />
                     </p>
                 </div>
+
             </section>
 
             {notice && (
@@ -239,7 +248,7 @@ export default function AdminHome() {
                     {notice}
                 </p>
             )}
-            {error && <p className={styles.error}>{error}</p>}
+            {error && <p className={styles.error} role="alert">{error}</p>}
 
             <div className={styles.layout}>
                 <AdminNav
@@ -365,20 +374,6 @@ export default function AdminHome() {
 
                                 <span className={styles.pill}>{STATUS_LABEL[partner.status]}</span>
 
-                                <button
-                                    type="button"
-                                    className={
-                                        partner.is_featured
-                                            ? `${styles.feature} ${styles.featureOn}`
-                                            : styles.feature
-                                    }
-                                    aria-pressed={partner.is_featured}
-                                    title="Coup de cœur du Ministre"
-                                    onClick={() => handleToggleFeatured(partner)}
-                                >
-                                    <Heart aria-hidden="true" />
-                                    <span className={styles.featureLabel}>Coup de cœur</span>
-                                </button>
                             </li>
                         ))}
                     </ul>

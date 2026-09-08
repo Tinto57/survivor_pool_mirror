@@ -5,8 +5,9 @@ import SimulationBadge from "../SimulationBadge/SimulationBadge";
 import styles from "./BalanceCard.module.css";
 
 export default function BalanceCard({ balance }: { balance: Balance }) {
-    const { integer, cents } = splitAmount(balance.amount);
-    const empty = balance.amount <= 0;
+    const displayedAmount = Math.max(0, balance.amount);
+    const { integer, cents } = splitAmount(displayedAmount);
+    const empty = displayedAmount === 0;
 
     return (
         <section className={styles.card}>

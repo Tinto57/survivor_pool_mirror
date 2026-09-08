@@ -42,7 +42,7 @@ export default function LoginPage() {
     }
 
     return (
-        <main className={styles.wrapper}>
+        <main id="main-content" tabIndex={-1} className={styles.wrapper}>
             <div className={styles.card}>
                 <h1 className={styles.title}>Content de vous revoir</h1>
                 <p className={styles.subtitle}>Connectez-vous à votre compte CartePro</p>
@@ -53,7 +53,7 @@ export default function LoginPage() {
                             Identifiant
                         </label>
                         <div className={styles.inputWrapper}>
-                            <Mail />
+                            <Mail aria-hidden="true" />
                             <input
                                 id="email"
                                 type="text"
@@ -71,7 +71,7 @@ export default function LoginPage() {
                             Mot de passe
                         </label>
                         <div className={styles.inputWrapper}>
-                            <Lock />
+                            <Lock aria-hidden="true" />
                             <input
                                 id="password"
                                 type={showPassword ? "text" : "password"}
@@ -87,12 +87,16 @@ export default function LoginPage() {
                                 onClick={() => setShowPassword((v) => !v)}
                                 aria-label={showPassword ? "Masquer le mot de passe" : "Afficher le mot de passe"}
                             >
-                                {showPassword ? <EyeOff /> : <Eye />}
+                                {showPassword ? (
+                                    <EyeOff aria-hidden="true" />
+                                ) : (
+                                    <Eye aria-hidden="true" />
+                                )}
                             </button>
                         </div>
                     </div>
 
-                    {error && <p className={styles.error}>{error}</p>}
+                    {error && <p className={styles.error} role="alert">{error}</p>}
 
                     <button type="submit" className={styles.submit} disabled={loading}>
                         {loading ? "Connexion..." : "Se connecter"}

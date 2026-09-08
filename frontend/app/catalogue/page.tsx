@@ -39,7 +39,7 @@ export default function CataloguePage() {
     return (
         <Page
             title="Partenaires"
-            subtitle="Le réseau référencé par le Ministère du Job et Bonheur."
+            subtitle="Le réseau de partenaires Ticket Tout."
         >
             <div className={styles.search}>
                 <Search className={styles.searchIcon} aria-hidden="true" />
@@ -69,32 +69,34 @@ export default function CataloguePage() {
                 ))}
             </div>
 
-            {error && <p className={styles.error}>{error}</p>}
+            {error && <p className={styles.error} role="alert">{error}</p>}
 
-            {loading ? (
-                <p className={styles.info}>Chargement du catalogue...</p>
-            ) : visible.length === 0 ? (
-                <div className={styles.empty}>
-                    <SearchX className={styles.emptyIcon} aria-hidden="true" />
-                    <p className={styles.emptyTitle}>Aucun partenaire trouvé</p>
-                    <p className={styles.emptyHint}>
-                        Essayez un autre mot-clé — de nouveaux partenaires sont en cours de signature.
-                    </p>
-                </div>
-            ) : (
-                <>
-                    <p className={styles.count}>
-                        {visible.length} partenaire{visible.length > 1 ? "s" : ""} référencé
-                        {visible.length > 1 ? "s" : ""}
-                    </p>
+            <div aria-live="polite">
+                {loading ? (
+                    <p className={styles.info}>Chargement du catalogue...</p>
+                ) : visible.length === 0 ? (
+                    <div className={styles.empty}>
+                        <SearchX className={styles.emptyIcon} aria-hidden="true" />
+                        <p className={styles.emptyTitle}>Aucun partenaire trouvé</p>
+                        <p className={styles.emptyHint}>
+                            Essayez un autre mot-clé — de nouveaux partenaires sont en cours de signature.
+                        </p>
+                    </div>
+                ) : (
+                    <>
+                        <p className={styles.count}>
+                            {visible.length} partenaire{visible.length > 1 ? "s" : ""} référencé
+                            {visible.length > 1 ? "s" : ""}
+                        </p>
 
-                    <ul className={styles.list}>
-                        {visible.map((partner) => (
-                            <PartnerCard key={partner.id} partner={partner} />
-                        ))}
-                    </ul>
-                </>
-            )}
+                        <ul className={styles.list}>
+                            {visible.map((partner) => (
+                                <PartnerCard key={partner.id} partner={partner} />
+                            ))}
+                        </ul>
+                    </>
+                )}
+            </div>
         </Page>
     );
 }

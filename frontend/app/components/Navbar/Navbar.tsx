@@ -2,7 +2,6 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import BlocMarque from "../BlocMarque/BlocMarque";
 import styles from "./Navbar.module.css";
 
 import { House, History, Settings, Store } from "lucide-react";
@@ -22,11 +21,7 @@ export default function Navbar() {
     }
 
     return (
-        <nav className={styles.navbar}>
-            <div className={styles.blocMarque}>
-                <BlocMarque />
-            </div>
-
+        <nav className={styles.navbar} aria-label="Navigation principale">
             <Link href="/employee" className={styles.logo}>
                 <span>CartePro</span>
             </Link>

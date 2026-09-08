@@ -1,30 +1,37 @@
-import re
 from rest_framework import serializers
-from django.contrib.auth import get_user_model
-from wallet.models import Employee
-from accounts.models import User
 from decimal import Decimal
 
+from wallet.models import Employee
+
+
 class EmployeeSerializer(serializers.ModelSerializer):
+    """Fiche salarié complète."""
+
     class Meta:
         model = Employee
         fields = ["id", "user", "balance", "employer"]
         read_only_fields = ["id", "balance"]
+        extra_kwargs = {
+            "user": {"help_text": "Identifiant du compte utilisateur (rôle `employee`) rattaché à ce salarié."},
+            "employer": {"help_text": "Nom de l'employeur du salarié."},
+        }
+
 
 class EmployeeBalanceReadSerializer(serializers.ModelSerializer):
-    """Pour le GET : lecture du solde."""
+    """Solde d'un salarié."""
+
     class Meta:
         model = Employee
         fields = ["id", "balance"]
         read_only_fields = ["id", "balance"]
 
+
 class EmployeeBalanceUpdateSerializer(serializers.Serializer):
-    """Pour le PATCH : validation du montant à ajouter."""
     amount = serializers.DecimalField(
         max_digits=10,
         decimal_places=2,
         min_value=Decimal("0.01"),
-        help_text="Montant positif à créditer"
+        help_text="Montant positif à créditer",
     )
 
     def update(self, instance: Employee, validated_data: dict) -> Employee:

@@ -10,7 +10,7 @@ Une fois réveillé, il reste rapide.
 
 ## Les 5 risques, et quoi dire
 
-### 1. Le journaliste clique sur « Espace partenaire » ou « Espace Ministère » → écran vide
+### 1. Le journaliste clique sur « Espace partenaire » ou « Espace administration » → écran vide
 **Le plus probable.** Ces deux espaces affichent « arrive bientôt » : ils ne sont pas encore développés.
 
 > « Ces deux espaces arrivent la semaine prochaine. Aujourd'hui je vous montre le parcours du salarié,

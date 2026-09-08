@@ -4,6 +4,8 @@ import {
     SEED_DECISIONS,
     SEED_EMPLOYEES,
     SEED_PARTNERS,
+    SEED_SPOTLIGHT,
+    SEED_SPOTLIGHT_HISTORY,
     SEED_TRANSACTIONS,
 } from "./seed";
 
@@ -23,6 +25,47 @@ export type Partner = {
     is_featured: boolean;
     registered_at: string;
 };
+
+/** Partenaire tel que renvoyé par GET /api/v1/partners/ (catégorie imbriquée). */
+type ApiPartner = {
+    id: number;
+    business_name: string;
+    business_purpose: string;
+    category: { id: number; name: string } | null;
+    siren: string;
+    address: string;
+    latitude: number | null;
+    longitude: number | null;
+    status: PartnerStatus;
+    is_featured: boolean;
+    registered_at: string;
+};
+
+/** Corps d'une réponse paginée DRF (toutes les listes de l'API le sont). */
+type Paginated<T> = { count: number; next: string | null; previous: string | null; results: T[] };
+
+/** Le modèle Partner n'a pas de champ ville séparé : dérivée du dernier segment de l'adresse. */
+function cityFromAddress(address: string): string {
+    const segments = address.split(",");
+    return segments.length > 1 ? segments[segments.length - 1].trim() : address;
+}
+
+function toPartner(p: ApiPartner): Partner {
+    return {
+        id: p.id,
+        business_name: p.business_name,
+        business_purpose: p.business_purpose,
+        category: p.category?.name ?? "Non catégorisé",
+        siren: p.siren,
+        address: p.address,
+        city: cityFromAddress(p.address),
+        latitude: p.latitude,
+        longitude: p.longitude,
+        status: p.status,
+        is_featured: p.is_featured,
+        registered_at: p.registered_at,
+    };
+}
 
 /**
  * Trace d'une décision de référencement (acceptation ou refus).
@@ -58,11 +101,24 @@ export type Balance = {
 export type Transaction = {
     id: number;
     amount: number;
-    kind: "payment" | "topup";
+    transaction_type: "PAYMENT" | "ABONDMENT";
     validated_at: string;
     partner_id: number | null;
     partner_name: string;
-    is_cancelled: boolean;
+    counter_entry_of: number | null;
+    /** Solde du salarié juste après cette écriture. Fourni uniquement sur ses propres transactions. */
+    balance_after: number | null;
+};
+
+/** Coup de cœur du Ministre : mise en avant unique, publiée depuis l'espace administration. */
+export type MinisterSpotlight = {
+    id: number;
+    partner: { id: number; business_name: string; category: string; address: string };
+    message: string;
+    is_active?: boolean;
+    click_count?: number;
+    published_by?: string | null;
+    published_at?: string;
 };
 
 async function fetchOrSeed<T>(path: string, token: string | null, fallback: T): Promise<T> {
@@ -77,7 +133,7 @@ async function fetchOrSeed<T>(path: string, token: string | null, fallback: T): 
 
         if (!res.ok) {
             const message =
-                typeof data?.error === "string" ? data.error : "Une erreur est survenue.";
+                typeof data?.detail === "string" ? data.detail : "Une erreur est survenue.";
             throw new ApiError(message, res.status);
         }
 
@@ -88,26 +144,206 @@ async function fetchOrSeed<T>(path: string, token: string | null, fallback: T): 
     }
 }
 
-export function getPartners(token: string | null): Promise<Partner[]> {
-    return fetchOrSeed<Partner[]>("/api/partners", token, SEED_PARTNERS);
+export async function getPartners(token: string | null): Promise<Partner[]> {
+    const data = await fetchOrSeed<Paginated<ApiPartner> | Partner[]>(
+        "/api/v1/partners/",
+        token,
+        SEED_PARTNERS,
+    );
+    return Array.isArray(data) ? data : data.results.map(toPartner);
 }
 
+/** GET /api/v1/partners/{id}/ — direct, pour ne pas dépendre de la pagination du catalogue. */
 export async function getPartner(id: number, token: string | null): Promise<Partner | null> {
+    try {
+        const headers: Record<string, string> = {};
+        if (token) headers["Authorization"] = `Bearer ${token}`;
+
+        const res = await fetch(`${API_URL}/api/v1/partners/${id}/`, { headers });
+        if (res.status === 404) return SEED_PARTNERS.find((p) => p.id === id) ?? null;
+
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok) {
+            const message =
+                typeof data?.detail === "string" ? data.detail : "Une erreur est survenue.";
+            throw new ApiError(message, res.status);
+        }
+
+        return toPartner(data as ApiPartner);
+    } catch (err) {
+        if (err instanceof ApiError) throw err;
+        return SEED_PARTNERS.find((p) => p.id === id) ?? null;
+    }
+}
+
+/** Fiche salarié telle que renvoyée par GET /api/v1/employees/me/. */
+type ApiEmployeeMe = {
+    id: number;
+    user: number;
+    balance: string;
+    employer: string;
+};
+
+/** Écriture comptable telle que renvoyée par GET /api/v1/transactions/. */
+type ApiTransaction = {
+    id: number;
+    transaction_type: "PAYMENT" | "ABONDMENT";
+    partner: number | null;
+    amount: string;
+    validated_at: string;
+    counter_entry_of: number | null;
+    balance_after: string | null;
+};
+
+function isInCurrentMonth(iso: string): boolean {
+    const date = new Date(iso);
+    const now = new Date();
+    return date.getFullYear() === now.getFullYear() && date.getMonth() === now.getMonth();
+}
+
+/**
+ * GET /api/v1/employees/me/ — solde et employeur du salarié authentifié.
+ *
+ * Les stats "crédité/dépensé ce mois-ci" ne sont pas renvoyées par l'API : on
+ * les recalcule côté client à partir de l'historique des transactions.
+ */
+export async function getBalance(token: string | null): Promise<Balance> {
+    try {
+        const headers: Record<string, string> = {};
+        if (token) headers["Authorization"] = `Bearer ${token}`;
+
+        const res = await fetch(`${API_URL}/api/v1/employees/me/`, { headers });
+        if (res.status === 404) return SEED_BALANCE;
+
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok) {
+            const message =
+                typeof data?.detail === "string" ? data.detail : "Une erreur est survenue.";
+            throw new ApiError(message, res.status);
+        }
+
+        const employee = data as ApiEmployeeMe;
+        const transactions = await getTransactions(token);
+        const thisMonth = transactions.filter((t) => isInCurrentMonth(t.validated_at));
+
+        return {
+            amount: Number(employee.balance),
+            employer: employee.employer,
+            topped_up_this_month: thisMonth
+                .filter((t) => t.transaction_type === "ABONDMENT")
+                .reduce((sum, t) => sum + t.amount, 0),
+            spent_this_month: thisMonth
+                .filter((t) => t.transaction_type === "PAYMENT")
+                .reduce((sum, t) => sum + t.amount, 0),
+        };
+    } catch (err) {
+        if (err instanceof ApiError) throw err;
+        return SEED_BALANCE;
+    }
+}
+
+/** GET /api/v1/transactions/ — historique visible par l'utilisateur authentifié (paginé côté API). */
+export async function getTransactions(token: string | null): Promise<Transaction[]> {
+    const data = await fetchOrSeed<Paginated<ApiTransaction> | Transaction[]>(
+        "/api/v1/transactions/",
+        token,
+        SEED_TRANSACTIONS,
+    );
+    if (Array.isArray(data)) return data;
+
     const partners = await getPartners(token);
-    return partners.find((p) => p.id === id) ?? null;
+    const partnerNames = new Map(partners.map((p) => [p.id, p.business_name]));
+
+    return data.results.map((t) => ({
+        id: t.id,
+        amount: Number(t.amount),
+        transaction_type: t.transaction_type,
+        validated_at: t.validated_at,
+        partner_id: t.partner,
+        partner_name:
+            t.partner === null
+                ? "Abondement employeur"
+                : partnerNames.get(t.partner) ?? `Partenaire #${t.partner}`,
+        counter_entry_of: t.counter_entry_of,
+        balance_after: t.balance_after === null || t.balance_after === undefined ? null : Number(t.balance_after),
+    }));
 }
 
-export function getBalance(token: string | null): Promise<Balance> {
-    return fetchOrSeed<Balance>("/api/wallet/balance", token, SEED_BALANCE);
+/** Partenaire allégé tel que renvoyé dans une entrée de Coup de cœur du Ministre. */
+type ApiSpotlightPartner = { id: number; business_name: string; category: string; address: string };
+
+type ApiMinisterSpotlight = {
+    id: number;
+    partner: ApiSpotlightPartner;
+    message: string;
+    is_active?: boolean;
+    click_count?: number;
+    published_by?: string | null;
+    published_at?: string;
+};
+
+/**
+ * GET /api/v1/ministre/coup-de-coeur/ — public, sans authentification.
+ *
+ * `null` si aucune mise en avant n'est active (204 sans contenu) ; ne peut pas
+ * passer par `fetchOrSeed` car un 204 n'a pas de corps JSON à parser.
+ */
+export async function getMinisterSpotlight(token: string | null): Promise<MinisterSpotlight | null> {
+    try {
+        const headers: Record<string, string> = {};
+        if (token) headers["Authorization"] = `Bearer ${token}`;
+
+        const res = await fetch(`${API_URL}/api/v1/ministre/coup-de-coeur/`, { headers });
+        if (res.status === 204) return null;
+        if (res.status === 404) return SEED_SPOTLIGHT;
+
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok) {
+            const message =
+                typeof data?.detail === "string" ? data.detail : "Une erreur est survenue.";
+            throw new ApiError(message, res.status);
+        }
+
+        return data as ApiMinisterSpotlight;
+    } catch (err) {
+        if (err instanceof ApiError) throw err;
+        return SEED_SPOTLIGHT;
+    }
 }
 
-export function getTransactions(token: string | null): Promise<Transaction[]> {
-    return fetchOrSeed<Transaction[]>("/api/transactions", token, SEED_TRANSACTIONS);
+/** GET /api/v1/ministre/coup-de-coeur/historique/ — historique complet, réservé aux administrateurs. */
+export async function getMinisterSpotlightHistory(token: string | null): Promise<MinisterSpotlight[]> {
+    const data = await fetchOrSeed<Paginated<ApiMinisterSpotlight> | ApiMinisterSpotlight[]>(
+        "/api/v1/ministre/coup-de-coeur/historique/",
+        token,
+        SEED_SPOTLIGHT_HISTORY,
+    );
+    return Array.isArray(data) ? data : data.results;
 }
 
-/** Liste des salariés — route réelle, réservée aux comptes administrateurs. */
-export function getEmployees(token: string | null): Promise<AdminEmployee[]> {
-    return fetchOrSeed<AdminEmployee[]>("/api/v1/employees/", token, SEED_EMPLOYEES);
+/**
+ * GET /api/v1/ministre/coup-de-coeur/toutes/ — public, sans authentification.
+ *
+ * Tous les Coups de cœur (actif et archivés), sans le compteur de clics
+ * (réservé à l'historique admin).
+ */
+export async function getAllMinisterSpotlights(token: string | null): Promise<MinisterSpotlight[]> {
+    const data = await fetchOrSeed<Paginated<ApiMinisterSpotlight> | ApiMinisterSpotlight[]>(
+        "/api/v1/ministre/coup-de-coeur/toutes/",
+        token,
+        SEED_SPOTLIGHT_HISTORY,
+    );
+    return Array.isArray(data) ? data : data.results;
+}
+
+/** Liste des salariés — route réelle, réservée aux comptes administrateurs (paginée). */
+export async function getEmployees(token: string | null): Promise<AdminEmployee[]> {
+    const data = await fetchOrSeed<Paginated<AdminEmployee> | AdminEmployee[]>(
+        "/api/v1/employees/",
+        token,
+        SEED_EMPLOYEES,
+    );
+    return Array.isArray(data) ? data : data.results;
 }
 
 export function getPartnerDecisions(): PartnerDecision[] {

@@ -1,5 +1,10 @@
 from django.urls import path
-from .views import EmployeesView, EmployeeMe, SingleEmployeeView, SingleEmployeeBalanceView
+from .views import (
+    EmployeesView,
+    EmployeeMe,
+    SingleEmployeeView,
+    SingleEmployeeBalanceView,
+)
 
 urlpatterns = [
 

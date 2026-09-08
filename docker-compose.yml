@@ -29,3 +29,18 @@ services:
       redis:
         condition: service_healthy
     restart: unless-stopped
+
+  front:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: survivor_fronted
+    command: >
+      sh -c "npm run dev"
+    volumes:
+      - ./frontend:/app
+    ports:
+      - "${FRONT_PORT:-3000}:3000"
+    env_file:
+      - .env
+    restart: unless-stopped

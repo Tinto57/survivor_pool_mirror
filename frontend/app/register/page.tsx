@@ -178,7 +178,7 @@ export default function RegisterPage() {
     }
 
     return (
-        <main className={styles.wrapper}>
+        <main id="main-content" tabIndex={-1} className={styles.wrapper}>
             <div className={styles.card}>
                 <h1 className={styles.title}>Devenir partenaire</h1>
                 <p className={styles.subtitle}>
@@ -186,9 +186,13 @@ export default function RegisterPage() {
                     identifiants directement de leur employeur.
                 </p>
 
-                <div className={styles.steps}>
+                <ol className={styles.steps} aria-label="Étapes de l'inscription">
                     {Array.from({ length: STEP_COUNT }, (_, i) => i + 1).map((n) => (
-                        <div className={styles.step} key={n}>
+                        <li
+                            className={styles.step}
+                            key={n}
+                            aria-current={n === step ? "step" : undefined}
+                        >
                             <div
                                 className={`${styles.stepCircle} ${
                                     n === step
@@ -198,14 +202,18 @@ export default function RegisterPage() {
                                         : ""
                                 }`}
                             >
-                                {n < step ? <Check size={14} /> : n}
+                                {n < step ? <Check size={14} aria-hidden="true" /> : n}
+                                <span className="sr-only">
+                                    Étape {n} sur {STEP_COUNT}
+                                    {n < step ? " (complétée)" : n === step ? " (en cours)" : ""}
+                                </span>
                             </div>
                             {n < STEP_COUNT && (
                                 <div className={`${styles.stepLine} ${n < step ? styles.stepLineDone : ""}`} />
                             )}
-                        </div>
+                        </li>
                     ))}
-                </div>
+                </ol>
 
                 <form onSubmit={step === STEP_COUNT ? handleSubmit : (e) => e.preventDefault()}>
                     {step === 1 && (
@@ -217,7 +225,7 @@ export default function RegisterPage() {
                                     Email
                                 </label>
                                 <div className={styles.inputWrapper}>
-                                    <Mail />
+                                    <Mail aria-hidden="true" />
                                     <input
                                         id="email"
                                         type="email"
@@ -235,7 +243,7 @@ export default function RegisterPage() {
                                     Mot de passe
                                 </label>
                                 <div className={styles.inputWrapper}>
-                                    <Lock />
+                                    <Lock aria-hidden="true" />
                                     <input
                                         id="password"
                                         type={showPassword ? "text" : "password"}
@@ -251,7 +259,11 @@ export default function RegisterPage() {
                                         onClick={() => setShowPassword((v) => !v)}
                                         aria-label={showPassword ? "Masquer le mot de passe" : "Afficher le mot de passe"}
                                     >
-                                        {showPassword ? <EyeOff /> : <Eye />}
+                                        {showPassword ? (
+                                            <EyeOff aria-hidden="true" />
+                                        ) : (
+                                            <Eye aria-hidden="true" />
+                                        )}
                                     </button>
                                 </div>
 
@@ -263,8 +275,15 @@ export default function RegisterPage() {
                                                 key={req.id}
                                                 className={`${styles.passwordHint} ${valid ? styles.passwordHintValid : ""}`}
                                             >
-                                                {valid ? <Check /> : <X />}
+                                                {valid ? (
+                                                    <Check aria-hidden="true" />
+                                                ) : (
+                                                    <X aria-hidden="true" />
+                                                )}
                                                 {req.label}
+                                                <span className="sr-only">
+                                                    {valid ? " (respecté)" : " (non respecté)"}
+                                                </span>
                                             </li>
                                         );
                                     })}
@@ -276,7 +295,7 @@ export default function RegisterPage() {
                                     Confirmer le mot de passe
                                 </label>
                                 <div className={styles.inputWrapper}>
-                                    <Lock />
+                                    <Lock aria-hidden="true" />
                                     <input
                                         id="confirmPassword"
                                         type={showPassword ? "text" : "password"}
@@ -301,7 +320,7 @@ export default function RegisterPage() {
                                         Prénom
                                     </label>
                                     <div className={styles.inputWrapper}>
-                                        <User />
+                                        <User aria-hidden="true" />
                                         <input
                                             id="firstName"
                                             type="text"
@@ -319,7 +338,7 @@ export default function RegisterPage() {
                                         Nom
                                     </label>
                                     <div className={styles.inputWrapper}>
-                                        <User />
+                                        <User aria-hidden="true" />
                                         <input
                                             id="lastName"
                                             type="text"
@@ -344,7 +363,7 @@ export default function RegisterPage() {
                                     Nom de l&apos;entreprise
                                 </label>
                                 <div className={styles.inputWrapper}>
-                                    <Store />
+                                    <Store aria-hidden="true" />
                                     <input
                                         id="business_name"
                                         type="text"
@@ -362,7 +381,7 @@ export default function RegisterPage() {
                                     Siren
                                 </label>
                                 <div className={styles.inputWrapper}>
-                                    <Store />
+                                    <Store aria-hidden="true" />
                                     <input
                                         id="siren"
                                         type="text"
@@ -384,7 +403,7 @@ export default function RegisterPage() {
                                 </label>
                                 <div className={styles.autocompleteWrapper}>
                                     <div className={styles.inputWrapper}>
-                                        <MapPin />
+                                        <MapPin aria-hidden="true" />
                                         <input
                                             id="address"
                                             type="text"
@@ -399,47 +418,53 @@ export default function RegisterPage() {
                                     </div>
 
                                     {showSuggestions && suggestions.length > 0 && (
-                                        <ul className={styles.suggestions}>
+                                        <ul className={styles.suggestions} role="listbox" aria-label="Suggestions d'adresse">
                                             {suggestions.map((suggestion) => (
-                                                <li
-                                                    key={suggestion.label}
-                                                    className={styles.suggestionItem}
-                                                    onMouseDown={() => selectSuggestion(suggestion)}
-                                                >
-                                                    <MapPin />
-                                                    {suggestion.label}
+                                                <li key={suggestion.label} role="presentation">
+                                                    <button
+                                                        type="button"
+                                                        role="option"
+                                                        aria-selected={false}
+                                                        className={styles.suggestionItem}
+                                                        onMouseDown={() => selectSuggestion(suggestion)}
+                                                    >
+                                                        <MapPin aria-hidden="true" />
+                                                        {suggestion.label}
+                                                    </button>
                                                 </li>
                                             ))}
                                         </ul>
                                     )}
                                 </div>
 
-                                {geocodeStatus === "loading" && (
-                                    <p className={styles.geocodeStatus}>
-                                        <Loader2 className={styles.spin} />
-                                        Recherche d&apos;adresses...
-                                    </p>
-                                )}
+                                <div aria-live="polite">
+                                    {geocodeStatus === "loading" && (
+                                        <p className={styles.geocodeStatus}>
+                                            <Loader2 className={styles.spin} aria-hidden="true" />
+                                            Recherche d&apos;adresses...
+                                        </p>
+                                    )}
 
-                                {geocodeStatus === "success" && (
-                                    <p className={`${styles.geocodeStatus} ${styles.geocodeStatusSuccess}`}>
-                                        <Check />
-                                        Adresse localisée
-                                        {latitude !== null && longitude !== null && (
-                                            <span>
-                                                {" "}
-                                                ({latitude.toFixed(4)}, {longitude.toFixed(4)})
-                                            </span>
-                                        )}
-                                    </p>
-                                )}
+                                    {geocodeStatus === "success" && (
+                                        <p className={`${styles.geocodeStatus} ${styles.geocodeStatusSuccess}`}>
+                                            <Check aria-hidden="true" />
+                                            Adresse localisée
+                                            {latitude !== null && longitude !== null && (
+                                                <span>
+                                                    {" "}
+                                                    ({latitude.toFixed(4)}, {longitude.toFixed(4)})
+                                                </span>
+                                            )}
+                                        </p>
+                                    )}
 
-                                {geocodeStatus === "error" && (
-                                    <p className={`${styles.geocodeStatus} ${styles.geocodeStatusError}`}>
-                                        <AlertCircle />
-                                        Aucune adresse trouvée, vérifiez la saisie.
-                                    </p>
-                                )}
+                                    {geocodeStatus === "error" && (
+                                        <p className={`${styles.geocodeStatus} ${styles.geocodeStatusError}`}>
+                                            <AlertCircle aria-hidden="true" />
+                                            Aucune adresse trouvée, vérifiez la saisie.
+                                        </p>
+                                    )}
+                                </div>
                             </div>
 
                             <div className={styles.field}>
@@ -447,7 +472,7 @@ export default function RegisterPage() {
                                     Activité de l&apos;entreprise
                                 </label>
                                 <div className={`${styles.inputWrapper} ${styles.inputWrapperTop}`}>
-                                    <FileText />
+                                    <FileText aria-hidden="true" />
                                     <textarea
                                         id="businessPurpose"
                                         className={`${styles.input} ${styles.textarea}`}
@@ -460,7 +485,7 @@ export default function RegisterPage() {
                         </>
                     )}
 
-                    {error && <p className={styles.error}>{error}</p>}
+                    {error && <p className={styles.error} role="alert">{error}</p>}
 
                     {step === 1 && (
                         <button type="button" className={styles.submit} onClick={goNext}>
