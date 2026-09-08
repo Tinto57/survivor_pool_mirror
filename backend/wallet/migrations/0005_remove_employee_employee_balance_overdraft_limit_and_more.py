@@ -22,6 +22,9 @@ def regularize_negative_balances(apps, schema_editor):
     Employee = apps.get_model('wallet', 'Employee')
     Transaction = apps.get_model('transactions', 'Transaction')
 
+    total_cost = Decimal('0.00')
+    regularized = 0
+
     for employee in Employee.objects.filter(balance__lt=Decimal('0.00')):
         shortfall = -employee.balance
         Transaction.objects.create(
@@ -32,6 +35,15 @@ def regularize_negative_balances(apps, schema_editor):
         )
         employee.balance = Decimal('0.00')
         employee.save(update_fields=['balance'])
+
+        total_cost += shortfall
+        regularized += 1
+        print(f"  · salarié #{employee.id} régularisé : +{shortfall}€")
+
+    if regularized:
+        print(f"[wallet.0005] {regularized} salarié(s) régularisé(s), coût total pour le Ministère : {total_cost}€")
+    else:
+        print("[wallet.0005] Aucun salarié en négatif, rien à régulariser.")
 
 
 class Migration(migrations.Migration):
