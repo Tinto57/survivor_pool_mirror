@@ -11,6 +11,24 @@ services:
       timeout: 3s
       retries: 5
 
+  db:
+    image: postgres:16-alpine
+    container_name: survivor_db
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-cartepro}
+      POSTGRES_USER: ${POSTGRES_USER:-cartepro_owner}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-change-me}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-cartepro_owner} -d ${POSTGRES_DB:-cartepro}"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
   web:
     build:
       context: ./backend
@@ -28,6 +46,8 @@ services:
     depends_on:
       redis:
         condition: service_healthy
+      db:
+        condition: service_healthy
     restart: unless-stopped
 
   front:
@@ -44,3 +64,6 @@ services:
     env_file:
       - .env
     restart: unless-stopped
+
+volumes:
+  pgdata:

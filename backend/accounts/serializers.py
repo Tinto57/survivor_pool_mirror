@@ -53,6 +53,18 @@ class UserSerializer(serializers.ModelSerializer):
         read_only_fields = ["id", "username", "date_joined", "role"]
 
 
+class UserRoleUpdateSerializer(serializers.ModelSerializer):
+    """Changement du rôle d'un compte existant, réservé aux administrateurs.
+
+    Ne touche ni ne crée les fiches `Employee`/`Partner` associées : l'administrateur
+    reste responsable de leur cohérence après un changement de rôle (ex. créer la
+    fiche `Employee` manquante si un compte devient `employee`)."""
+
+    class Meta:
+        model = User
+        fields = ["role"]
+
+
 class UserRegistrationSerializer(serializers.ModelSerializer):
     """Payload d'inscription d'un nouveau compte (salarié ou partenaire)."""
 

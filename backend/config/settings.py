@@ -65,6 +65,7 @@ INSTALLED_APPS = [
     "wallet",
     "partners",
     "transactions",
+    "audit",
     "django_extensions",
 ]
 
@@ -148,10 +149,21 @@ TEMPLATES = [
 
 WSGI_APPLICATION = "config.wsgi.application"
 
+# APP_DATABASE_URL, quand elle est définie, prend le pas sur DATABASE_URL : c'est le
+# rôle Postgres restreint (voir `audit` app) utilisé par le serveur applicatif en
+# service (gunicorn/runserver). DATABASE_URL reste le rôle propriétaire, utilisé pour
+# `manage.py migrate` (DDL, GRANT/REVOKE) — les deux pointent vers la même base, avec
+# des privilèges différents. En son absence, DATABASE_URL sert aux deux usages.
+_database_url = os.getenv("APP_DATABASE_URL") or os.getenv("DATABASE_URL")
+
 DATABASES = {
-    "default": dj_database_url.config(
-        default=f"sqlite:///{BASE_DIR / 'db.sqlite3'}",
-        conn_max_age=600,
+    "default": (
+        dj_database_url.parse(_database_url, conn_max_age=600)
+        if _database_url
+        else {
+            "ENGINE": "django.db.backends.sqlite3",
+            "NAME": BASE_DIR / "db.sqlite3",
+        }
     )
 }
 
