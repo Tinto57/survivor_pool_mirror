@@ -280,6 +280,28 @@ class CounterEntryTests(BaseAPITestCase):
         )
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
 
+    def test_countering_a_cancelled_payment_is_rejected(self):
+        # PAYMENT_CANCELLED documente un paiement rejeté (solde insuffisant) :
+        # aucun argent n'a jamais bougé, donc il n'y a rien à contre-passer.
+        # Avant le correctif, `if tx.transaction_type == PAYMENT: ... else: ...`
+        # traitait ce cas comme un abondement à annuler et débitait réellement
+        # le salarié au bénéfice du partenaire visé par le paiement annulé.
+        cancelled_tx = Transaction.objects.create(
+            token="tx-cancelled",
+            transaction_type=Transaction.PAYMENT_CANCELLED,
+            employee=self.employee,
+            partner=self.partner,
+            amount=Decimal("40.00"),
+        )
+        self.client.force_authenticate(user=self.admin)
+        response = self.client.post(
+            f"/api/v1/transactions/{cancelled_tx.id}/counter-entry/"
+        )
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertFalse(hasattr(cancelled_tx, "counter_entry"))
+        self.employee.refresh_from_db()
+        self.assertEqual(self.employee.balance, Decimal("100.00"))
+
     def test_countering_a_counter_entry_is_currently_allowed(self):
         # La vue ne bloque que le fait de contrer une transaction qui a *déjà*
         # une contre-écriture (`hasattr(tx, "counter_entry")`) ; elle ne
@@ -340,6 +362,41 @@ class AdminTransactionsCsvExportTests(BaseAPITestCase):
         response = self.client.get("/api/v1/admin/transactions.csv/")
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
+    def test_non_admin_export_attempt_gets_a_readable_json_error(self):
+        # Régression : `renderer_classes = [CSVRenderer]` sur cette vue fait
+        # aussi passer les réponses d'erreur DRF (dict `{"detail": ...}`) par
+        # CSVRenderer, qui ne sait sérialiser que du texte brut. Sans le
+        # correctif dans `finalize_response`, le corps devenait `b"detail"`
+        # (Django itère un dict Python comme un itérable de ses clés) sous un
+        # `Content-Type: text/csv` trompeur, au lieu du JSON attendu.
+        self.client.force_authenticate(user=self.employee_user)
+        response = self.client.get("/api/v1/admin/transactions.csv/")
+        self.assertTrue(response["Content-Type"].startswith("application/json"))
+        self.assertEqual(
+            response.json(),
+            {"detail": "You do not have permission to perform this action."},
+        )
+
     def test_anonymous_cannot_export_csv(self):
         response = self.client.get("/api/v1/admin/transactions.csv/")
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+
+    def test_anonymous_export_attempt_gets_a_readable_json_error(self):
+        response = self.client.get("/api/v1/admin/transactions.csv/")
+        self.assertTrue(response["Content-Type"].startswith("application/json"))
+        self.assertEqual(
+            response.json(),
+            {"detail": "Authentication credentials were not provided."},
+        )
+
+    def test_unknown_route_under_export_prefix_still_returns_json_404(self):
+        # Garde-fou plus large : n'importe quelle erreur DRF sur cette vue
+        # (pas seulement 401/403) doit rester en JSON, pas seulement le
+        # chemin nominal testé ci-dessus.
+        # Cette vue ne route que GET ; POST déclenche une 405 (MethodNotAllowed),
+        # une autre exception DRF qui doit elle aussi passer par le rendu JSON.
+        self.client.force_authenticate(user=self.admin)
+        response = self.client.post("/api/v1/admin/transactions.csv/")
+        self.assertEqual(response.status_code, status.HTTP_405_METHOD_NOT_ALLOWED)
+        self.assertTrue(response["Content-Type"].startswith("application/json"))
+        self.assertIn("detail", response.json())

@@ -1,7 +1,10 @@
+from decimal import Decimal
+
 from django.contrib.auth import get_user_model
 from rest_framework import status
 
 from partners.models import Partner
+from transactions.models import Transaction
 from .base import BaseAPITestCase, STRONG_PASSWORD
 
 User = get_user_model()
@@ -352,3 +355,38 @@ class SingleUserTests(BaseAPITestCase):
         self.client.force_authenticate(user=self.admin)
         response = self.client.delete(f"/api/v1/users/{self.other_employee_user.id}/")
         self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
+
+    def test_deleting_user_with_protected_transactions_returns_409(self):
+        # Régression : `SingleUserView` n'avait pas de `destroy()` propre.
+        # `Employee`/`Partner` sont en CASCADE sur `User`, mais `Transaction`
+        # est en PROTECT sur `employee`/`partner` : sans le correctif, la
+        # suppression en cascade levait un `ProtectedError` non rattrapé
+        # (500) au lieu d'un 409 propre.
+        Transaction.objects.create(
+            token="tx-user-delete-guard",
+            transaction_type=Transaction.PAYMENT,
+            employee=self.employee,
+            partner=self.partner,
+            amount=Decimal("1.00"),
+        )
+        self.client.force_authenticate(user=self.admin)
+        response = self.client.delete(f"/api/v1/users/{self.employee_user.id}/")
+        self.assertEqual(response.status_code, status.HTTP_409_CONFLICT)
+        self.assertIn("detail", response.data)
+        self.assertTrue(User.objects.filter(id=self.employee_user.id).exists())
+
+    def test_owner_deleting_own_account_with_protected_transactions_returns_409(self):
+        # Même garde-fou, mais déclenché par le propriétaire du compte
+        # lui-même (`IsOwnerOrAdmin` autorise aussi le self-service), pas
+        # seulement par un administrateur.
+        Transaction.objects.create(
+            token="tx-owner-delete-guard",
+            transaction_type=Transaction.PAYMENT,
+            employee=self.employee,
+            partner=self.partner,
+            amount=Decimal("1.00"),
+        )
+        self.client.force_authenticate(user=self.employee_user)
+        response = self.client.delete(f"/api/v1/users/{self.employee_user.id}/")
+        self.assertEqual(response.status_code, status.HTTP_409_CONFLICT)
+        self.assertTrue(User.objects.filter(id=self.employee_user.id).exists())
