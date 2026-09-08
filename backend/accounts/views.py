@@ -10,6 +10,8 @@ from django.contrib.auth.models import update_last_login
 from django.db import transaction
 from drf_spectacular.utils import extend_schema, extend_schema_view, OpenApiResponse
 
+from audit.request_context import actor_info, get_client_ip
+from audit.services import record_audit_event
 from config.serializers import ErrorDetailSerializer
 from partners.models import Partner
 from .serializers import (
@@ -17,6 +19,7 @@ from .serializers import (
     RegistrationResponseSerializer,
     UserSerializer,
     UserRegistrationSerializer,
+    UserRoleUpdateSerializer,
 )
 from .permissions import IsOwnerOrAdmin, IsAdminRole
 
@@ -63,6 +66,16 @@ class UsersView(generics.ListCreateAPIView):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         user = serializer.save()
+
+        record_audit_event(
+            actor_id=user.id,
+            actor_role=user.role,
+            action="ACCOUNT_CREATED",
+            target_type="User",
+            target_id=user.id,
+            payload={"username": user.username, "role": user.role},
+            ip=get_client_ip(request),
+        )
 
         token = RefreshToken.for_user(user)
 
@@ -133,6 +146,28 @@ class SingleUserView(generics.RetrieveUpdateDestroyAPIView):
     lookup_url_kwarg = "user_id"
     http_method_names = ["get", "patch", "delete"]
 
+    TRACKED_FIELDS = ("first_name", "last_name", "email")
+
+    def perform_update(self, serializer):
+        before = {field: getattr(serializer.instance, field) for field in self.TRACKED_FIELDS}
+        instance = serializer.save()
+        changed = {
+            field: {"before": before[field], "after": getattr(instance, field)}
+            for field in self.TRACKED_FIELDS
+            if before[field] != getattr(instance, field)
+        }
+        if changed:
+            actor_id, actor_role = actor_info(self.request)
+            record_audit_event(
+                actor_id=actor_id,
+                actor_role=actor_role,
+                action="ACCOUNT_UPDATED",
+                target_type="User",
+                target_id=instance.id,
+                payload={"changed_fields": changed},
+                ip=get_client_ip(self.request),
+            )
+
     def destroy(self, request, *args, **kwargs):
         instance = self.get_object()
         try:
@@ -143,6 +178,49 @@ class SingleUserView(generics.RetrieveUpdateDestroyAPIView):
                 status=status.HTTP_409_CONFLICT,
             )
         return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+@extend_schema_view(
+    patch=extend_schema(
+        tags=["Utilisateurs"],
+        summary="Changer le rôle d'un compte",
+        description=(
+            "Modifie le rôle (`employee`, `partner`, `admin`) d'un compte existant. "
+            "Réservé aux administrateurs. Ne crée ni ne modifie la fiche "
+            "`Employee`/`Partner` associée."
+        ),
+        request=UserRoleUpdateSerializer,
+        responses={200: UserSerializer},
+    ),
+)
+class UserRoleUpdateView(generics.UpdateAPIView):
+    queryset = User.objects.all()
+    serializer_class = UserRoleUpdateSerializer
+    permission_classes = [IsAdminRole]
+    lookup_url_kwarg = "user_id"
+    http_method_names = ["patch"]
+
+    def perform_update(self, serializer):
+        old_role = serializer.instance.role
+        instance = serializer.save()
+        if instance.role != old_role:
+            actor_id, actor_role = actor_info(self.request)
+            record_audit_event(
+                actor_id=actor_id,
+                actor_role=actor_role,
+                action="ROLE_CHANGED",
+                target_type="User",
+                target_id=instance.id,
+                payload={"before": old_role, "after": instance.role},
+                ip=get_client_ip(self.request),
+            )
+
+    def update(self, request, *args, **kwargs):
+        instance = self.get_object()
+        serializer = self.get_serializer(instance, data=request.data, partial=True)
+        serializer.is_valid(raise_exception=True)
+        self.perform_update(serializer)
+        return Response(UserSerializer(serializer.instance).data, status=status.HTTP_200_OK)
 
 
 class CustomTokenObtainPairView(TokenObtainPairView):
@@ -158,7 +236,20 @@ class CustomTokenObtainPairView(TokenObtainPairView):
         },
     )
     def post(self, request: Request, *args, **kwargs) -> Response:
-        response: Response = super().post(request, *args, **kwargs)
+        try:
+            response: Response = super().post(request, *args, **kwargs)
+        except Exception:
+            record_audit_event(
+                actor_id=None,
+                actor_role="",
+                action="LOGIN_FAILED",
+                target_type="User",
+                target_id=None,
+                payload={"username": request.data.get("username", "")},
+                ip=get_client_ip(request),
+            )
+            raise
+
         if response.status_code == 200:
             user = User.objects.get(username=request.data["username"])
             update_last_login(None, user)
