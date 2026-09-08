@@ -1,6 +1,6 @@
 <div align="center">
 
-# 🎟️ Ticket Tout
+# 🎟️ CartePro
 
 **La carte pro qui permet aux salariés de dépenser leur budget avantages partout où le Ministère l'autorise.**
 **The employee benefits card that lets you spend anywhere the Ministry allows.**
@@ -21,7 +21,7 @@
 
 ### Le projet
 
-Sur mandat du **Ministère du Job et Bonheur**, Ticket Tout modernise le principe du
+Sur mandat du **Ministère du Job et Bonheur**, CartePro modernise le principe du
 titre-restaurant : chaque salarié reçoit un budget crédité par son employeur, à dépenser
 chez n'importe quel partenaire référencé — pas seulement pour manger.
 
@@ -76,7 +76,7 @@ relations, cycle de vie d'un paiement. 👉 [docs/](docs/README.md)
 
 ### The project
 
-Commissioned by the **Ministry of Job and Happiness**, Ticket Tout modernizes the
+Commissioned by the **Ministry of Job and Happiness**, CartePro modernizes the
 meal-voucher concept: every employee gets a budget funded by their employer, to spend
 at any referenced partner — not just for lunch.
 

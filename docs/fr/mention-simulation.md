@@ -8,7 +8,7 @@ pour chaque emplacement demandé, ce qui est fait et ce qui reste à faire ou à
 
 | Emplacement | Implémentation | Fichier(s) |
 |---|---|---|
-| Écran de solde | Badge `SimulationBadge` à côté du libellé "Solde Ticket Tout" et sur les stats "Crédité"/"Dépensé ce mois-ci" | `frontend/app/components/BalanceCard/BalanceCard.tsx` |
+| Écran de solde | Badge `SimulationBadge` à côté du libellé "Solde CartePro" et sur les stats "Crédité"/"Dépensé ce mois-ci" | `frontend/app/components/BalanceCard/BalanceCard.tsx` |
 | Historique des transactions | Badge sur le titre de page + sur "Reçu au total"/"Dépensé au total" | `frontend/app/historique/page.tsx` |
 | Titres de pages | Prop `simulation` ajoutée au composant `Page`, réutilisable sur tout futur écran | `frontend/app/components/Page/Page.tsx` |
 | Écran d'accueil employé | Badge dans le bandeau supérieur, à côté du solde affiché | `frontend/app/employee/page.tsx` |
