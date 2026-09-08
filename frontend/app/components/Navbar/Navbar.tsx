@@ -28,7 +28,7 @@ export default function Navbar() {
             </div>
 
             <Link href="/employee" className={styles.logo}>
-                <span>Ticket Tout</span>
+                <span>CartePro</span>
             </Link>
 
             <div className={styles.links}>

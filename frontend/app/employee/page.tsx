@@ -39,7 +39,7 @@ export default function Home() {
             <h1 className="sr-only">Accueil</h1>
 
             <header className={styles.topbar}>
-                <span className={styles.brand}>Ticket Tout</span>
+                <span className={styles.brand}>CartePro</span>
                 <SimulationBadge size="sm" />
             </header>
 

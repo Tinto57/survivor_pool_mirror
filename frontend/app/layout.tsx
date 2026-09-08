@@ -10,9 +10,9 @@ const spectral = Spectral({
 });
 
 export const metadata: Metadata = {
-    title: "Ticket Tout",
+    title: "CartePro",
     description:
-        "Votre budget Ticket Tout à dépenser chez les partenaires du Ministère du Job et Bonheur.",
+        "Votre budget CartePro à dépenser chez les partenaires du Ministère du Job et Bonheur.",
 };
 
 export const viewport = {
