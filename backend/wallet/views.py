@@ -8,6 +8,8 @@ from django.db.models.deletion import ProtectedError
 from drf_spectacular.utils import extend_schema, extend_schema_view, OpenApiResponse
 
 from accounts.permissions import IsAdminRole
+from audit.request_context import actor_info, get_client_ip
+from audit.services import record_audit_event
 from config.serializers import ErrorDetailSerializer
 from wallet.permissions import IsOwnerOrAdminEmployee
 from .models import Employee
@@ -156,6 +158,20 @@ class SingleEmployeeBalanceView(generics.RetrieveUpdateAPIView):
         serializer.is_valid(raise_exception=True)
 
         updated_employee = serializer.save()
+
+        actor_id, actor_role = actor_info(request)
+        record_audit_event(
+            actor_id=actor_id,
+            actor_role=actor_role,
+            action="BALANCE_TOPUP",
+            target_type="Employee",
+            target_id=updated_employee.id,
+            payload={
+                "amount": str(serializer.validated_data.get("amount", "")),
+                "balance_after": str(updated_employee.balance),
+            },
+            ip=get_client_ip(request),
+        )
 
         read_serializer = EmployeeBalanceReadSerializer(updated_employee)
         return Response(read_serializer.data, status=status.HTTP_200_OK)
