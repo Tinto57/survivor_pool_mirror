@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
-import { ArrowLeft, BadgeCheck, Heart, MapPin, Navigation } from "lucide-react";
+import { ArrowLeft, BadgeCheck, MapPin, Navigation } from "lucide-react";
 import Avatar from "../../components/Avatar/Avatar";
 import Page from "../../components/Page/Page";
 import { getAccessToken } from "../../lib/auth";
@@ -72,13 +72,6 @@ export default function PartnerDetail() {
                         <BadgeCheck className={styles.badgeIcon} aria-hidden="true" />
                         Partenaire officiel
                     </span>
-
-                    {partner.is_featured && (
-                        <span className={styles.featured}>
-                            <Heart className={styles.badgeIconFilled} aria-hidden="true" />
-                            Coup de cœur
-                        </span>
-                    )}
                 </div>
             </header>
 

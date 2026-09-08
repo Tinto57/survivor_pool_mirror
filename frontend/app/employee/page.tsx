@@ -3,43 +3,31 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import BalanceCard from "../components/BalanceCard/BalanceCard";
-import MinisterSpotlight from "../components/MinisterSpotlight/MinisterSpotlight";
-import PartnerTile from "../components/PartnerTile/PartnerTile";
 import SimulationBadge from "../components/SimulationBadge/SimulationBadge";
 import TransactionRow from "../components/TransactionRow/TransactionRow";
 import { getAccessToken } from "../lib/auth";
-import { getBalance, getMinisterSpotlight, getPartners, getTransactions } from "../lib/catalog";
-import type { Balance, MinisterSpotlight as MinisterSpotlightType, Partner, Transaction } from "../lib/catalog";
+import { getBalance, getTransactions } from "../lib/catalog";
+import type { Balance, Transaction } from "../lib/catalog";
 import styles from "./employee.module.css";
 
 export default function Home() {
     const [balance, setBalance] = useState<Balance | null>(null);
-    const [partners, setPartners] = useState<Partner[]>([]);
     const [transactions, setTransactions] = useState<Transaction[]>([]);
-    const [spotlight, setSpotlight] = useState<MinisterSpotlightType | null>(null);
     const [error, setError] = useState<string | null>(null);
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
         const token = getAccessToken();
 
-        Promise.all([
-            getBalance(token),
-            getPartners(token),
-            getTransactions(token),
-            getMinisterSpotlight(token),
-        ])
-            .then(([nextBalance, nextPartners, nextTransactions, nextSpotlight]) => {
+        Promise.all([getBalance(token), getTransactions(token)])
+            .then(([nextBalance, nextTransactions]) => {
                 setBalance(nextBalance);
-                setPartners(nextPartners);
                 setTransactions(nextTransactions);
-                setSpotlight(nextSpotlight);
             })
             .catch((err) => setError(err instanceof Error ? err.message : "Une erreur est survenue."))
             .finally(() => setLoading(false));
     }, []);
 
-    const featured = partners.filter((p) => p.is_featured && p.status === "active");
     const recent = transactions.slice(0, 4);
 
     return (
@@ -53,31 +41,11 @@ export default function Home() {
 
             {error && <p className={styles.error} role="alert">{error}</p>}
 
-            {!loading && spotlight && <MinisterSpotlight spotlight={spotlight} />}
-
             {loading ? (
                 <div className={styles.skeleton} aria-hidden="true" />
             ) : (
                 balance && <BalanceCard balance={balance} />
             )}
-
-            {featured.length > 0 && (
-                <section className={styles.section}>
-                    <div className={styles.sectionHeader}>
-                        <h2 className={styles.sectionTitle}>Coup de cœur</h2>
-                        <Link href="/catalogue" className={styles.sectionLink}>
-                            Tout voir
-                        </Link>
-                    </div>
-
-                    <div className={styles.carousel}>
-                        {featured.map((partner) => (
-                            <PartnerTile key={partner.id} partner={partner} />
-                        ))}
-                    </div>
-                </section>
-            )}
-
             {recent.length > 0 && (
                 <section className={styles.section}>
                     <div className={styles.sectionHeader}>

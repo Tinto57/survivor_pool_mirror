@@ -151,19 +151,6 @@ export default function AdminHome() {
         }
     }
 
-    function handleToggleFeatured(partner: Partner) {
-        setPartners((current) =>
-            current.map((p) =>
-                p.id === partner.id ? { ...p, is_featured: !p.is_featured } : p,
-            ),
-        );
-        setNotice(
-            partner.is_featured
-                ? `${partner.business_name} retiré du Coup de cœur.`
-                : `${partner.business_name} mis en avant sur l'accueil salarié.`,
-        );
-    }
-
     async function handleCredit(employee: AdminEmployee) {
         const amount = Number(creditAmount.replace(",", "."));
         const token = getAccessToken();
@@ -387,20 +374,6 @@ export default function AdminHome() {
 
                                 <span className={styles.pill}>{STATUS_LABEL[partner.status]}</span>
 
-                                <button
-                                    type="button"
-                                    className={
-                                        partner.is_featured
-                                            ? `${styles.feature} ${styles.featureOn}`
-                                            : styles.feature
-                                    }
-                                    aria-pressed={partner.is_featured}
-                                    title="Coup de cœur"
-                                    onClick={() => handleToggleFeatured(partner)}
-                                >
-                                    <Heart aria-hidden="true" />
-                                    <span className={styles.featureLabel}>Coup de cœur</span>
-                                </button>
                             </li>
                         ))}
                     </ul>
