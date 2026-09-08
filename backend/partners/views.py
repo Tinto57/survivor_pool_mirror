@@ -9,6 +9,8 @@ from rest_framework.views import APIView
 from django.db.models import F
 
 from accounts.permissions import IsAdminRole, is_admin_role
+from audit.request_context import actor_info, get_client_ip
+from audit.services import record_audit_event
 from config.serializers import ErrorDetailSerializer
 
 from .models import Category, Partner, PartnerDecision
@@ -213,6 +215,18 @@ class PartnerDecisionCreateView(APIView):
             reason=reason,
             agent=request.user,
         )
+
+        actor_id, actor_role = actor_info(request)
+        record_audit_event(
+            actor_id=actor_id,
+            actor_role=actor_role,
+            action="PARTNER_DECISION",
+            target_type="Partner",
+            target_id=partner.id,
+            payload={"decision": decision_value, "reason": reason},
+            ip=get_client_ip(request),
+        )
+
         return Response(PartnerDecisionSerializer(decision).data, status=status.HTTP_201_CREATED)
 
 
