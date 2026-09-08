@@ -6,7 +6,7 @@ from partners.models import Category, Partner
 
 User = get_user_model()
 
-DEMO_PASSWORD = "TicketTout2026!"
+DEMO_PASSWORD = "CartePro2026!"
 
 
 class Command(BaseCommand):
@@ -15,7 +15,7 @@ class Command(BaseCommand):
     Idempotent : peut être relancée à chaque déploiement sans dupliquer les comptes.
     """
 
-    help = "Crée les comptes de démonstration Ticket Tout (salarié, partenaire, admin)."
+    help = "Crée les comptes de démonstration CartePro (salarié, partenaire, admin)."
 
     def handle(self, *args, **options):
         employee_user, created = self._get_or_create_user(

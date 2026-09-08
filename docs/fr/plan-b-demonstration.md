@@ -1,10 +1,10 @@
-# Plan B — Démonstration Ticket Tout (JT de 13h)
+# Plan B — Démonstration CartePro (JT de 13h)
 
 **Avant de monter sur le plateau :** ouvrez l'application 5 minutes avant et connectez-vous une fois.
 Le serveur se met en veille quand personne ne l'utilise ; ce premier réveil peut prendre jusqu'à une minute.
 Une fois réveillé, il reste rapide.
 
-**Lien :** https://survivor-pool-mirror-lyart.vercel.app — **Identifiant :** `salarie.demo` — **Mot de passe :** `TicketTout2026!`
+**Lien :** https://survivor-pool-mirror-lyart.vercel.app — **Identifiant :** `salarie.demo` — **Mot de passe :** `CartePro2026!`
 
 ---
 
