@@ -1,5 +1,5 @@
 /**
- * Client HTTP de l'API Ticket Tout.
+ * Client HTTP de l'API CartePro.
  *
  * L'URL du backend est configurable via NEXT_PUBLIC_API_URL (voir .env.local),
  * et retombe sur le serveur de dev Django par défaut.
@@ -134,6 +134,10 @@ export function register(payload: RegisterPayload): Promise<RegisterResponse> {
 /** GET /api/v1/users/{id}/ — route protégée par JWT. */
 export function getUser(userId: number, token: string): Promise<UserResponse> {
     return request<UserResponse>(`/api/v1/users/${userId}/`, { token });
+}
+
+export function getUserSelf(): Promise<UserResponse> {
+    return request<UserResponse>(`/api/v1/users/me/`);
 }
 
 export type BalanceUpdateResponse = {

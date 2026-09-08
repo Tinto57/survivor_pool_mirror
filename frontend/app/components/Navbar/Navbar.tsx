@@ -23,7 +23,7 @@ export default function Navbar() {
     return (
         <nav className={styles.navbar} aria-label="Navigation principale">
             <Link href="/employee" className={styles.logo}>
-                <span>Ticket Tout</span>
+                <span>CartePro</span>
             </Link>
 
             <div className={styles.links}>

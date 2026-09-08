@@ -10,6 +10,7 @@ import { getAccessToken } from "../../lib/auth";
 import { getPartner } from "../../lib/catalog";
 import type { Partner } from "../../lib/catalog";
 import styles from "./partner.module.css";
+import PartnerProfile from "@/app/components/PartnerProfile/PartnerProfile";
 
 export default function PartnerDetail() {
     const params = useParams();
@@ -100,7 +101,7 @@ export default function PartnerDetail() {
             </a>
 
             <p className={styles.footnote}>
-                Réglez sur place avec votre solde Ticket Tout — le paiement par QR code arrive
+                Réglez sur place avec votre solde CartePro — le paiement par QR code arrive
                 très bientôt.
             </p>
         </main>

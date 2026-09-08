@@ -81,7 +81,7 @@ export default function HistoriquePage() {
     return (
         <Page
             title="Historique"
-            subtitle="Toutes vos opérations Ticket Tout, du plus récent au plus ancien."
+            subtitle="Toutes vos opérations CartePro, du plus récent au plus ancien."
             simulation
         >
             <div className={styles.totals}>

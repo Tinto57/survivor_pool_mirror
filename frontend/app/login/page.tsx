@@ -45,7 +45,7 @@ export default function LoginPage() {
         <main id="main-content" tabIndex={-1} className={styles.wrapper}>
             <div className={styles.card}>
                 <h1 className={styles.title}>Content de vous revoir</h1>
-                <p className={styles.subtitle}>Connectez-vous à votre compte Ticket Tout</p>
+                <p className={styles.subtitle}>Connectez-vous à votre compte CartePro</p>
 
                 <form onSubmit={handleSubmit}>
                     <div className={styles.field}>

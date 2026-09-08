@@ -12,8 +12,9 @@ const spectral = Spectral({
 });
 
 export const metadata: Metadata = {
-    title: "Ticket Tout",
-    description: "Votre budget Ticket Tout à dépenser chez nos partenaires.",
+    title: "CartePro",
+    description:
+        "Votre budget CartePro à dépenser chez nos partenaires",
 };
 
 export const viewport = {

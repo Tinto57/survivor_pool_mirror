@@ -12,7 +12,7 @@ export default function BalanceCard({ balance }: { balance: Balance }) {
     return (
         <section className={styles.card}>
             <div className={styles.labelRow}>
-                <p className={styles.label}>Solde Ticket Tout</p>
+                <p className={styles.label}>Solde CartePro</p>
                 <SimulationBadge />
             </div>
 

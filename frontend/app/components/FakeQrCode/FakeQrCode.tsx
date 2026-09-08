@@ -8,7 +8,7 @@ import styles from "./FakeQrCode.module.css";
  * Aperçu factice : le code encode un identifiant de démo statique, rien n'est généré
  * ni signé côté serveur. À remplacer par le vrai flux de paiement une fois développé.
  */
-const DEMO_PAYLOAD = "TICKETTOUT-SIMULATION-DEMO";
+const DEMO_PAYLOAD = "CARTEPRO-SIMULATION-DEMO";
 
 export default function FakeQrCode() {
     return (
