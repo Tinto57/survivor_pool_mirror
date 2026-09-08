@@ -11,7 +11,7 @@ from django.db.models import F
 from accounts.permissions import IsAdminRole, is_admin_role
 from config.serializers import ErrorDetailSerializer
 
-from .models import Category, MinisterSpotlight, Partner, PartnerDecision
+from .models import Category, Partner, PartnerDecision
 from .permissions import CanViewPartner, CanViewPartnerDecisions, IsPartnerOwnerOrAdmin
 from .serializers import (
     CategorySerializer,

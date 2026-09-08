@@ -1,6 +1,6 @@
 from rest_framework import serializers
 
-from .models import Category, MinisterSpotlight, Partner, PartnerDecision
+from .models import Category, Partner, PartnerDecision
 
 
 class CategorySerializer(serializers.ModelSerializer):
