@@ -14,7 +14,7 @@ const DASHBOARD_TABS: { id: DashboardTab; label: string }[] = [
 
 type AdminNavProps = {
     /** Espace affiché : le pilotage bascule en liens quand on est ailleurs. */
-    section: "dashboard" | "registre" | "coup-de-coeur";
+    section: "dashboard" | "registre";
     activeTab?: DashboardTab;
     onSelectTab?: (tab: DashboardTab) => void;
     pendingCount?: number;
