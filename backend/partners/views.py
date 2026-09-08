@@ -6,8 +6,6 @@ from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from django.db.models import F
-
 from accounts.permissions import IsAdminRole, is_admin_role
 from audit.request_context import actor_info, get_client_ip
 from audit.services import record_audit_event
@@ -17,9 +15,6 @@ from .models import Category, Partner, PartnerDecision
 from .permissions import CanViewPartner, CanViewPartnerDecisions, IsPartnerOwnerOrAdmin
 from .serializers import (
     CategorySerializer,
-    # MinisterSpotlightCreateSerializer,
-    # MinisterSpotlightPublicSerializer,
-    # MinisterSpotlightSerializer,
     PartnerDecisionCreateSerializer,
     PartnerDecisionSerializer,
     PartnerSerializer,
@@ -243,138 +238,3 @@ class PartnerDecisionsListView(generics.ListAPIView):
     def get_queryset(self):
         partner = generics.get_object_or_404(Partner, id=self.kwargs["partner_id"])
         return PartnerDecision.objects.filter(partner=partner).select_related("agent").order_by("-created_at")
-
-
-# @extend_schema(
-#     tags=["Coup de cœur du Ministre"],
-#     summary="Consulter le Coup de cœur du Ministre en cours",
-#     description="Public, sans authentification. Renvoie 204 sans contenu si aucune mise en avant n'est active.",
-#     responses={
-#         200: MinisterSpotlightPublicSerializer,
-#         204: OpenApiResponse(description="Aucune mise en avant active."),
-#     },
-# )
-# class MinisterSpotlightPublicView(APIView):
-#     permission_classes = [AllowAny]
-
-#     def get(self, request):
-#         spotlight = MinisterSpotlight.objects.filter(is_active=True).select_related(
-#             "partner", "partner__category"
-#         ).first()
-#         if spotlight is None:
-#             return Response(status=status.HTTP_204_NO_CONTENT)
-#         return Response(MinisterSpotlightPublicSerializer(spotlight).data, status=status.HTTP_200_OK)
-
-
-# @extend_schema(
-#     tags=["Coup de cœur du Ministre"],
-#     summary="Lister tous les Coups de cœur du Ministre",
-#     description=(
-#         "Public, sans authentification. Historique complet (actif et archivés), sans le "
-#         "compteur de clics qui reste réservé à l'administration."
-#     ),
-#     responses={200: MinisterSpotlightPublicSerializer(many=True)},
-# )
-# class MinisterSpotlightPublicListView(generics.ListAPIView):
-#     queryset = MinisterSpotlight.objects.select_related("partner", "partner__category")
-#     serializer_class = MinisterSpotlightPublicSerializer
-#     permission_classes = [AllowAny]
-
-
-# @extend_schema(
-#     tags=["Coup de cœur du Ministre"],
-#     summary="Signaler un clic sur le Coup de cœur du Ministre",
-#     description="Public, sans authentification. Incrémente le compteur de clics de la mise en avant active.",
-#     request=None,
-#     responses={
-#         204: OpenApiResponse(description="Clic comptabilisé."),
-#         404: OpenApiResponse(response=ErrorDetailSerializer, description="Aucune mise en avant active."),
-#     },
-# )
-# class MinisterSpotlightClickView(APIView):
-#     permission_classes = [AllowAny]
-
-#     def post(self, request):
-#         updated = MinisterSpotlight.objects.filter(is_active=True).update(
-#             click_count=F("click_count") + 1
-#         )
-#         if not updated:
-#             return Response({"detail": "Aucun Coup de cœur actif."}, status=status.HTTP_404_NOT_FOUND)
-#         return Response(status=status.HTTP_204_NO_CONTENT)
-
-
-# @extend_schema_view(
-#     get=extend_schema(
-#         tags=["Coup de cœur du Ministre"],
-#         summary="Historique des Coups de cœur du Ministre",
-#         description="Toutes les publications, actives ou archivées, avec leur compteur de clics. Réservé aux administrateurs.",
-#         responses={200: MinisterSpotlightSerializer(many=True)},
-#     ),
-#     post=extend_schema(
-#         tags=["Coup de cœur du Ministre"],
-#         summary="Publier un nouveau Coup de cœur du Ministre",
-#         description=(
-#             "Met en avant un partenaire actif avec un message. Désactive automatiquement la "
-#             "mise en avant précédente, sans la supprimer (elle reste republiable). Réservé aux "
-#             "administrateurs."
-#         ),
-#         request=MinisterSpotlightCreateSerializer,
-#         responses={201: MinisterSpotlightSerializer},
-#     ),
-# )
-# class MinisterSpotlightListCreateView(generics.ListCreateAPIView):
-#     queryset = MinisterSpotlight.objects.select_related("partner", "partner__category", "published_by")
-#     permission_classes = [IsAdminRole]
-
-#     def get_serializer_class(self):
-#         if self.request.method == "POST":
-#             return MinisterSpotlightCreateSerializer
-#         return MinisterSpotlightSerializer
-
-#     @transaction.atomic
-#     def create(self, request, *args, **kwargs):
-#         serializer = self.get_serializer(data=request.data)
-#         serializer.is_valid(raise_exception=True)
-
-#         MinisterSpotlight.objects.select_for_update().filter(is_active=True).update(is_active=False)
-#         spotlight = MinisterSpotlight.objects.create(
-#             partner=serializer.validated_data["partner"],
-#             message=serializer.validated_data["message"],
-#             is_active=True,
-#             published_by=request.user,
-#         )
-#         return Response(MinisterSpotlightSerializer(spotlight).data, status=status.HTTP_201_CREATED)
-
-
-# @extend_schema(
-#     tags=["Coup de cœur du Ministre"],
-#     summary="Republier un ancien Coup de cœur du Ministre",
-#     description=(
-#         "Réactive une publication archivée sans la recréer (le compteur de clics est "
-#         "conservé). Désactive l'éventuelle mise en avant en cours. Réservé aux administrateurs."
-#     ),
-#     request=None,
-#     responses={
-#         200: MinisterSpotlightSerializer,
-#         404: OpenApiResponse(response=ErrorDetailSerializer, description="Publication introuvable."),
-#     },
-# )
-# class MinisterSpotlightRepublishView(APIView):
-#     permission_classes = [IsAdminRole]
-
-#     @transaction.atomic
-#     def post(self, request, spotlight_id):
-#         try:
-#             spotlight = MinisterSpotlight.objects.select_for_update().get(id=spotlight_id)
-#         except MinisterSpotlight.DoesNotExist:
-#             return Response({"detail": "Publication introuvable."}, status=status.HTTP_404_NOT_FOUND)
-
-#         MinisterSpotlight.objects.select_for_update().filter(is_active=True).exclude(
-#             id=spotlight.id
-#         ).update(is_active=False)
-
-#         if not spotlight.is_active:
-#             spotlight.is_active = True
-#             spotlight.save(update_fields=["is_active"])
-
-#         return Response(MinisterSpotlightSerializer(spotlight).data, status=status.HTTP_200_OK)
