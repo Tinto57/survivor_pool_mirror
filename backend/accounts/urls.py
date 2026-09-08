@@ -3,7 +3,8 @@ from .views import (
     CustomTokenObtainPairView,
     UsersView,
     UserMeView,
-    SingleUserView
+    SingleUserView,
+    UserRoleUpdateView,
 )
 
 urlpatterns = [
@@ -14,4 +15,5 @@ urlpatterns = [
     path('users/', UsersView.as_view(), name='user-list-create'),
     path('users/me/', UserMeView.as_view(), name='user-me'),
     path('users/<int:user_id>/', SingleUserView.as_view(), name='user-detail'),
+    path('users/<int:user_id>/role/', UserRoleUpdateView.as_view(), name='user-role-update'),
 ]
