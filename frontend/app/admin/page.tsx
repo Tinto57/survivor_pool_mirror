@@ -5,7 +5,6 @@ import { useRouter } from "next/navigation";
 import {
     BadgeCheck,
     Ban,
-    Banknote,
     Check,
     Heart,
     Inbox,
@@ -19,7 +18,7 @@ import AdminNav from "../components/AdminNav/AdminNav";
 import type { DashboardTab } from "../components/AdminNav/AdminNav";
 import SimulationBadge from "../components/SimulationBadge/SimulationBadge";
 import Avatar from "../components/Avatar/Avatar";
-import { ApiError, creditEmployee, decidePartner, getOverdraftTotal } from "../lib/api";
+import { ApiError, creditEmployee, decidePartner } from "../lib/api";
 import { getAccessToken, logout } from "../lib/auth";
 import { useAdminGuard } from "./useAdminGuard";
 import {
@@ -49,7 +48,6 @@ export default function AdminHome() {
     const [employees, setEmployees] = useState<AdminEmployee[]>([]);
     const [transactions, setTransactions] = useState<Transaction[]>([]);
     const [decisions, setDecisions] = useState<PartnerDecision[]>([]);
-    const [overdraftTotal, setOverdraftTotal] = useState<number>(0);
 
     const [tab, setTab] = useState<DashboardTab>("requests");
     const [rejecting, setRejecting] = useState<number | null>(null);
@@ -75,12 +73,6 @@ export default function AdminHome() {
             .catch((err) => {
                 setError(err instanceof ApiError ? err.message : "Une erreur est survenue.");
             });
-
-        if (token) {
-            getOverdraftTotal(token)
-                .then((res) => setOverdraftTotal(Number(res.total_advanced)))
-                .catch(() => {});
-        }
     }, [admin]);
 
     const pending = useMemo(() => partners.filter((p) => p.status === "pending"), [partners]);
@@ -262,13 +254,6 @@ export default function AdminHome() {
                     </p>
                 </div>
 
-                <div className={styles.stat}>
-                    <Banknote className={styles.statIcon} aria-hidden="true" />
-                    <p className={styles.statValue}>{formatAmount(overdraftTotal)}</p>
-                    <p className={styles.statLabel}>
-                        Avancé par le Ministère <SimulationBadge size="sm" />
-                    </p>
-                </div>
             </section>
 
             {notice && (

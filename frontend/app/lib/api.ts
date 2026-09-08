@@ -158,15 +158,6 @@ export function creditEmployee(
     });
 }
 
-export type OverdraftTotalResponse = {
-    total_advanced: string;
-};
-
-/** GET /api/v1/employees/decouvert-total/ — total avancé par le Ministère, réservé aux administrateurs. */
-export function getOverdraftTotal(token: string): Promise<OverdraftTotalResponse> {
-    return request<OverdraftTotalResponse>("/api/v1/employees/decouvert-total/", { token });
-}
-
 export type MinisterSpotlightResponse = {
     id: number;
     partner: { id: number; business_name: string; category: string; address: string };

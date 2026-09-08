@@ -16,7 +16,7 @@ import secrets
 from accounts.permissions import IsAdminRole, IsActivePartner, IsEmployee, is_admin_role
 from config.serializers import ErrorDetailSerializer
 from partners.models import Partner
-from wallet.models import Employee, OVERDRAFT_LIMIT
+from wallet.models import Employee
 from .models import Transaction
 from .permissions import CanInspectPaymentIntent, IsParticipantOrAdmin
 from .serializers import (
@@ -167,7 +167,7 @@ class PaymentIntentDetailView(APIView):
                         status=status.HTTP_404_NOT_FOUND,
                     )
 
-                if emitter.balance - amount < OVERDRAFT_LIMIT:
+                if emitter.balance < amount:
                     return Response(
                         {"detail": "Insufficient balance"},
                         status=status.HTTP_400_BAD_REQUEST,
@@ -353,7 +353,7 @@ class CounterEntryCreateView(APIView):
             employee.balance += tx.amount
             counter_type = Transaction.ABONDMENT
         else:
-            if employee.balance - tx.amount < OVERDRAFT_LIMIT:
+            if employee.balance < tx.amount:
                 return Response(
                     {"detail": "Solde insuffisant pour la contre-écriture."},
                     status=status.HTTP_400_BAD_REQUEST,
