@@ -60,7 +60,7 @@ export default function SessionNotice({ role }: SessionNoticeProps) {
         router.replace("/login");
     }
 
-    if (error) return <p className={styles.error}>{error}</p>;
+    if (error) return <p className={styles.error} role="alert">{error}</p>;
 
     if (!user) return <div className={styles.skeleton} aria-hidden="true" />;
 

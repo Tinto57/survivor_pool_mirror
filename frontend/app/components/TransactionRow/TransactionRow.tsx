@@ -4,14 +4,19 @@ import type { Transaction } from "../../lib/catalog";
 import { formatAmount, formatDateTime } from "../../lib/catalog";
 import styles from "./TransactionRow.module.css";
 
-export default function TransactionRow({ transaction }: { transaction: Transaction }) {
-    const isTopUp = transaction.kind === "topup";
-    const cancelled = transaction.is_cancelled;
+export default function TransactionRow({
+    transaction,
+    enteredOverdraft = false,
+}: {
+    transaction: Transaction;
+    /** Marque la première écriture ayant fait passer le solde en découvert. */
+    enteredOverdraft?: boolean;
+}) {
+    const isTopUp = transaction.transaction_type === "ABONDMENT";
 
     const amountClass = [
         styles.amount,
-        isTopUp && !cancelled ? styles.amountTopUp : "",
-        cancelled ? styles.amountCancelled : "",
+        isTopUp ? styles.amountTopUp : "",
     ]
         .filter(Boolean)
         .join(" ");
@@ -21,17 +26,14 @@ export default function TransactionRow({ transaction }: { transaction: Transacti
             <Avatar
                 name={transaction.partner_name}
                 size="sm"
-                icon={isTopUp ? <ArrowDownLeft /> : undefined}
+                icon={isTopUp ? <ArrowDownLeft aria-hidden="true" /> : undefined}
             />
 
             <div className={styles.body}>
                 <p className={styles.name}>{transaction.partner_name}</p>
                 <p className={styles.meta}>
-                    {cancelled ? (
-                        <span className={styles.cancelled}>Annulée</span>
-                    ) : (
-                        formatDateTime(transaction.validated_at)
-                    )}
+                    {formatDateTime(transaction.validated_at)}
+                    {enteredOverdraft && <span className={styles.overdraftBadge}>Passage en découvert</span>}
                 </p>
             </div>
 

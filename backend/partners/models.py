@@ -1,8 +1,7 @@
 from django.db import models
 from django.core.validators import RegexValidator
-from django.contrib import admin
 
-# Create your models here.
+
 class Category(models.Model):
     name = models.CharField(max_length=100, unique=True)
 
@@ -48,3 +47,27 @@ class PartnerDecision(models.Model):
 
     def __str__(self):
         return f"{self.partner.business_name} - {self.decision} ({self.created_at:%d/%m/%Y})"
+
+
+class MinisterSpotlight(models.Model):
+    """« Coup de cœur du Ministre » : mise en avant unique, publiable et republiable."""
+
+    partner = models.ForeignKey(Partner, on_delete=models.CASCADE, related_name='spotlights')
+    message = models.CharField(max_length=280)
+    is_active = models.BooleanField(default=False)
+    click_count = models.PositiveIntegerField(default=0)
+    published_by = models.ForeignKey('accounts.User', on_delete=models.SET_NULL, null=True)
+    published_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=['is_active'],
+                condition=models.Q(is_active=True),
+                name='single_active_ministerspotlight',
+            )
+        ]
+        ordering = ['-published_at']
+
+    def __str__(self):
+        return f"{self.partner.business_name} ({'actif' if self.is_active else 'archivé'})"

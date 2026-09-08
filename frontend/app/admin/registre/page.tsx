@@ -1,9 +1,19 @@
 "use client";
 
-import { AlertTriangle, Database, ShieldCheck } from "lucide-react";
+import { Database, Download, ShieldCheck } from "lucide-react";
 import Page from "../../components/Page/Page";
 import AdminNav from "../../components/AdminNav/AdminNav";
 import { useAdminGuard } from "../useAdminGuard";
+import {
+    buildRtfDocument,
+    downloadRtf,
+    rtfBullet,
+    rtfHeading1,
+    rtfHeading2,
+    rtfParagraph,
+    rtfSpacer,
+    rtfSubBullet,
+} from "../../lib/rtf";
 import styles from "./registre.module.css";
 
 /**
@@ -28,8 +38,8 @@ const RECORDS: Record[] = [
         id: "T1",
         purpose: "Gestion des comptes et authentification",
         legalBasis:
-            "Exécution d'une mission d'intérêt public (art. 6.1.e) — dispositif porté par le Ministère.",
-        subjects: "Salariés bénéficiaires, représentants des partenaires, agents du Ministère.",
+            "Exécution d'une mission d'intérêt public (art. 6.1.e) — dispositif porté par l'organisme responsable.",
+        subjects: "Salariés bénéficiaires, représentants des partenaires, agents habilités.",
         data: [
             {
                 table: "accounts_user",
@@ -50,7 +60,7 @@ const RECORDS: Record[] = [
             },
         ],
         recipients: [
-            "Agents habilités du Ministère (accounts_user.is_staff = true)",
+            "Agents habilités (accounts_user.is_staff = true)",
             "Hébergeur de la base et du serveur applicatif",
         ],
         retention:
@@ -75,7 +85,7 @@ const RECORDS: Record[] = [
         recipients: [
             "Le salarié concerné",
             "L'employeur, pour les seuls abondements qu'il finance",
-            "Agents habilités du Ministère",
+            "Agents habilités",
         ],
         retention:
             "13 mois après la fin des droits du salarié ; les abondements sont conservés sur le même horizon pour justifier les montants versés.",
@@ -111,7 +121,7 @@ const RECORDS: Record[] = [
         ],
         recipients: [
             "Le partenaire concerné (y compris le motif de refus qui lui est communiqué)",
-            "Agents habilités du Ministère",
+            "Agents habilités",
             "Salariés, pour les seules données publiques du catalogue (raison sociale, catégorie, adresse)",
         ],
         retention:
@@ -152,7 +162,7 @@ const RECORDS: Record[] = [
         ],
         recipients: [
             "Le salarié et le partenaire parties à la transaction",
-            "Agents habilités du Ministère",
+            "Agents habilités",
         ],
         retention:
             "13 mois après la validation (transactions_transaction.validated_at). Les QR codes non consommés sont purgeables dès leur expiration (expires_at).",
@@ -188,10 +198,74 @@ const MINIMISATION = [
     },
 ];
 
+/** Mécanisme concret des 13 mois — une seule source pour l'écran et l'export. */
+const MECHANISM_STEPS = [
+    {
+        title: "Purge immédiate",
+        text: "les QR codes expirés et non consommés (transactions_qrcode où expires_at est dépassé et is_used vaut faux) sont supprimés sans délai : ils ne portent aucune valeur probante.",
+    },
+    {
+        title: "Anonymisation à 13 mois",
+        text: "plutôt que de supprimer les transactions, qui doivent rester comptablement cohérentes, le lien vers la personne est rompu : les champs identifiants de accounts_user (nom, prénom, e-mail, identifiant) sont remplacés par des valeurs neutres, et le compte est désactivé. Les montants et les dates subsistent, sans personne derrière.",
+    },
+    {
+        title: "Suppression des comptes jamais utilisés",
+        text: "un compte sans connexion 13 mois après sa création est supprimé, y compris ses lignes wallet_employee.",
+    },
+    {
+        title: "Décisions de référencement",
+        text: "partners_partnerdecision est conservé 13 mois après la décision, puis agent_id est dissocié tout en gardant le motif, qui n'identifie personne.",
+    },
+    {
+        title: "Exécution",
+        text: "commande d'administration dédiée (purge_expired_data), idempotente, avec un mode --dry-run et un journal des volumes traités à chaque passage. Reste à la brancher sur une tâche planifiée quotidienne.",
+    },
+];
+
+function exportRegistre() {
+    const blocks: string[] = [
+        rtfParagraph("Responsable de traitement : Ticket Tout", { bold: true }),
+        rtfParagraph(
+            "Les colonnes citées ci-dessous sont celles de la base en fonctionnement, relevées le 3 septembre 2026. Toute évolution du modèle de données doit être répercutée dans cette fiche.",
+        ),
+        rtfSpacer(),
+    ];
+
+    for (const record of RECORDS) {
+        blocks.push(rtfHeading1(`${record.id} — ${record.purpose}`));
+        blocks.push(rtfParagraph(`Base légale : ${record.legalBasis}`));
+        blocks.push(rtfParagraph(`Personnes concernées : ${record.subjects}`));
+        blocks.push(rtfParagraph("Données traitées :", { bold: true }));
+        for (const source of record.data) {
+            blocks.push(rtfBullet(`${source.table} : ${source.columns.join(", ")}`));
+            if (source.note) blocks.push(rtfSubBullet(source.note));
+        }
+        blocks.push(rtfParagraph("Destinataires :", { bold: true }));
+        for (const recipient of record.recipients) blocks.push(rtfBullet(recipient));
+        blocks.push(rtfParagraph(`Durée de conservation : ${record.retention}`));
+        blocks.push(rtfSpacer());
+    }
+
+    blocks.push(rtfHeading1("Minimisation : données à arbitrer"));
+    for (const item of MINIMISATION) {
+        blocks.push(rtfHeading2(`${item.column} — ${item.verdict}`));
+        blocks.push(rtfParagraph(item.why));
+    }
+    blocks.push(rtfSpacer());
+
+    blocks.push(rtfHeading1("Mécanisme concret des 13 mois"));
+    MECHANISM_STEPS.forEach((step, i) => {
+        blocks.push(rtfBullet(`${i + 1}. ${step.title} — ${step.text}`));
+    });
+
+    const content = buildRtfDocument("Registre RGPD — Ticket Tout (article 30)", blocks);
+    downloadRtf("registre-rgpd-ticket-tout", content);
+}
+
 export default function RegistrePage() {
     const { admin, error } = useAdminGuard();
 
-    if (error && !admin) return <p className={styles.error}>{error}</p>;
+    if (error && !admin) return <p className={styles.error} role="alert">{error}</p>;
 
     if (!admin) {
         return (
@@ -215,7 +289,7 @@ export default function RegistrePage() {
                         <ShieldCheck className={styles.introIcon} aria-hidden="true" />
                         <div>
                             <p className={styles.introTitle}>
-                                Responsable de traitement : Ministère du Job et Bonheur
+                                Responsable de traitement : Ticket Tout
                             </p>
                             <p className={styles.introText}>
                                 Les colonnes citées ci-dessous sont celles de la base en
@@ -223,6 +297,10 @@ export default function RegistrePage() {
                                 modèle de données doit être répercutée dans cette fiche.
                             </p>
                         </div>
+                        <button type="button" className={styles.export} onClick={exportRegistre}>
+                            <Download aria-hidden="true" />
+                            Exporter (.rtf)
+                        </button>
                     </section>
 
                     {RECORDS.map((record) => (
@@ -324,42 +402,11 @@ export default function RegistrePage() {
                         </header>
 
                         <ol className={styles.steps}>
-                            <li>
-                                <strong>Purge immédiate</strong> — les QR codes expirés et non
-                                consommés (<code className={styles.column}>transactions_qrcode</code>{" "}
-                                où <code className={styles.column}>expires_at</code> est dépassé et{" "}
-                                <code className={styles.column}>is_used</code> vaut faux) sont
-                                supprimés sans délai : ils ne portent aucune valeur probante.
-                            </li>
-                            <li>
-                                <strong>Anonymisation à 13 mois</strong> — plutôt que de supprimer
-                                les transactions, qui doivent rester comptablement cohérentes, le
-                                lien vers la personne est rompu : les champs identifiants de{" "}
-                                <code className={styles.column}>accounts_user</code> (nom, prénom,
-                                e-mail, identifiant) sont remplacés par des valeurs neutres, et le
-                                compte est désactivé. Les montants et les dates subsistent, sans
-                                personne derrière.
-                            </li>
-                            <li>
-                                <strong>Suppression des comptes jamais utilisés</strong> — un compte
-                                sans connexion 13 mois après sa création est supprimé, y compris ses
-                                lignes <code className={styles.column}>wallet_employee</code>.
-                            </li>
-                            <li>
-                                <strong>Décisions de référencement</strong> —{" "}
-                                <code className={styles.column}>partners_partnerdecision</code> est
-                                conservé 13 mois après la décision, puis{" "}
-                                <code className={styles.column}>agent_id</code> est dissocié tout en
-                                gardant le motif, qui n&apos;identifie personne.
-                            </li>
-                            <li>
-                                <strong>Exécution</strong> — commande d&apos;administration dédiée (
-                                <code className={styles.column}>purge_expired_data</code>),
-                                idempotente, avec un mode{" "}
-                                <code className={styles.column}>--dry-run</code> et un journal des
-                                volumes traités à chaque passage. Reste à la brancher sur une tâche
-                                planifiée quotidienne.
-                            </li>
+                            {MECHANISM_STEPS.map((step) => (
+                                <li key={step.title}>
+                                    <strong>{step.title}</strong> — {step.text}
+                                </li>
+                            ))}
                         </ol>
                     </article>
                 </div>

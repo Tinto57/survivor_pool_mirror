@@ -3,7 +3,8 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
-import { ArrowLeft, MapPin, Navigation } from "lucide-react";
+import { ArrowLeft, BadgeCheck, MapPin, Navigation } from "lucide-react";
+import Avatar from "../../components/Avatar/Avatar";
 import Page from "../../components/Page/Page";
 import { getAccessToken } from "../../lib/auth";
 import { getPartner } from "../../lib/catalog";
@@ -39,7 +40,7 @@ export default function PartnerDetail() {
         return (
             <Page title="Partenaire introuvable">
                 <p className={styles.info}>
-                    {error ?? "Ce partenaire n'est plus référencé par le Ministère."}
+                    {error ?? "Ce partenaire n'est plus référencé au catalogue."}
                 </p>
                 <Link href="/catalogue" className={styles.backLink}>
                     Retour au catalogue
@@ -54,12 +55,26 @@ export default function PartnerDetail() {
             : partner.address;
 
     return (
-        <main className={styles.page}>
+        <main id="main-content" tabIndex={-1} className={styles.page}>
             <Link href="/catalogue" className={styles.back} aria-label="Retour au catalogue">
                 <ArrowLeft className={styles.backIcon} aria-hidden="true" />
             </Link>
 
-            <PartnerProfile partner={partner}/>
+            <header className={styles.hero}>
+                <Avatar name={partner.business_name} size="lg" />
+
+                <h1 className={styles.name}>{partner.business_name}</h1>
+                <p className={styles.category}>
+                    {partner.category} · {partner.city}
+                </p>
+
+                <div className={styles.badges}>
+                    <span className={styles.official}>
+                        <BadgeCheck className={styles.badgeIcon} aria-hidden="true" />
+                        Partenaire officiel
+                    </span>
+                </div>
+            </header>
 
             <section className={styles.card}>
                 <h2 className={styles.cardTitle}>À propos</h2>

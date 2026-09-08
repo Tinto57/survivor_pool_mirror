@@ -10,12 +10,12 @@ import { formatAmount, getTransactions, monthLabel } from "../lib/catalog";
 import type { Transaction } from "../lib/catalog";
 import styles from "./historique.module.css";
 
-type Filter = "all" | "payment" | "topup";
+type Filter = "all" | "PAYMENT" | "ABONDMENT";
 
 const FILTERS: { id: Filter; label: string }[] = [
     { id: "all", label: "Tout" },
-    { id: "payment", label: "Dépenses" },
-    { id: "topup", label: "Abondements" },
+    { id: "PAYMENT", label: "Dépenses" },
+    { id: "ABONDMENT", label: "Abondements" },
 ];
 
 function groupByMonth(transactions: Transaction[]): [string, Transaction[]][] {
@@ -52,21 +52,28 @@ export default function HistoriquePage() {
     }, []);
 
     const visible = useMemo(
-        () => transactions.filter((t) => filter === "all" || t.kind === filter),
+        () => transactions.filter((t) => filter === "all" || t.transaction_type === filter),
         [transactions, filter],
     );
 
     const groups = useMemo(() => groupByMonth(visible), [visible]);
 
-    const totals = useMemo(() => {
-        const active = transactions.filter((t) => !t.is_cancelled);
+    /** Première écriture (la plus ancienne) ayant fait passer le solde en découvert. */
+    const overdraftEntryId = useMemo(() => {
+        const chronological = [...transactions].sort(
+            (a, b) => Date.parse(a.validated_at) - Date.parse(b.validated_at),
+        );
+        const entry = chronological.find((t) => t.balance_after !== null && t.balance_after < 0);
+        return entry?.id ?? null;
+    }, [transactions]);
 
+    const totals = useMemo(() => {
         return {
-            spent: active
-                .filter((t) => t.kind === "payment")
+            spent: transactions
+                .filter((t) => t.transaction_type === "PAYMENT")
                 .reduce((sum, t) => sum + t.amount, 0),
-            received: active
-                .filter((t) => t.kind === "topup")
+            received: transactions
+                .filter((t) => t.transaction_type === "ABONDMENT")
                 .reduce((sum, t) => sum + t.amount, 0),
         };
     }, [transactions]);
@@ -109,7 +116,7 @@ export default function HistoriquePage() {
                 ))}
             </div>
 
-            {error && <p className={styles.error}>{error}</p>}
+            {error && <p className={styles.error} role="alert">{error}</p>}
 
             {loading ? (
                 <p className={styles.info}>Chargement de l&apos;historique...</p>
@@ -128,7 +135,11 @@ export default function HistoriquePage() {
 
                         <ul className={styles.list}>
                             {items.map((transaction) => (
-                                <TransactionRow key={transaction.id} transaction={transaction} />
+                                <TransactionRow
+                                    key={transaction.id}
+                                    transaction={transaction}
+                                    enteredOverdraft={transaction.id === overdraftEntryId}
+                                />
                             ))}
                         </ul>
                     </section>

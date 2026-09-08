@@ -9,6 +9,7 @@
 .intro {
     display: flex;
     align-items: flex-start;
+    flex-wrap: wrap;
     gap: 12px;
 
     margin-bottom: 16px;
@@ -16,6 +17,42 @@
 
     background: var(--primary-soft);
     border-radius: var(--radius-md);
+}
+
+.intro > div {
+    flex: 1;
+    min-width: 200px;
+}
+
+.export {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    flex-shrink: 0;
+
+    padding: 8px 14px;
+    margin-left: auto;
+
+    background: var(--surface);
+    border: 1px solid var(--primary);
+    border-radius: var(--radius-sm);
+
+    color: var(--primary);
+    font-family: inherit;
+    font-size: 13px;
+    font-weight: 700;
+
+    cursor: pointer;
+}
+
+.export:hover {
+    background: var(--primary);
+    color: #ffffff;
+}
+
+.export svg {
+    width: 16px;
+    height: 16px;
 }
 
 .introIcon {

@@ -1,4 +1,3 @@
-import csv
 from datetime import datetime, timedelta, timezone
 from decimal import Decimal
 import random
@@ -10,11 +9,11 @@ from django.db import transaction
 from accounts.models import User
 from partners.models import Category, Partner
 from transactions.models import QRCode, Transaction
-from wallet.models import Employee, TopUp
-
+from wallet.models import Employee
+from transactions.services import export_transactions
 
 class Command(BaseCommand):
-    help = "Seed déterministe CartePro conforme au cahier des charges (50 salariés, 12 partenaires, 200 tx, CSV)."
+    help = "Seed déterministe CartePro conforme au cahier des charges (50 salariés, 6 partenaires, 200 tx, CSV)."
 
     def handle(self, *args, **options):
         random.seed(42)
@@ -22,18 +21,12 @@ class Command(BaseCommand):
         total_seconds = 90 * 24 * 3600
 
         partners_raw = [
-            ("Le Bistrot du Palais", "Restauration", "12 Rue de Rivoli, 75001 Paris", "123456781"),
-            ("Brasserie Bellecour", "Restauration", "15 Place Bellecour, 69002 Lyon", "123456782"),
-            ("La Table Lorraine", "Restauration", "4 Place Stanislas, 54000 Nancy", "123456783"),
-            ("Boulangerie Saint-Honoré", "Alimentation", "8 Rue Saint-Honoré, 75001 Paris", "123456784"),
-            ("Les Halles Gourmandes", "Alimentation", "22 Rue Sainte-Catherine, 33000 Bordeaux", "123456785"),
-            ("Primeur & Terroir", "Alimentation", "5 Rue Mercière, 69002 Lyon", "123456786"),
-            ("VéloCité Express", "Mobilité", "30 Boulevard Saint-Germain, 75005 Paris", "123456787"),
-            ("Éco-Trott Services", "Mobilité", "18 Rue Saint-Dizier, 54000 Nancy", "123456788"),
-            ("Navette & Bus Région", "Mobilité", "10 Cours Lafayette, 69003 Lyon", "123456789"),
-            ("Librairie Gutenberg", "Culture & Loisirs", "40 Boulevard Saint-Michel, 75005 Paris", "123456790"),
-            ("Cinéma Lumière", "Culture & Loisirs", "7 Place Gambetta, 33000 Bordeaux", "123456791"),
-            ("Espace Bloc & Grimpe", "Sport & Bien-être", "12 Rue de la Commanderie, 54000 Nancy", "123456792"),
+            ("Le Comptoir du Midi", "Restauration", "22 Rue du Midi, 13001 Marseille", "300000001"),
+            ("Épicerie Sainte-Claire", "Alimentation", "6 Rue Sainte-Claire, 67000 Strasbourg", "300000002"),
+            ("Librairie Vasseur", "Culture", "9 Place du Théâtre, 59800 Lille", "300000003"),
+            ("Pharmacie du Parc", "Santé", "3 Avenue du Parc, 69006 Lyon", "300000004"),
+            ("Transports Régionaux Unifiés", "Mobilité", "1 Esplanade de la Gare, 44000 Nantes", "300000005"),
+            ("Sport Loisirs Aubagne", "Sport", "5 Boulevard des Sports, 13400 Aubagne", "300000006"),
         ]
 
         first_names = [
@@ -59,7 +52,6 @@ class Command(BaseCommand):
         with transaction.atomic():
             Transaction.objects.all().delete()
             QRCode.objects.all().delete()
-            TopUp.objects.all().delete()
             Employee.objects.all().delete()
             Partner.objects.all().delete()
             Category.objects.all().delete()
@@ -129,17 +121,11 @@ class Command(BaseCommand):
             timestamps = sorted(random.sample(range(3600, total_seconds - 3600), 200))
             
             assignments = [
-                # (150 €) -> 45 + 55 + 50 = 150 € -> reste 0 € -> refus 22 €
                 (10, 1, 4500), (40, 1, 5500), (80, 1, 5000), (150, 1, 2200),
-                # (120 €) -> 60 + 40 + 20 = 120 € -> reste 0 € -> refus 15 €
                 (15, 2, 6000), (60, 2, 4000), (110, 2, 2000), (160, 2, 1500),
-                # (100 €) -> 55 + 45 = 100 € -> reste 0 € -> refus 18 €
                 (25, 3, 5500), (90, 3, 4500), (170, 3, 1800),
-                # (80 €) -> 45 + 32.50 = 77.50 € -> reste 2,50 € -> refus 12 €
                 (30, 4, 4500), (100, 4, 3250), (180, 4, 1200),
-                # (95 €) -> 50 + 41.20 = 91.20 € -> reste 3,80 € -> refus 14 €
                 (35, 5, 5000), (120, 5, 4120), (190, 5, 1400),
-                # refus
                 (45, 6, 6000), (195, 6, 50000),
             ]
 
@@ -153,28 +139,31 @@ class Command(BaseCommand):
             assignments.sort(key=lambda x: x[0])
 
             csv_rows = []
-            valid_transactions_to_create = []
+            transactions_to_create = []
             tx_id = 1
 
             for idx, emp_id, amount in assignments:
                 tx_date = date_ref + timedelta(seconds=timestamps[idx])
                 iso_date = tx_date.strftime("%Y-%m-%dT%H:%M:%SZ")
-                partner_id = random.randint(1, 12)
+                partner_id = random.randint(1, len(partners_raw))
 
                 if employee_state[emp_id]["balance_cents"] >= amount:
                     employee_state[emp_id]["balance_cents"] -= amount
                     status = "VALIDATED"
-                    valid_transactions_to_create.append(Transaction(
-                        id=tx_id,
-                        token=secrets.token_urlsafe(32),
-                        employee=employee_state[emp_id]["obj"],
-                        partner=partners_by_id[partner_id],
-                        amount=Decimal(amount) / Decimal(100),
-                        validated_at=tx_date,
-                        is_cancelled=False
-                    ))
+                    tx_type = Transaction.PAYMENT
                 else:
                     status = "REJECTED_INSUFFICIENT_FUNDS"
+                    tx_type = Transaction.PAYMENT_CANCELLED
+
+                transactions_to_create.append(Transaction(
+                    id=tx_id,
+                    token=secrets.token_urlsafe(32),
+                    employee=employee_state[emp_id]["obj"],
+                    partner=partners_by_id[partner_id],
+                    amount=Decimal(amount) / Decimal(100),
+                    validated_at=tx_date,
+                    transaction_type=tx_type
+                ))
 
                 csv_rows.append({
                     "id": tx_id,
@@ -186,9 +175,9 @@ class Command(BaseCommand):
                 })
                 tx_id += 1
 
-            Transaction.objects.bulk_create(valid_transactions_to_create)
+            Transaction.objects.bulk_create(transactions_to_create)
 
-            for tx_obj in valid_transactions_to_create:
+            for tx_obj in transactions_to_create:
                 Transaction.objects.filter(id=tx_obj.id).update(validated_at=tx_obj.validated_at)
 
             for emp_id, data in employee_state.items():
@@ -196,20 +185,19 @@ class Command(BaseCommand):
                     balance=Decimal(data["balance_cents"]) / Decimal(100)
                 )
 
-        csv_fields = ["id", "date_iso8601", "employee_id", "partner_id", "amount_cents", "status"]
+        csv_content = export_transactions()
         with open("transactions.csv", "w", newline="", encoding="utf-8") as f:
-            writer = csv.DictWriter(f, fieldnames=csv_fields, delimiter=";")
-            writer.writeheader()
-            writer.writerows(csv_rows)
+            f.write(csv_content)
 
         zero_balances = [e for e, d in employee_state.items() if d["balance_cents"] == 0]
         under_five = [e for e, d in employee_state.items() if 0 < d["balance_cents"] < 500]
         rejected_count = sum(1 for r in csv_rows if r["status"] == "REJECTED_INSUFFICIENT_FUNDS")
+        exported_count = Transaction.objects.count()
 
         self.stdout.write(self.style.SUCCESS(
             f"Seed exécuté avec succès !\n"
-            f"- Transactions CSV : {len(csv_rows)} (dont {rejected_count} refusées)\n"
-            f"- Transactions en base : {Transaction.objects.count()}\n"
+            f"- Transactions en base : {exported_count} (dont {rejected_count} annulées pour solde insuffisant)\n"
+            f"- Transactions CSV : {exported_count}\n"
             f"- Salariés à 0 € : {len(zero_balances)} (IDs: {zero_balances})\n"
             f"- Salariés < 5 € : {len(under_five)} (IDs: {under_five})\n"
             f"- Fichier exporté : transactions.csv"
