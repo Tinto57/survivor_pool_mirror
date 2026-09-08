@@ -7,6 +7,11 @@ import { getAccessToken, getCurrentUserId } from "../lib/auth";
 import { getPartner } from "../lib/catalog";
 import type { Partner } from "../lib/catalog";
 import styles from "./partner.module.css";
+import QrScanner from "../components/QrScanner/QrScanner";
+
+function onQrScan (){
+    console.log("test");
+}
 
 export default function PartnerHome() {
     const [partner, setPartner] = useState<Partner | null>(null);
@@ -41,6 +46,7 @@ export default function PartnerHome() {
     return (
         <main className={styles.page}>
             <PartnerProfile partner={partner}/>
+            <QrScanner onScan={onQrScan}/>
         </main>
 
     );
