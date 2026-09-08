@@ -14,6 +14,8 @@ from django.core.cache import cache
 import secrets
 
 from accounts.permissions import IsAdminRole, IsActivePartner, IsEmployee, is_admin_role
+from audit.request_context import actor_info, get_client_ip
+from audit.services import record_audit_event
 from config.serializers import ErrorDetailSerializer
 from partners.models import Partner
 from wallet.models import Employee
@@ -168,6 +170,15 @@ class PaymentIntentDetailView(APIView):
                     )
 
                 if emitter.balance < amount:
+                    record_audit_event(
+                        actor_id=partner.id,
+                        actor_role="partner",
+                        action="TRANSACTION_REJECTED",
+                        target_type="Employee",
+                        target_id=emitter.id,
+                        payload={"amount_requested": str(amount), "reason": "insufficient_balance"},
+                        ip=get_client_ip(request),
+                    )
                     return Response(
                         {"detail": "Insufficient balance"},
                         status=status.HTTP_400_BAD_REQUEST,
@@ -184,6 +195,16 @@ class PaymentIntentDetailView(APIView):
                     amount=amount,
                 )
                 cache.delete(key)
+
+                record_audit_event(
+                    actor_id=partner.id,
+                    actor_role="partner",
+                    action="TRANSACTION_VALIDATED",
+                    target_type="Transaction",
+                    target_id=tx.id,
+                    payload={"amount": str(amount), "employee_id": emitter.id},
+                    ip=get_client_ip(request),
+                )
         except IntegrityError:
             return self._replay_or_not_found(token, partner)
 
@@ -369,6 +390,18 @@ class CounterEntryCreateView(APIView):
             amount=tx.amount,
             counter_entry_of=tx,
         )
+
+        actor_id, actor_role = actor_info(request)
+        record_audit_event(
+            actor_id=actor_id,
+            actor_role=actor_role,
+            action="ADMIN_ACTION",
+            target_type="Transaction",
+            target_id=counter_entry.id,
+            payload={"detail": "COUNTER_ENTRY_CREATED", "counter_entry_of": tx.id, "amount": str(tx.amount)},
+            ip=get_client_ip(request),
+        )
+
         return Response(TransactionSerializer(counter_entry).data, status=status.HTTP_201_CREATED)
 
 
