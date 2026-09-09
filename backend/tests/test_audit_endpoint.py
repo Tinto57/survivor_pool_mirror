@@ -35,7 +35,7 @@ class AdminAuditLogViewTests(BaseAPITestCase):
         self.client.force_authenticate(user=self.admin)
         response = self.client.get("/api/v1/admin/audit/")
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(response.data["count"], 3)
+        self.assertEqual(response.data["count"], 4)  # + la ligne de genèse (#121)
 
     def test_results_are_ordered_most_recent_first(self):
         self.client.force_authenticate(user=self.admin)
@@ -100,7 +100,7 @@ class AdminAuditLogViewTests(BaseAPITestCase):
         cutoff = self.entries[1].occurred_at.isoformat()
         response = self.client.get("/api/v1/admin/audit/", {"end": cutoff})
         actions = {row["action"] for row in response.data["results"]}
-        self.assertEqual(actions, {"PARTNER_DECISION", "TRANSACTION_VALIDATED"})
+        self.assertEqual(actions, {"AUDIT_LOG_GENESIS", "PARTNER_DECISION", "TRANSACTION_VALIDATED"})
 
     def test_non_numeric_actor_id_is_rejected(self):
         self.client.force_authenticate(user=self.admin)
