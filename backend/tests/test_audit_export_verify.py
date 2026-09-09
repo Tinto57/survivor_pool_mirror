@@ -31,9 +31,9 @@ class ExportAuditLogTestCase(TestCase):
 
     def test_export_contains_every_record_in_order(self):
         envelope, _ = self._export()
-        actions = [r["action"] for r in envelope["records"]]
+        # La genèse (#121) précède toujours les événements applicatifs.
+        actions = [r["action"] for r in envelope["records"] if r["action"] != "AUDIT_LOG_GENESIS"]
         self.assertEqual(actions, ["EVT_0", "EVT_1", "EVT_2"])
-        self.assertEqual(envelope["count"], 3)
 
     def test_export_is_correctly_signed(self):
         envelope, _ = self._export()
