@@ -61,9 +61,13 @@ class HashingTestCase(TestCase):
 
 
 class RecordAuditEventTestCase(TestCase):
-    def test_first_entry_has_no_prev_hash(self):
-        entry = record_audit_event(actor_id=None, actor_role="", action="GENESIS")
-        self.assertEqual(entry.prev_hash, "")
+    def test_new_entry_chains_from_the_genesis_entry(self):
+        # La migration audit.0003 écrit une ligne de genèse avant tout événement
+        # applicatif (#121) : le premier événement "métier" n'est donc jamais le
+        # tout premier de la table, il chaîne depuis elle.
+        genesis = AuditLog.objects.get(action="AUDIT_LOG_GENESIS")
+        entry = record_audit_event(actor_id=None, actor_role="", action="SOME_EVENT")
+        self.assertEqual(entry.prev_hash, genesis.hash)
         self.assertTrue(entry.hash)
 
     def test_chain_links_consecutive_entries(self):
@@ -121,5 +125,7 @@ class RecordAuditEventTestCase(TestCase):
         record_audit_event(actor_id=1, actor_role="admin", action="A")
         record_audit_event(actor_id=1, actor_role="admin", action="B")
 
-        actions = list(AuditLog.objects.values_list("action", flat=True))
+        actions = list(
+            AuditLog.objects.exclude(action="AUDIT_LOG_GENESIS").values_list("action", flat=True)
+        )
         self.assertEqual(actions, ["A", "B"])
