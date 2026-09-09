@@ -5,3 +5,133 @@
     margin: 0 auto;
     padding: 16px 16px 32px;
 }
+
+.scanCard {
+    margin-top: 20px;
+    padding: 20px;
+
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-md);
+}
+
+.scanHeader {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+
+    margin-bottom: 16px;
+}
+
+.scanTitle {
+    margin: 0;
+
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-soft);
+}
+
+.confirmForm {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.label {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-soft);
+}
+
+.amountInput {
+    width: 100%;
+    box-sizing: border-box;
+
+    padding: 12px;
+
+    font-size: 20px;
+    font-weight: 600;
+    text-align: center;
+
+    background: #ffffff;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+}
+
+.confirmError {
+    margin: 0;
+
+    font-size: 13px;
+    color: #c0392b;
+
+    background: #fdecea;
+    border-radius: 8px;
+    padding: 8px 12px;
+}
+
+.confirmActions {
+    display: flex;
+    gap: 10px;
+}
+
+.primaryButton {
+    flex: 1;
+
+    padding: 12px;
+
+    background: #111111;
+    color: #ffffff;
+    border: none;
+    border-radius: 10px;
+
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.primaryButton:disabled {
+    background: var(--text-soft);
+    cursor: not-allowed;
+}
+
+.secondaryButton {
+    flex: 1;
+
+    padding: 12px;
+
+    background: #f3f3f3;
+    color: #111111;
+    border: none;
+    border-radius: 10px;
+
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.secondaryButton:disabled {
+    color: var(--text-soft);
+    cursor: not-allowed;
+}
+
+.result {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+}
+
+.resultAmount {
+    margin: 0;
+
+    font-size: 28px;
+    font-weight: 700;
+}
+
+.resultHint {
+    margin: 0 0 10px;
+
+    font-size: 13px;
+    color: var(--text-soft);
+}

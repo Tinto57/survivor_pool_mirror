@@ -162,6 +162,50 @@ export function creditEmployee(
     });
 }
 
+export type PaymentIntentResponse = {
+    token: string;
+    expires_in: number;
+};
+
+/**
+ * POST /api/v1/payments/ — un salarié crée une intention de paiement (token à
+ * courte durée de vie, à encoder en QR code). Réservé aux comptes salariés.
+ */
+export function createPaymentIntent(token: string): Promise<PaymentIntentResponse> {
+    return request<PaymentIntentResponse>("/api/v1/payments/", {
+        method: "POST",
+        token,
+    });
+}
+
+export type ConfirmedPayment = {
+    id: number;
+    token: string;
+    transaction_type: "PAYMENT" | "ABONDMENT";
+    employee: number;
+    partner: number | null;
+    amount: string;
+    validated_at: string;
+    counter_entry_of: number | null;
+};
+
+/**
+ * POST /api/v1/payments/{token}/ — le partenaire fixe le montant et valide le
+ * paiement scanné. Idempotent côté API : rejouer avec le même token renvoie la
+ * même transaction sans débiter à nouveau.
+ */
+export function confirmPayment(
+    paymentToken: string,
+    amount: number,
+    token: string,
+): Promise<ConfirmedPayment> {
+    return request<ConfirmedPayment>(`/api/v1/payments/${paymentToken}/`, {
+        method: "POST",
+        body: { amount: amount.toFixed(2) },
+        token,
+    });
+}
+
 export type PartnerDecisionResponse = {
     id: number;
     partner: number;

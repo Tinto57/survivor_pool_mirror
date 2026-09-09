@@ -36,10 +36,33 @@
     box-shadow: var(--shadow-sm);
 }
 
+.placeholder {
+    width: 162px;
+    height: 162px;
+
+    background: var(--border);
+    border-radius: 8px;
+
+    animation: pulse 1.4s ease-in-out infinite;
+}
+
+@keyframes pulse {
+    0%, 100% { opacity: 0.4; }
+    50% { opacity: 0.8; }
+}
+
 .hint {
     margin: 12px 0 0;
 
     font-size: 12px;
     color: var(--text-soft);
+    text-align: center;
+}
+
+.error {
+    margin: 12px 0 0;
+
+    font-size: 12px;
+    color: #c0392b;
     text-align: center;
 }

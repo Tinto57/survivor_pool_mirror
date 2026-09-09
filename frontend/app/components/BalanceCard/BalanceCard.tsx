@@ -1,6 +1,6 @@
 import type { Balance } from "../../lib/catalog";
 import { formatAmount, splitAmount } from "../../lib/catalog";
-import FakeQrCode from "../FakeQrCode/FakeQrCode";
+import PaymentQrCode from "../PaymentQrCode/PaymentQrCode";
 import SimulationBadge from "../SimulationBadge/SimulationBadge";
 import styles from "./BalanceCard.module.css";
 
@@ -27,7 +27,7 @@ export default function BalanceCard({ balance }: { balance: Balance }) {
                     : "à dépenser chez vos partenaires préférés !"}
             </p>
 
-            <FakeQrCode />
+            <PaymentQrCode />
 
             <dl className={styles.stats}>
                 <div className={styles.stat}>

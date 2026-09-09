@@ -141,6 +141,17 @@ export async function getPartner(id: number, token: string | null): Promise<Part
     return toPartner(data as ApiPartner);
 }
 
+/**
+ * GET /api/v1/partners/me/ — fiche du partenaire authentifié, quel que soit son
+ * statut. À utiliser à la place de `getPartner(userId, token)` : l'identifiant
+ * du compte utilisateur n'est pas celui de la fiche partenaire (deux séquences
+ * distinctes), donc `getPartner` échoue dès que les deux ne coïncident pas.
+ */
+export async function getPartnerMe(token: string | null): Promise<Partner> {
+    const data = await fetchJson<ApiPartner>("/api/v1/partners/me/", token);
+    return toPartner(data);
+}
+
 /** Fiche salarié telle que renvoyée par GET /api/v1/employees/me/. */
 type ApiEmployeeMe = {
     id: number;
