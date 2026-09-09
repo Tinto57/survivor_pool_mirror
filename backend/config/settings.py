@@ -103,6 +103,7 @@ SPECTACULAR_SETTINGS = {
         {"name": "Paiements", "description": "Intentions de paiement (QR code) entre un salarié et un partenaire."},
         {"name": "Transactions", "description": "Écritures comptables (paiements, abondements, contre-écritures) et export."},
         {"name": "Système", "description": "État de santé et informations de version de l'API."},
+        {"name": "Audit", "description": "Journal d'audit en ajout seul, réservé aux administrateurs."},
     ],
     "SORT_OPERATIONS": False,
 }
