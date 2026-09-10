@@ -14,3 +14,14 @@ services:
         value: https://survivor-pool-mirror-lyart.vercel.app
       - key: SIRH_API_KEYS
         generateValue: true
+      # Base déjà existante sur Render (survivor-pool-db) : coller ici l'"Internal
+      # Database URL" de ce service Postgres, disponible dans son onglet "Connect"
+      # sur le dashboard Render. `sync: false` = valeur gérée à la main dans le
+      # dashboard, jamais écrasée par un sync du Blueprint.
+      - key: DATABASE_URL
+        sync: false
+      # Mot de passe du rôle applicatif restreint créé par la migration
+      # `audit.0002` (REVOKE UPDATE/DELETE/TRUNCATE sur le journal d'audit).
+      # Requis dès que DATABASE_URL pointe vers Postgres, sinon `migrate` échoue.
+      - key: AUDIT_APP_DB_PASSWORD
+        generateValue: true
