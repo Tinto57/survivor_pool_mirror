@@ -230,6 +230,21 @@ class CounterEntryTests(BaseAPITestCase):
         self.employee.refresh_from_db()
         self.assertEqual(self.employee.balance, Decimal("130.00"))
 
+    def test_countered_payment_is_flagged_as_cancelled_for_the_partner(self):
+        self.client.force_authenticate(user=self.admin)
+        self.client.post(f"/api/v1/transactions/{self.payment_tx.id}/counter-entry/")
+
+        self.client.force_authenticate(user=self.partner_user)
+        response = self.client.get("/api/v1/transactions/")
+        row = next(r for r in response.data["results"] if r["id"] == self.payment_tx.id)
+        self.assertTrue(row["is_cancelled"])
+
+    def test_uncountered_payment_is_not_flagged_as_cancelled(self):
+        self.client.force_authenticate(user=self.partner_user)
+        response = self.client.get("/api/v1/transactions/")
+        row = next(r for r in response.data["results"] if r["id"] == self.payment_tx.id)
+        self.assertFalse(row["is_cancelled"])
+
     def test_admin_can_counter_an_abondment(self):
         self.client.force_authenticate(user=self.admin)
         response = self.client.post(
