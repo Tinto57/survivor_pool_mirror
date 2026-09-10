@@ -231,3 +231,21 @@ export function decidePartner(
         token,
     });
 }
+
+/**
+ * POST /api/v1/partners/{id}/status/ — suspend, réactive ou clôture un
+ * partenaire déjà référencé (distinct de decidePartner, qui ne statue que
+ * sur une demande en attente). Réservé aux comptes administrateurs.
+ */
+export function updatePartnerStatus(
+    partnerId: number,
+    targetStatus: "active" | "suspended" | "closed",
+    reason: string,
+    token: string,
+): Promise<ApiPartner> {
+    return request<ApiPartner>(`/api/v1/partners/${partnerId}/status/`, {
+        method: "POST",
+        body: reason ? { status: targetStatus, reason } : { status: targetStatus },
+        token,
+    });
+}

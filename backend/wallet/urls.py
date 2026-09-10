@@ -4,6 +4,7 @@ from .views import (
     EmployeeMe,
     SingleEmployeeView,
     SingleEmployeeBalanceView,
+    ExternalEmployeeBalanceView,
 )
 
 urlpatterns = [
@@ -11,5 +12,6 @@ urlpatterns = [
     path('employees/', EmployeesView.as_view(), name='employee-list-create'),
     path('employees/me/', EmployeeMe.as_view(), name='employee-me'),
     path('employees/<int:employee_id>/', SingleEmployeeView.as_view(), name='employee-detail'),
-    path('employees/<int:employee_id>/balance/', SingleEmployeeBalanceView.as_view(), name='employee-balance-detail')
+    path('employees/<int:employee_id>/balance/', SingleEmployeeBalanceView.as_view(), name='employee-balance-detail'),
+    path('external/employees/<int:employee_id>/balance/', ExternalEmployeeBalanceView.as_view(), name='employee-balance-external'),
 ]

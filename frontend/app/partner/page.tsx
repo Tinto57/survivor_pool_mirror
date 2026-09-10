@@ -1,5 +1,7 @@
 "use client";
 
+import Link from "next/link";
+import { Receipt } from "lucide-react";
 import { useEffect, useState } from "react";
 import Page from "../components/Page/Page";
 import PartnerProfile from "../components/PartnerProfile/PartnerProfile";
@@ -87,6 +89,11 @@ export default function PartnerHome() {
     return (
         <main className={styles.page}>
             <PartnerProfile partner={partner} />
+
+            <Link href="/transactions-partenaire" className={styles.historyLink}>
+                <Receipt aria-hidden="true" size={18} />
+                Voir l&apos;historique des transactions
+            </Link>
 
             <section className={styles.scanCard}>
                 <div className={styles.scanHeader}>

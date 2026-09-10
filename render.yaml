@@ -12,3 +12,5 @@ services:
         generateValue: true
       - key: CORS_ALLOWED_ORIGINS
         value: https://survivor-pool-mirror-lyart.vercel.app
+      - key: SIRH_API_KEYS
+        generateValue: true

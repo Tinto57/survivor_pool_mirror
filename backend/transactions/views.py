@@ -237,17 +237,17 @@ class TransactionsView(generics.ListAPIView):
         user = self.request.user
 
         if is_admin_role(user):
-            return Transaction.objects.select_related("employee__user", "partner__user").all()
+            return Transaction.objects.select_related("employee__user", "partner__user", "counter_entry").all()
 
         if hasattr(user, "partner"):
             return Transaction.objects.filter(
                 partner=user.partner
-            ).select_related("employee__user", "partner__user")
+            ).select_related("employee__user", "partner__user", "counter_entry")
 
         if hasattr(user, "employee"):
             return Transaction.objects.filter(
                 employee=user.employee
-            ).select_related("employee__user", "partner__user")
+            ).select_related("employee__user", "partner__user", "counter_entry")
 
         return Transaction.objects.none()
 

@@ -2,6 +2,7 @@ from rest_framework import generics, status
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.request import Request
+from rest_framework.views import APIView
 from rest_framework.exceptions import NotFound
 from django.db import transaction
 from django.db.models.deletion import ProtectedError
@@ -11,7 +12,8 @@ from accounts.permissions import IsAdminRole
 from audit.request_context import actor_info, get_client_ip
 from audit.services import record_audit_event
 from config.serializers import ErrorDetailSerializer
-from wallet.permissions import IsOwnerOrAdminEmployee
+from wallet.authentication import ExternalApiKeyAuthentication
+from wallet.permissions import HasExternalApiKey, IsOwnerOrAdminEmployee
 from .models import Employee
 from .serializers import (
     EmployeeSerializer,
@@ -175,3 +177,44 @@ class SingleEmployeeBalanceView(generics.RetrieveUpdateAPIView):
 
         read_serializer = EmployeeBalanceReadSerializer(updated_employee)
         return Response(read_serializer.data, status=status.HTTP_200_OK)
+
+
+class ExternalEmployeeBalanceView(APIView):
+    """Interopérabilité SIRH (cahier des charges §3.3) : permet à un système
+    tiers authentifié par clé API (en-tête `X-Api-Key`, pas de JWT) de
+    consulter en lecture seule le solde d'un salarié."""
+
+    authentication_classes = [ExternalApiKeyAuthentication]
+    permission_classes = [HasExternalApiKey]
+
+    @extend_schema(
+        tags=["Salariés"],
+        summary="[SIRH] Consulter le solde d'un salarié",
+        description=(
+            "Endpoint dédié à l'intégration avec les SIRH employeurs. "
+            "Authentification par clé API statique (en-tête `X-Api-Key`), "
+            "distincte de l'authentification JWT des autres endpoints."
+        ),
+        responses={
+            200: EmployeeBalanceReadSerializer,
+            403: OpenApiResponse(response=ErrorDetailSerializer, description="Clé API manquante ou invalide."),
+            404: OpenApiResponse(response=ErrorDetailSerializer, description="Salarié introuvable."),
+        },
+    )
+    def get(self, request, *args, **kwargs):
+        try:
+            employee = Employee.objects.get(id=kwargs["employee_id"])
+        except Employee.DoesNotExist:
+            return Response({"detail": "Salarié introuvable."}, status=status.HTTP_404_NOT_FOUND)
+
+        record_audit_event(
+            actor_id=None,
+            actor_role="external_sirh",
+            action="EXTERNAL_BALANCE_LOOKUP",
+            target_type="Employee",
+            target_id=employee.id,
+            payload={},
+            ip=get_client_ip(request),
+        )
+
+        return Response(EmployeeBalanceReadSerializer(employee).data, status=status.HTTP_200_OK)

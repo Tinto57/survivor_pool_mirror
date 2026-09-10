@@ -18,6 +18,7 @@ from .serializers import (
     PartnerDecisionCreateSerializer,
     PartnerDecisionSerializer,
     PartnerSerializer,
+    PartnerStatusUpdateSerializer,
     PartnerUpdateSerializer,
 )
 
@@ -223,6 +224,74 @@ class PartnerDecisionCreateView(APIView):
         )
 
         return Response(PartnerDecisionSerializer(decision).data, status=status.HTTP_201_CREATED)
+
+
+class PartnerStatusUpdateView(APIView):
+    """Suspend, réactive ou clôture un partenaire déjà référencé.
+
+    Distinct de PartnerDecisionCreateView : cette dernière ne statue que sur
+    une demande `pending`, alors qu'ici on gère le cycle de vie d'un
+    partenaire déjà accepté (`active` <-> `suspended`, ou `-> closed`).
+    """
+
+    permission_classes = [IsAdminRole]
+
+    ALLOWED_TRANSITIONS = {
+        "active": {"suspended", "closed"},
+        "suspended": {"active", "closed"},
+    }
+
+    @extend_schema(
+        tags=["Partenaires"],
+        summary="Changer le statut d'un partenaire référencé",
+        description=(
+            "Fait transitionner un partenaire `active` <-> `suspended`, ou vers "
+            "`closed`. Ne s'applique pas aux partenaires `pending` (voir "
+            "`POST /partners/{id}/decision/`) ni déjà `closed` (statut terminal). "
+            "Réservé aux administrateurs."
+        ),
+        request=PartnerStatusUpdateSerializer,
+        responses={
+            200: PartnerSerializer,
+            400: OpenApiResponse(response=ErrorDetailSerializer, description="Transition de statut invalide, ou motif manquant."),
+            404: OpenApiResponse(response=ErrorDetailSerializer, description="Partenaire introuvable."),
+        },
+    )
+    @transaction.atomic
+    def post(self, request, partner_id):
+        try:
+            partner = Partner.objects.select_for_update().get(id=partner_id)
+        except Partner.DoesNotExist:
+            return Response({"detail": "Partenaire introuvable."}, status=status.HTTP_404_NOT_FOUND)
+
+        serializer = PartnerStatusUpdateSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        target_status = serializer.validated_data["status"]
+        reason = serializer.validated_data.get("reason", "")
+
+        allowed = self.ALLOWED_TRANSITIONS.get(partner.status, set())
+        if target_status not in allowed:
+            return Response(
+                {"detail": f"Transition de `{partner.status}` vers `{target_status}` non autorisée."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        previous_status = partner.status
+        partner.status = target_status
+        partner.save(update_fields=["status"])
+
+        actor_id, actor_role = actor_info(request)
+        record_audit_event(
+            actor_id=actor_id,
+            actor_role=actor_role,
+            action="PARTNER_STATUS_UPDATE",
+            target_type="Partner",
+            target_id=partner.id,
+            payload={"previous_status": previous_status, "new_status": target_status, "reason": reason},
+            ip=get_client_ip(request),
+        )
+
+        return Response(PartnerSerializer(partner).data, status=status.HTTP_200_OK)
 
 
 @extend_schema(

@@ -100,6 +100,8 @@ export type Transaction = {
     counter_entry_of: number | null;
     /** Solde du salarié juste après cette écriture. Fourni uniquement sur ses propres transactions. */
     balance_after: number | null;
+    /** True si une contre-écriture existe pour cette transaction (elle a été annulée). */
+    is_cancelled: boolean;
 };
 
 async function fetchJson<T>(path: string, token: string | null): Promise<T> {
@@ -169,6 +171,7 @@ type ApiTransaction = {
     validated_at: string;
     counter_entry_of: number | null;
     balance_after: string | null;
+    is_cancelled: boolean;
 };
 
 function isInCurrentMonth(iso: string): boolean {
@@ -223,6 +226,7 @@ export async function getTransactions(token: string | null): Promise<Transaction
                 : partnerNames.get(t.partner) ?? `Partenaire #${t.partner}`,
         counter_entry_of: t.counter_entry_of,
         balance_after: t.balance_after === null || t.balance_after === undefined ? null : Number(t.balance_after),
+        is_cancelled: t.is_cancelled,
     }));
 }
 

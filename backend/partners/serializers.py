@@ -78,6 +78,31 @@ class PartnerDecisionCreateSerializer(serializers.Serializer):
         return attrs
 
 
+class PartnerStatusUpdateSerializer(serializers.Serializer):
+    """Payload de changement de statut d'un partenaire déjà référencé (suspension, réactivation, clôture)."""
+
+    STATUS_CHOICES = [
+        ('active', 'Actif'),
+        ('suspended', 'Suspendu'),
+        ('closed', 'Clôturé'),
+    ]
+
+    status = serializers.ChoiceField(
+        choices=STATUS_CHOICES,
+        help_text="Nouveau statut cible : `active`, `suspended` ou `closed`.",
+    )
+    reason = serializers.CharField(
+        required=False,
+        allow_blank=True,
+        help_text="Motif du changement de statut. Obligatoire en cas de suspension ou de clôture.",
+    )
+
+    def validate(self, attrs):
+        if attrs["status"] in ("suspended", "closed") and not attrs.get("reason"):
+            raise serializers.ValidationError({"reason": "Un motif est requis pour suspendre ou clôturer un partenaire."})
+        return attrs
+
+
 class PartnerDecisionSerializer(serializers.ModelSerializer):
     """Décision de référencement archivée (traçabilité)."""
 

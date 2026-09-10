@@ -59,6 +59,7 @@ services:
       sh -c "npm run dev"
     volumes:
       - ./frontend:/app
+      - /app/node_modules
     ports:
       - "${FRONT_PORT:-8000}:3000"
     env_file:

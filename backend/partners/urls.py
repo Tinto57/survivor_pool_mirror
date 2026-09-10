@@ -6,6 +6,7 @@ from .views import (
     SinglePartnerView,
     PartnerDecisionCreateView,
     PartnerDecisionsListView,
+    PartnerStatusUpdateView,
 )
 
 urlpatterns = [
@@ -15,4 +16,5 @@ urlpatterns = [
     path('partners/<int:partner_id>/', SinglePartnerView.as_view(), name='partner-detail'),
     path('partners/<int:partner_id>/decision/', PartnerDecisionCreateView.as_view(), name='partner-decision-create'),
     path('partners/<int:partner_id>/decisions/', PartnerDecisionsListView.as_view(), name='partner-decisions-list'),
+    path('partners/<int:partner_id>/status/', PartnerStatusUpdateView.as_view(), name='partner-status-update'),
 ]
