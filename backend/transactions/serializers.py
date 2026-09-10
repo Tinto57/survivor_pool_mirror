@@ -25,10 +25,13 @@ class TransactionSerializer(serializers.ModelSerializer):
         help_text="Solde du salarié juste après cette écriture. Fourni uniquement quand le "
         "salarié consulte ses propres transactions, `null` sinon (partenaire, admin)."
     )
+    is_cancelled = serializers.SerializerMethodField(
+        help_text="True si une contre-écriture existe pour cette transaction (elle a été annulée)."
+    )
 
     class Meta:
         model = Transaction
-        fields = ["id", "token", "transaction_type", "employee", "partner", "amount", "validated_at", "counter_entry_of", "balance_after"]
+        fields = ["id", "token", "transaction_type", "employee", "partner", "amount", "validated_at", "counter_entry_of", "balance_after", "is_cancelled"]
         read_only_fields = ["id", "token", "transaction_type", "employee", "partner", "amount", "validated_at", "counter_entry_of"]
         extra_kwargs = {
             "transaction_type": {"help_text": "`PAYMENT` (débit salarié → partenaire) ou `ABONDMENT` (crédit du solde salarié)."},
@@ -41,6 +44,9 @@ class TransactionSerializer(serializers.ModelSerializer):
 
     def get_balance_after(self, obj: Transaction):
         return self.context.get("balance_after_map", {}).get(obj.id)
+
+    def get_is_cancelled(self, obj: Transaction) -> bool:
+        return hasattr(obj, "counter_entry")
 
 
 class AbondmentCreateSerializer(serializers.Serializer):
