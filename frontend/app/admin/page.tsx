@@ -18,7 +18,7 @@ import AdminNav from "../components/AdminNav/AdminNav";
 import type { DashboardTab } from "../components/AdminNav/AdminNav";
 import SimulationBadge from "../components/SimulationBadge/SimulationBadge";
 import Avatar from "../components/Avatar/Avatar";
-import { ApiError, creditEmployee, decidePartner } from "../lib/api";
+import { ApiError, creditEmployee, decidePartner, updatePartnerStatus } from "../lib/api";
 import { getAccessToken, logout } from "../lib/auth";
 import { useAdminGuard } from "./useAdminGuard";
 import {
@@ -52,6 +52,8 @@ export default function AdminHome() {
     const [tab, setTab] = useState<DashboardTab>("requests");
     const [rejecting, setRejecting] = useState<number | null>(null);
     const [reason, setReason] = useState("");
+    const [suspending, setSuspending] = useState<number | null>(null);
+    const [statusReason, setStatusReason] = useState("");
     const [crediting, setCrediting] = useState<number | null>(null);
     const [creditAmount, setCreditAmount] = useState("");
     const [notice, setNotice] = useState<string | null>(null);
@@ -78,6 +80,10 @@ export default function AdminHome() {
     const pending = useMemo(() => partners.filter((p) => p.status === "pending"), [partners]);
     const referenced = useMemo(
         () => partners.filter((p) => p.status === "active"),
+        [partners],
+    );
+    const managedPartners = useMemo(
+        () => partners.filter((p) => p.status === "active" || p.status === "suspended"),
         [partners],
     );
 
@@ -148,6 +154,41 @@ export default function AdminHome() {
             setReason("");
         } catch (err) {
             setError(err instanceof ApiError ? err.message : "Le refus a échoué.");
+        }
+    }
+
+    async function handleSuspend(partner: Partner) {
+        if (!statusReason.trim()) return;
+        const token = getAccessToken();
+        if (!token) return;
+
+        setError(null);
+        try {
+            await updatePartnerStatus(partner.id, "suspended", statusReason.trim(), token);
+            setPartners((current) =>
+                current.map((p) => (p.id === partner.id ? { ...p, status: "suspended" } : p)),
+            );
+            setNotice(`${partner.business_name} est désormais suspendu.`);
+            setSuspending(null);
+            setStatusReason("");
+        } catch (err) {
+            setError(err instanceof ApiError ? err.message : "La suspension a échoué.");
+        }
+    }
+
+    async function handleReactivate(partner: Partner) {
+        const token = getAccessToken();
+        if (!token) return;
+
+        setError(null);
+        try {
+            await updatePartnerStatus(partner.id, "active", "", token);
+            setPartners((current) =>
+                current.map((p) => (p.id === partner.id ? { ...p, status: "active" } : p)),
+            );
+            setNotice(`${partner.business_name} est de nouveau référencé.`);
+        } catch (err) {
+            setError(err instanceof ApiError ? err.message : "La réactivation a échoué.");
         }
     }
 
@@ -355,11 +396,11 @@ export default function AdminHome() {
                 ))}
 
             {tab === "partners" &&
-                (referenced.length === 0 ? (
+                (managedPartners.length === 0 ? (
                     <p className={styles.empty}>Aucun partenaire référencé pour le moment.</p>
                 ) : (
                     <ul className={styles.list}>
-                        {referenced.map((partner) => (
+                        {managedPartners.map((partner) => (
                             <li key={partner.id} className={styles.row}>
                                 <Avatar name={partner.business_name} size="sm" />
 
@@ -374,6 +415,69 @@ export default function AdminHome() {
 
                                 <span className={styles.pill}>{STATUS_LABEL[partner.status]}</span>
 
+                                {partner.status === "active" &&
+                                    (suspending === partner.id ? (
+                                        <div className={styles.rejectBox}>
+                                            <label
+                                                className={styles.rejectLabel}
+                                                htmlFor={`suspend-${partner.id}`}
+                                            >
+                                                Motif de la suspension (obligatoire)
+                                            </label>
+                                            <textarea
+                                                id={`suspend-${partner.id}`}
+                                                className={styles.textarea}
+                                                rows={2}
+                                                value={statusReason}
+                                                onChange={(e) => setStatusReason(e.target.value)}
+                                                placeholder="Ex. : signalement en cours de vérification."
+                                            />
+                                            <div className={styles.actions}>
+                                                <button
+                                                    type="button"
+                                                    className={styles.reject}
+                                                    disabled={!statusReason.trim()}
+                                                    onClick={() => handleSuspend(partner)}
+                                                >
+                                                    Confirmer la suspension
+                                                </button>
+                                                <button
+                                                    type="button"
+                                                    className={styles.ghost}
+                                                    onClick={() => {
+                                                        setSuspending(null);
+                                                        setStatusReason("");
+                                                    }}
+                                                >
+                                                    Annuler
+                                                </button>
+                                            </div>
+                                        </div>
+                                    ) : (
+                                        <button
+                                            type="button"
+                                            className={styles.ghost}
+                                            onClick={() => {
+                                                setSuspending(partner.id);
+                                                setStatusReason("");
+                                                setError(null);
+                                            }}
+                                        >
+                                            <Ban aria-hidden="true" />
+                                            Suspendre
+                                        </button>
+                                    ))}
+
+                                {partner.status === "suspended" && (
+                                    <button
+                                        type="button"
+                                        className={styles.accept}
+                                        onClick={() => handleReactivate(partner)}
+                                    >
+                                        <Check aria-hidden="true" />
+                                        Réactiver
+                                    </button>
+                                )}
                             </li>
                         ))}
                     </ul>
