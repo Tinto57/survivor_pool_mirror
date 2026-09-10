@@ -45,15 +45,13 @@ Authentification par JWT (access + refresh), rôle porté par `accounts.User.rol
 
 ### Démarrage rapide
 
-```bash
-# Backend — API Django sur :8000 (ensure that you have docker installed!)
-docker compose up
+Nécessite Docker.
 
-# Frontend — Next.js sur :3000
-cd frontend
-npm install
-echo "NEXT_PUBLIC_API_URL=http://localhost:8000" > .env.local
-npm run dev
+```bash
+cp .env.example .env
+
+# Démarre tout : backend Django (:8001), Postgres, Redis, et frontend Next.js (:8000)
+docker compose up
 ```
 
 ### Structure du dépôt
@@ -101,18 +99,18 @@ JWT authentication (access + refresh), role carried by `accounts.User.role`
 ### Quick start
 
 ```bash
-# Backend — Django API on :8000
+# Backend — Django API on :8001
 cd backend
 python -m venv ../venv && source ../venv/bin/activate
 pip install -r requirements.txt
 python manage.py migrate
-python manage.py runserver
+python manage.py runserver 0.0.0.0:8001
 
-# Frontend — Next.js on :3000
+# Frontend — Next.js on :8000
 cd frontend
 npm install
-echo "NEXT_PUBLIC_API_URL=http://localhost:8000" > .env.local
-npm run dev
+echo "NEXT_PUBLIC_API_URL=http://localhost:8001" > .env.local
+npm run dev -- -p 8000
 ```
 
 ### Repository structure

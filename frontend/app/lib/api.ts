@@ -5,7 +5,7 @@
  * et retombe sur le serveur de dev Django par défaut.
  */
 
-export const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
+export const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8001";
 
 export type Tokens = {
     access: string;
