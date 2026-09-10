@@ -83,6 +83,10 @@ REST_FRAMEWORK = {
 
 APP_VERSION = "1.0.0"
 
+# Clés API statiques acceptées par l'endpoint SIRH (`GET /api/v1/external/employees/{id}/balance/`),
+# séparées par des virgules. Un système tiers s'authentifie via l'en-tête `X-Api-Key`.
+SIRH_API_KEYS = _env_list("SIRH_API_KEYS")
+
 SPECTACULAR_SETTINGS = {
     "TITLE": "CartePro API",
     "DESCRIPTION": (
@@ -130,6 +134,10 @@ else:
     SESSION_COOKIE_SECURE = True
     CSRF_COOKIE_SECURE = True
     SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
+    SECURE_SSL_REDIRECT = True
+    SECURE_HSTS_SECONDS = 31536000
+    SECURE_HSTS_INCLUDE_SUBDOMAINS = True
+    SECURE_HSTS_PRELOAD = True
 
 ROOT_URLCONF = "config.urls"
 
