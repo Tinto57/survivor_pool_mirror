@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { QRCodeSVG } from "qrcode.react";
-import { createPaymentIntent } from "../../lib/api";
+import { ApiError, createPaymentIntent } from "../../lib/api";
 import { getAccessToken } from "../../lib/auth";
 import SimulationBadge from "../SimulationBadge/SimulationBadge";
 import styles from "./PaymentQrCode.module.css";
@@ -28,6 +28,7 @@ export default function PaymentQrCode() {
 
     useEffect(() => {
         let cancelled = false;
+        let retryTimer: ReturnType<typeof setTimeout> | undefined;
 
         createPaymentIntent(getAccessToken() ?? "")
             .then((intent) => {
@@ -38,11 +39,26 @@ export default function PaymentQrCode() {
             })
             .catch((err) => {
                 if (cancelled) return;
+                // On efface expiresAt : sans ça, le minuteur ci-dessous continuerait de
+                // tourner sur l'ancienne échéance (déjà dépassée) et redéclencherait cet
+                // effet à CHAQUE tick d'une seconde au lieu d'une seule fois, bombardant
+                // l'API en boucle serrée tant que l'erreur persiste.
+                setExpiresAt(null);
+
+                if (err instanceof ApiError && err.status === 401) {
+                    setError("Session expirée. Reconnectez-vous pour générer un nouveau code.");
+                    return;
+                }
+
                 setError(err instanceof Error ? err.message : "Impossible de générer le code de paiement.");
+                retryTimer = setTimeout(() => {
+                    if (!cancelled) setGeneration((g) => g + 1);
+                }, 10000);
             });
 
         return () => {
             cancelled = true;
+            if (retryTimer) clearTimeout(retryTimer);
         };
     }, [generation]);
 
