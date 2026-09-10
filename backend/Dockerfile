@@ -22,7 +22,7 @@ RUN pip install --no-cache-dir --upgrade pip && \
 COPY . /app/
 
 # Expose Django port
-EXPOSE 8000
+EXPOSE 8001
 
 # Default command: run development server (or gunicorn for prod)
-CMD ["python", "manage.py", "runserver", "0.0.0.0:8000"]
+CMD ["python", "manage.py", "runserver", "0.0.0.0:8001"]
